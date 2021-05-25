@@ -1,0 +1,273 @@
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+interface ICDXFactory;
+interface ICDXView;
+interface ICDXSink;
+interface ICDXScene;
+interface ICDXNode;
+interface ICDXFont;
+interface ICDXTexture;
+interface ICDXBuffer;
+
+cpp_quote("#if(0)")
+typedef IUnknown ICSGMesh;
+typedef DECIMAL CSGVAR;
+typedef DECIMAL XMFLOAT2;
+typedef DECIMAL XMFLOAT3;
+typedef DECIMAL XMFLOAT4;
+typedef DECIMAL XMFLOAT4X3;
+typedef DECIMAL XMFLOAT4X4;
+cpp_quote("#endif")
+
+typedef enum CDX_RENDER
+{
+  CDX_RENDER_BOUNDINGBOX = 0x0001,
+  CDX_RENDER_COORDINATES = 0x0002,
+  CDX_RENDER_NORMALS = 0x0004,
+  CDX_RENDER_WIREFRAME = 0x0008,
+  CDX_RENDER_OUTLINES = 0x0010,
+  CDX_RENDER_SHADOWS = 0x0400,
+  CDX_RENDER_ZPLANESHADOWS = 0x0800,
+  CDX_RENDER_SELONLY = 0x1000,
+} CDX_RENDER;
+
+typedef enum CDX_CMD
+{
+  CDX_CMD_CENTER = 1, //XMFLOAT4 border, zoom, fnear, ffar
+  CDX_CMD_CENTERSEL = 2, //FLOAT border, zoom, fnear, ffar
+  CDX_CMD_GETBOX = 3, //XMFLOAT4X3
+  CDX_CMD_GETBOXSEL = 4, //XMFLOAT4X3
+  CDX_CMD_SETPLANE = 5, //XMFLOAT4X3
+  CDX_CMD_PICKPLANE = 6, //XMFLOAT2
+  CDX_CMD_SELECTRECT = 7, //XMFLOAT2[2]
+  CDX_CMD_BOXESSET = 8, //in BOOL, out INT[2]
+  CDX_CMD_BOXESGET = 9, //INT, out XMFLOAT3[2]
+  CDX_CMD_BOXESTRA = 10, //INT, out XMFLOAT4X3
+  CDX_CMD_BOXESIND = 11, //INT, out INT
+} CDX_CMD;
+
+typedef enum CDX_DRAW
+{
+  CDX_DRAW_ORTHOGRAPHIC = 0,
+  CDX_DRAW_GET_TRANSFORM = 1, //XMFLOAT4X3
+  CDX_DRAW_SET_TRANSFORM = 2, //XMFLOAT4X3
+  CDX_DRAW_GET_COLOR = 3, //UINT
+  CDX_DRAW_SET_COLOR = 4, //UINT
+  CDX_DRAW_GET_FONT = 5, //ICDXFont
+  CDX_DRAW_SET_FONT = 6, //ICDXFont
+  CDX_DRAW_GET_TEXTURE = 7, //ICDXTexture
+  CDX_DRAW_SET_TEXTURE = 8, //ICDXTexture
+  CDX_DRAW_GET_MAPPING = 9, //XMFLOAT4X3
+  CDX_DRAW_SET_MAPPING = 10, //XMFLOAT4X3
+  CDX_DRAW_FILL_RECT = 11, //FLOAT x, FLOAT y, FLOAT dx, FLOAT dy  
+  CDX_DRAW_FILL_ELLIPSE = 12, //FLOAT x, FLOAT y, FLOAT dx, FLOAT dy  
+  CDX_DRAW_GET_TEXTEXTENT = 13, //FLOAT x, FLOAT y, LPCWSTR s, UINT n  
+  CDX_DRAW_DRAW_TEXT = 14, //FLOAT x, FLOAT y, LPCWSTR s, UINT n  
+  CDX_DRAW_DRAW_RECT = 15, //FLOAT x, FLOAT y, FLOAT dx, FLOAT dy  
+  CDX_DRAW_DRAW_POINTS = 16, //FLOAT ra, UINT np, XMFLOAT3* pp
+  CDX_DRAW_CATCH = 17, //UINT
+  CDX_DRAW_DRAW_POLYLINE = 18, //UINT XMFLOAT2[]
+  CDX_DRAW_DRAW_ELLIPSE = 19, //FLOAT x, FLOAT y, FLOAT dx, FLOAT dy  
+  CDX_DRAW_DRAW_BOX = 20, //XMFLOAT3[2]
+} CDX_DRAW;
+
+[object, uuid(4C0EC273-CA2F-48F4-B871-E487E2774492), pointer_default(unique)]
+interface ICDXView : IUnknown
+{
+  [propget] HRESULT Samples([out, retval] BSTR* p);
+  [propput] HRESULT Samples([in] BSTR p);
+  [propget] HRESULT BkColor([out, retval] UINT* p);
+  [propput] HRESULT BkColor([in] UINT p);
+  [propget] HRESULT Projection([out, retval] FLOAT* p);
+  [propput] HRESULT Projection([in] FLOAT p);
+  [propget] HRESULT ToolScale([out, retval] FLOAT* p);
+  [propput] HRESULT ToolScale([in] FLOAT p);
+  [propget] HRESULT Render([out, retval] CDX_RENDER* p);
+  [propput] HRESULT Render([in] CDX_RENDER p);
+  [propget] HRESULT Scene([out, retval] ICDXScene** p);
+  [propput] HRESULT Scene([in] ICDXScene* p);
+  [propget] HRESULT Camera([out, retval] ICDXNode** p);
+  [propput] HRESULT Camera([in] ICDXNode* p);
+  [propget] HRESULT OverNode([out, retval] ICDXNode** p);
+  [propget] HRESULT OverId([out, retval] UINT* p);
+  [propget] HRESULT OverPoint([out, retval] XMFLOAT3* p);
+  HRESULT Draw([in] CDX_DRAW idc, [in] UINT* data);
+  HRESULT Command([in] CDX_CMD cmd, [in] UINT* data);
+  HRESULT Thumbnail([in] UINT dx, [in] UINT dy, [in] UINT samples, [in] UINT bkcolor, [in] IStream* str);
+};
+
+[object, uuid(982A1DBA-0C12-4342-8F58-A34D83956F0D), pointer_default(unique), local]
+interface ICDXSink : IUnknown
+{
+  void Render(UINT fl);
+  void Timer();
+  void Resolve(IUnknown* p, IStream* s);
+};
+
+typedef enum CDX_UNIT
+{
+  CDX_UNIT_UNDEF = 0,
+  CDX_UNIT_METER = 1,
+  CDX_UNIT_CENTIMETER = 2,
+  CDX_UNIT_MILLIMETER = 3,
+  CDX_UNIT_MICRON = 4,
+  CDX_UNIT_FOOT = 5,
+  CDX_UNIT_INCH = 6,
+} CDX_UNIT;
+
+[object, uuid(344CC49E-4BBF-4F1E-A17A-55CBF848EED3), pointer_default(unique)]
+interface ICDXRoot : IUnknown
+{
+  [propget] HRESULT Child([out, retval] ICDXNode** p);
+  [propget] HRESULT Count([out, retval] UINT* p);
+  HRESULT AddNode([in] BSTR name, [out, retval] ICDXNode** p);
+  HRESULT InsertAt([in] UINT i, [in] ICDXNode* p);
+  HRESULT RemoveAt([in] UINT i);
+};
+
+[object, uuid(98068F4F-7768-484B-A2F8-21D4F7B5D811), pointer_default(unique)]
+interface ICDXScene : ICDXRoot
+{
+  //HRESULT GetNode([in] UINT i, [out, retval] ICDXNode** p);
+  [propget] HRESULT Tag([out, retval] IUnknown** p);
+  [propput] HRESULT Tag([in] IUnknown* p);
+  [propget] HRESULT Unit([out, retval] CDX_UNIT* p);
+  [propput] HRESULT Unit([in] CDX_UNIT p);
+  //[propget] HRESULT Child([out, retval] ICDXNode** p);
+  //[propget] HRESULT Count([out, retval] UINT* p);
+  [propget] HRESULT SelectionCount([out, retval] UINT* p);
+  HRESULT GetSelection([in] UINT i, [out, retval] ICDXNode** p);
+  //HRESULT AddNode([in] BSTR name, [out, retval] ICDXNode** p);
+  //HRESULT RemoveAt([in] UINT i);
+  //HRESULT InsertAt([in] UINT i, [in] ICDXNode* p);
+  HRESULT Clear();
+  HRESULT SaveToStream([in] IStream* s, [in, optional] ICDXNode* cam);
+  HRESULT LoadFromStream([in] IStream* s);
+};
+
+typedef enum CDX_BUFFER
+{
+  CDX_BUFFER_POINTBUFFER = 0,
+  CDX_BUFFER_INDEXBUFFER = 1,
+  CDX_BUFFER_TEXCOORDS = 2,
+  CDX_BUFFER_TEXTURE = 3,
+  //CDX_BUFFER_TRANSFORM = 4,
+  //CDX_BUFFER_NAME = 5,
+  CDX_BUFFER_CAMERA = 7,
+  CDX_BUFFER_LIGHT = 8,
+  CDX_BUFFER_SCRIPT = 20,
+  CDX_BUFFER_SCRIPTDATA = 21,
+} CDX_BUFFER;
+
+[object, uuid(2BB87169-81D3-405E-9C16-E4C22177BBAA), pointer_default(unique)]
+interface ICDXNode : ICDXRoot
+{
+  [propget] HRESULT Name([out, retval] BSTR* p);
+  [propput] HRESULT Name([in] BSTR p);
+  [propget] HRESULT Parent([out, retval] ICDXRoot** p);
+  [propget] HRESULT Scene([out, retval] ICDXScene** p);
+  [propget] HRESULT Next([out, retval] ICDXNode** p);
+  [propget] HRESULT Index([out, retval] UINT* p);
+  [propput] HRESULT Index([in] UINT p);
+  [propget] HRESULT IsSelect([out, retval] BOOL* p);
+  [propput] HRESULT IsSelect([in] BOOL p);
+  [propget] HRESULT IsStatic([out, retval] BOOL* p);
+  [propput] HRESULT IsStatic([in] BOOL p);
+  [propget] HRESULT Transform([out, retval] XMFLOAT4X3* p);
+  [propput] HRESULT Transform([in] XMFLOAT4X3 p);
+  [propget] HRESULT Color([out, retval] UINT* p);
+  [propput] HRESULT Color([in] UINT p);
+  [propget] HRESULT Texture([out, retval] ICDXBuffer** p);
+  [propput] HRESULT Texture([in] ICDXBuffer* p);
+  [propget] HRESULT Range([out, retval] POINT* p);
+  [propput] HRESULT Range([in] POINT p);
+  [propget] HRESULT Tag([out, retval] IUnknown** p);
+  [propput] HRESULT Tag([in] IUnknown* p);
+  HRESULT NextSibling([in] ICDXNode* root, [out, retval] ICDXNode** p);
+  HRESULT GetTransform([in] ICDXNode* root, [out, retval] XMFLOAT4X3* p);
+  //HRESULT AddNode([in] BSTR name, [out, retval] ICDXNode** p);
+  //HRESULT RemoveAt([in] UINT i);
+  //HRESULT InsertAt([in] UINT i, [in] ICDXNode* p);
+  HRESULT HasBuffer([in] CDX_BUFFER id, [out, retval] BOOL* p);
+  HRESULT GetBuffer([in] CDX_BUFFER id, [out, retval] ICDXBuffer** p);
+  HRESULT SetBuffer([in] ICDXBuffer* p);
+  HRESULT GetBufferPtr([in] CDX_BUFFER id, [in] const BYTE** p, [out, retval] UINT* n);
+  HRESULT SetBufferPtr([in] CDX_BUFFER id, [in] const BYTE* p, [in] UINT n);
+  HRESULT GetBox([in, out] XMFLOAT3 box[2], [in] const XMFLOAT4X3* pm);
+  HRESULT CopyCoords([in] ICDXBuffer* bpp, [in] ICDXBuffer* bii, [in] float eps, [out, retval] ICDXBuffer** btt);
+  HRESULT GetTypeTransform([in] UINT typ, [out, retval] XMFLOAT4X3* p);
+  HRESULT SetTypeTransform([in] UINT typ, [in] const XMFLOAT4X3* p);
+};
+
+[object, uuid(F063C32D-59D1-4A0D-B209-323268059C12), pointer_default(unique)]
+interface ICDXFont : IUnknown
+{
+  [propget] HRESULT Name([out, retval] BSTR* p);
+  [propget] HRESULT Size([out, retval] FLOAT* p);
+  [propget] HRESULT Style([out, retval] UINT* p);
+  [propget] HRESULT Ascent([out, retval] FLOAT* p);
+  [propget] HRESULT Descent([out, retval] FLOAT* p);
+  [propget] HRESULT Height([out, retval] FLOAT* p);
+};
+
+[object, uuid(A21FB8D8-33B3-4F8E-8740-8EB4B1FD4153), pointer_default(unique)]
+interface ICDXBuffer : IUnknown
+{
+  [propget] HRESULT Id([out, retval] CDX_BUFFER* p);
+  [propget] HRESULT Name([out, retval] BSTR* p);
+  [propput] HRESULT Name([in] BSTR p);
+  [propget] HRESULT Tag([out, retval] IUnknown** p);
+  [propput] HRESULT Tag([in] IUnknown* p);
+  HRESULT GetBytes([in, out, optional] BYTE* p, [out, retval] UINT* size);
+  HRESULT GetPtr([in, out] BYTE** p, [out, retval] UINT* size);
+  HRESULT Update([in] const BYTE* p, [in] UINT n);
+};
+
+//[object, uuid(37E366F0-098E-45FB-9152-54CD33D05B21), pointer_default(unique)]
+//interface ICDXTexture : IUnknown
+//{
+//  [propget] HRESULT Name([out, retval] BSTR* p);
+//  [propput] HRESULT Name([in] BSTR p);
+//  HRESULT GetPtr([in, out] BYTE** p, [out, retval] UINT* size);
+//  HRESULT Update([in] const BYTE* p, [in] UINT n);
+//};
+
+typedef enum CDX_INFO
+{
+  CDX_INFO_VERTEXBUFFER = 0,
+  CDX_INFO_INDEXBUFFER = 1,
+  CDX_INFO_MAPPINGS = 2,
+  CDX_INFO_TEXTURES = 3,
+  CDX_INFO_FONTS = 4,
+  CDX_INFO_VIEWS = 5,
+} CDX_INFO;
+
+
+[object, uuid(f0993d73-ea2a-4bf1-b128-826d4a3ba584), pointer_default(unique)]
+interface ICDXFactory : IUnknown
+{
+  [propget] HRESULT Version([out, retval] UINT* pVal);
+  [propget] HRESULT Devices([out, retval] BSTR* p);
+  HRESULT SetDevice([in] UINT id);
+  HRESULT CreateView([in] HWND hwnd, [in] ICDXSink* sink, [in] UINT sampels, [out, retval] ICDXView** p);
+  HRESULT CreateScene([out, retval] ICDXScene** p);
+  HRESULT CreateNode([out, retval] ICDXNode** p);
+  HRESULT GetFont([in] BSTR name, FLOAT size, UINT style, [out, retval] ICDXFont** p);
+  HRESULT GetInfo([in] CDX_INFO id, [out, retval] UINT* v);
+  HRESULT GetBuffer([in] CDX_BUFFER id, [in] const BYTE* p, [in] UINT n, [out, retval] ICDXBuffer** v);
+};
+
+[uuid(6d43a611-b5a3-489c-aa3a-dc01bb9225e8), version(1.0)]
+library cdxLib
+{
+  importlib("stdole2.tlb");
+  [uuid(4e957503-5aeb-41f2-975b-3e6ae9f9c75a)]
+  coclass Factory
+  {
+    [default] interface ICDXFactory;
+  };
+};
+
+import "shobjidl.idl";
