@@ -27,20 +27,26 @@
           <CommandName>Script Toolbar</CommandName>
         </Strings>
       </Menu>
-      <Menu guid="guidCmdSet" id="Toolbar3D" type="Toolbar">
+      <Menu guid="guidCmdSet" id="Toolbar3D" type="ToolWindowToolbar" >
         <CommandFlag>DefaultDocked</CommandFlag>
         <Strings>
           <ButtonText>Apex 3D-Editor</ButtonText>
         </Strings>
       </Menu>
       <!--EditGrp-->
-      <Menu guid="guidCmdSet" id="menuGraphicsDriver" priority="0x0100" type="Menu">
+      <Menu guid="guidCmdSet" id="menuEdit3D" priority="0x0100" type="Menu">
+        <Parent guid="guidCmdSet" id="EditGrp"/>
+        <Strings>
+          <ButtonText>Edit</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid="guidCmdSet" id="menuGraphicsDriver" priority="0x0101" type="Menu">
         <Parent guid="guidCmdSet" id="EditGrp"/>
         <Strings>
           <ButtonText>Graphics Driver</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="guidCmdSet" id="menuSelectStyle" priority="0x0100" type="Menu">
+      <Menu guid="guidCmdSet" id="menuSelectStyle" priority="0x0102" type="Menu">
         <Parent guid="guidCmdSet" id="EditGrp"/>
         <Strings>
           <ButtonText>Select Style</ButtonText>
@@ -65,9 +71,10 @@
       <Group guid="guidCmdSet" id="CustGrp" priority="0x100">
         <Parent guid="guidCmdSet" id="contmenu3DView"/>
       </Group>
+      <!--
       <Group guid="guidCmdSet" id="EditGrp" priority="0x101">
         <Parent guid="guidCmdSet" id="contmenu3DView"/>
-      </Group>
+      </Group>-->
       <Group guid="guidCmdSet" id="groupToolWindows" priority="0x102">
         <Parent guid="guidCmdSet" id="contmenu3DView"/>
       </Group>
@@ -91,11 +98,15 @@
         <Parent guid="guidCmdSet" id="ToolbarScript" />
       </Group>
       <!--Toolbar3D-->
-      <Group guid="guidCmdSet" id="Toolbar3DGroup" priority="0x0000">
+      <Group guid="guidCmdSet" id="group3DTools" priority="0x100">
+        <Parent guid="guidCmdSet" id="Toolbar3D"/>
+      </Group>
+      <Group guid="guidCmdSet" id="Toolbar3DGroup" priority="0x200">
         <Parent guid="guidCmdSet" id="Toolbar3D" />
       </Group>
-      <Group guid="guidCmdSet" id="group3DTools" priority="0x200">
-        <Parent guid="guidCmdSet" id="Toolbar3D"/>
+      <!--menuEdit3D-->
+      <Group guid="guidCmdSet" id="groupEdit3D" priority="0x100">
+        <Parent guid="guidCmdSet" id="menuEdit3D"/>
       </Group>
     </Groups>
     <Buttons>
@@ -204,7 +215,6 @@
           <ButtonText>Center</ButtonText>
         </Strings>
       </Button>
-
       <!--groupToolWindows-->
       <Button guid="guidCmdSet" id="cmdidScript" priority="0x0602" type="Button">
         <Parent guid="guidCmdSet" id="groupToolWindows"/>
@@ -285,7 +295,6 @@
           <ButtonText>Driver4</ButtonText>
         </Strings>
       </Button>
-
       <Button guid="guidCmdSet" id="cmdidsSampl1" type="Button" priority="0x0100">
         <Parent guid="guidCmdSet" id="groupGraphicsSamples" />
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -324,7 +333,52 @@
           <ButtonText>Samples 16</ButtonText>
         </Strings>
       </Button>
+      <!--groupEdit3D-->
+      <Button guid="guidCmdSet" id="cmdidGroup" priority="0x0200" type="Button">
+        <Parent guid="guidCmdSet" id="groupEdit3D"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Group</ButtonText>
+          <ToolTipText>Group objects</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="guidCmdSet" id="cmdidUngroup" priority="0x0201" type="Button">
+        <Parent guid="guidCmdSet" id="groupEdit3D"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Ungroup</ButtonText>
+          <ToolTipText>Ungroup objects</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="guidCmdSet" id="cmdidCenter" priority="0x0202" type="Button">
+        <Parent guid="guidCmdSet" id="groupEdit3D"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Center</ButtonText>
+        </Strings>
+      </Button>
       <!--Toolbar3DGroup-->
+      <Button guid="guidCmdSet" id="cmdidCheckboard" priority="0x0118" type="Button">
+        <Parent guid="guidCmdSet" id="Toolbar3DGroup"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Checkboard</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidCmdSet" id="cmdidCollisions" priority="0x0118" type="Button">
+        <Parent guid="guidCmdSet" id="Toolbar3DGroup"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Collisions</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidCmdSet" id="cmdidCenter" priority="0x0202" type="Button">
+        <Parent guid="guidCmdSet" id="Toolbar3DGroup"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Center</ButtonText>
+        </Strings>
+      </Button>
       <!--group3DTools-->
       <Button guid="guidCmdSet" id="cmdidTool1" priority="0x0100" type="Button">
         <Parent guid="guidCmdSet" id="group3DTools"/>
@@ -570,21 +624,23 @@
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="0x0102">
       <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement> 
+    </CommandPlacement>
+    <!-- 
     <CommandPlacement guid="guidCmdSet" id="cmdidGroup" priority="0x0104">
       <Parent guid="guidCmdSet" id="Toolbar3DGroup" /> 
     </CommandPlacement>
     <CommandPlacement guid="guidCmdSet" id="cmdidUngroup" priority="0x0105">
       <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
+    </CommandPlacement> -->
+    <CommandPlacement guid="guidCmdSet" id="menuEdit3D" priority="0x0105">
+      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
     </CommandPlacement>
     <CommandPlacement guid="guidCmdSet" id="menuSelectStyle" priority="0x0106">
       <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement>
-    <!--
-    <CommandPlacement guid="guidCmdSet" id="menuGraphicsDriver" priority="0x0106">
+    </CommandPlacement> 
+    <CommandPlacement guid="guidCmdSet" id="menuGraphicsDriver" priority="0x0107">
       <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
     </CommandPlacement>
-    -->
     <!--menuTools-->
     <CommandPlacement guid="guidCmdSet" id="group3DTools" priority="0x0106">
       <Parent guid="guidCmdSet" id="menuTools" />
@@ -605,6 +661,7 @@
       <IDSymbol name="menuSelectStyle" value="0x2102" />
       <IDSymbol name="menuTools" value="0x2103" />
       <IDSymbol name="contmenuTree" value="0x2104" />
+      <IDSymbol name="menuEdit3D" value="0x2105" />
       <!-- Groups -->
       <IDSymbol name="EditGrp" value="0x1030" />
       <IDSymbol name="CustGrp" value="0x1040" />
@@ -613,6 +670,7 @@
       <IDSymbol name="SubMenuSelectStyleGroup" value="0x1043"/>
       <IDSymbol name="groupToolWindows" value="0x1044"/>
       <IDSymbol name="groupMenuTree" value="0x1045"/>
+      <IDSymbol name="groupEdit3D" value="0x1046"/> 
       <!-- Commands-->
       <IDSymbol name="cmdidGroup" value="2035" />
       <IDSymbol name="cmdidUngroup" value="2036" />

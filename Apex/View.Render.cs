@@ -47,8 +47,9 @@ namespace csg3mf
         if (scene.SelectionCount == 1)
         {
           var node = scene.GetSelection(0);
-          if (node.Tag is Node n) 
-            n.GetMethod<Action<DC>>()?.Invoke(dc);
+          if (node.Tag is Node n)
+            try { n.GetMethod<Action<DC>>()?.Invoke(dc); }
+            catch (Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
         }
         return;
       }
@@ -57,6 +58,10 @@ namespace csg3mf
         if (true)
         {
           dc.SetOrtographic();
+
+          //dc.Color = 0x80ffffff; dc.FillRect(8, 8, Width - 16, 24);
+          //dc.Color = 0x80000000; dc.DrawText(16, 24, "File"); dc.DrawText(100, 24, "Edit");
+
           dc.Color = 0xff000000;
           float y = 10 + font.Ascent, dy = font.Height, x = ClientSize.Width - 10f;
           if (debuginfo != null) for (int i = 0; i < debuginfo.Count; i++) dc.DrawText(10, y + i * dy, debuginfo[i]);

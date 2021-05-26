@@ -25,18 +25,18 @@ using System.Runtime.InteropServices;
 //todo: csg ops progress with break?
 //todo: csg checks befor ops 
 //todo: shared textures for toolbox
+//[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+//[ProvideEditorLogicalView(typeof(EditorFactory), "{7651a703-06e5-11d1-8ebd-00a0c90f26ea}")]
 
 namespace csg3mf
 {
   [Guid(Guids.guidPackage)]
   [PackageRegistration(UseManagedResourcesOnly = true)]//, AllowsBackgroundLoading = true)]
   [ProvideMenuResource("Menus.ctmenu", 1)]
-  //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-  //[ProvideEditorLogicalView(typeof(EditorFactory), "{7651a703-06e5-11d1-8ebd-00a0c90f26ea}")]
   [ProvideEditorExtension(typeof(EditorFactory), ".3mf", 32)]
   [ProvideEditorExtension(typeof(EditorFactory), ".b3mf", 32)]
   [ProvideToolboxItems(1, NeedsCallBackAfterReset = true)]
-  [ProvideToolWindow(typeof(ScriptToolWindow))]
+  [ProvideToolWindow(typeof(ScriptToolWindowPane))]
   public sealed class CDXPackage : Package //AsyncPackage
   {
     internal static CDXPackage Package;
@@ -76,10 +76,9 @@ namespace csg3mf
   {
     internal const string guidPackage = "785bd27f-9b97-45c5-b877-b701378798ac";
     internal static readonly Guid CmdSet = new Guid("d761bf5e-28df-41a8-9168-07703f46cac1");
-    internal static int CtxEdit = 0x2101;
     internal const string GuidEditorFactory = "93fa4dc3-61ec-47af-b0ba-50cad3caf049";
     internal static readonly Guid guidEditorFactory = new Guid(GuidEditorFactory);
-    internal static int ToolbarScript = 0x1000;
-    internal static int Toolbar3D = 0x1002;
+    //internal static int ToolbarScript = 0x1000;
+    //internal static int Toolbar3D = 0x1002;
   }
 }

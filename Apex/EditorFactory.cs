@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Design;
+using Microsoft.VisualStudio.TextManager.Interop;
 #pragma warning disable VSTHRD010
 
 namespace csg3mf
@@ -41,23 +42,15 @@ namespace csg3mf
       return 0;
     }
     [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
-    int IVsEditorFactory.CreateEditorInstance(
-      uint grfCreateDoc,
-      string pszMkDocument,
-      string pszPhysicalView,
-      IVsHierarchy pvHier,
-      uint itemid,
-      IntPtr punkDocDataExisting,
-      out IntPtr ppunkDocView,
-      out IntPtr ppunkDocData,
-      out string pbstrEditorCaption,
-      out Guid pguidCmdUI,
-      out int pgrfCDW)
+    int IVsEditorFactory.CreateEditorInstance(uint grfCreateDoc, string pszMkDocument, 
+      string pszPhysicalView, IVsHierarchy pvHier, uint itemid, IntPtr punkDocDataExisting, 
+      out IntPtr ppunkDocView, out IntPtr ppunkDocData, out string pbstrEditorCaption, 
+      out Guid pguidCmdUI, out int pgrfCDW)
     {
       pguidCmdUI = default; ppunkDocView = default; ppunkDocData = default; pgrfCDW = default; pbstrEditorCaption = default;
       if ((grfCreateDoc & (VSConstants.CEF_OPENFILE | VSConstants.CEF_SILENT)) == 0) return VSConstants.E_INVALIDARG;
       if (punkDocDataExisting != IntPtr.Zero) return VSConstants.VS_E_INCOMPATIBLEDOCDATA;
-      var pane = new CDXPane();
+      var pane = new CDXWindowPane();
       ppunkDocView = Marshal.GetIUnknownForObject(pane);
       ppunkDocData = Marshal.GetIUnknownForObject(pane);
       pguidCmdUI = Guids.guidEditorFactory;
@@ -65,9 +58,9 @@ namespace csg3mf
     }
   }
 
-  class CDXPane : WindowPane,
-   IVsPersistDocData, IPersistFileFormat,
-   IOleCommandTarget, IVsDocOutlineProvider, IVsToolboxUser //, IVsStatusbarUser
+  class CDXWindowPane : WindowPane,
+    IVsPersistDocData, IPersistFileFormat,
+    IOleCommandTarget, IVsDocOutlineProvider, IVsToolboxUser //, IVsStatusbarUser
   {
     internal static int transcmd(in Guid guid, int id)
     {
@@ -139,11 +132,25 @@ namespace csg3mf
     //  //if (view != null) { view.Dispose(); view = null; }
     //  if (treeview != null) { treeview.Dispose(); treeview = null; }
     //}
-    public CDXPane() : base(null)
+    public CDXWindowPane() : base(null)
     {
       view = new CDXView { AllowDrop = true, pane = this };
     }
+    protected override void Initialize()
+    {
+      //base.Initialize();
+      var frame = (IVsWindowFrame)base.GetService(typeof(SVsWindowFrame));
+      frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out var t);
+      var host = t as IVsToolWindowToolbarHost;
+      host.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, Guids.CmdSet, 0x1002);
+    
+      if (toolbox != null) return;
+      toolbox = (IVsToolbox)GetService(typeof(SVsToolbox));
+      toolbox.RegisterDataProvider(new ToolboxDataProvider { toolbox = toolbox }, out var id);
+    }
+
     CDXView view; string fileName;
+    static IVsToolbox toolbox;
     public override IWin32Window Window => view;
     public object GetVsService(Type t) => GetService(t);
 
@@ -312,15 +319,6 @@ namespace csg3mf
       return 0;
     }
 
-    static IVsToolbox toolbox;
-
-    protected override void Initialize()
-    {
-      if (toolbox != null) return;
-      toolbox = (IVsToolbox)GetService(typeof(SVsToolbox));
-      toolbox.RegisterDataProvider(new ToolboxDataProvider { toolbox = toolbox }, out var id);
-    }
-
     int IVsToolboxUser.IsSupported(Microsoft.VisualStudio.OLE.Interop.IDataObject pDO)
     {
       //FORMATETC fetc = { m_CF_CUSTOM_FORMAT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
@@ -344,24 +342,41 @@ namespace csg3mf
   }
 
   [Guid("381f778f-1111-4f04-88dd-241de0ad3e71")]
-  public class ScriptToolWindow : ToolWindowPane, IVsSelectionEvents, IOleCommandTarget
+  public class ScriptToolWindowPane : ToolWindowPane, IVsSelectionEvents, IOleCommandTarget//IVsFindTarget
   {
     //public override bool SearchEnabled => true;//base.SearchEnabled;
+    //public override IVsSearchTask CreateSearch(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback)
+    //{
+    //  var s = pSearchQuery.SearchString;
+    //  return base.CreateSearch(dwCookie, pSearchQuery, pSearchCallback);
+    //}
+    //public override Guid SearchCategory => base.SearchCategory;
+    //public override IVsEnumWindowSearchFilters SearchFiltersEnum => base.SearchFiltersEnum;
+    //public override IVsEnumWindowSearchOptions SearchOptionsEnum => base.SearchOptionsEnum;
+    //public override void ProvideSearchSettings(IVsUIDataSource pSearchSettings)
+    //{
+    //  base.ProvideSearchSettings(pSearchSettings);
+    //}
+    //public override void ClearSearch()
+    //{
+    //  base.ClearSearch();
+    //}
+
     UserControl host; ScriptEditor edit;
     public override IWin32Window Window => host;
-    public ScriptToolWindow() : base(null)
+    public ScriptToolWindowPane() : base(null)
     {
       this.Caption = "Script";
       using (DpiAwareness.EnterDpiScope(DpiAwarenessContext.SystemAware))
         host = new UserControl();
-      //this.ToolBar = new CommandID(Guids.CmdSet, Guids.ToolbarScript);
+      //this.ToolBar = new CommandID(Guids.CmdSet, 0x1000);
     }
     void Edit_MouseUp(object sender, MouseEventArgs e)
     {
       if (e.Button != MouseButtons.Right) return;
       var uishell = GetService(typeof(SVsUIShell)) as IVsUIShell; if (uishell == null) return;
       var p = Cursor.Position; var set = Guids.CmdSet;
-      uishell.ShowContextMenu(0, ref set, Guids.CtxEdit, new[] { new POINTS { x = (short)p.X, y = (short)p.Y } }, this);
+      uishell.ShowContextMenu(0, ref set, 0x2101, new[] { new POINTS { x = (short)p.X, y = (short)p.Y } }, this);
     }
     uint cookie;
     protected override void OnCreate()
@@ -452,7 +467,7 @@ namespace csg3mf
     int IOleCommandTarget.QueryStatus(ref Guid guid, uint nCmdId, OLECMD[] oleCmd, IntPtr oleText)
     {
       if (edit == null) return -2147221248;
-      var id = CDXPane.transcmd(guid, (int)oleCmd[0].cmdID);
+      var id = CDXWindowPane.transcmd(guid, (int)oleCmd[0].cmdID);
       if (id != 0)
       {
         var fl = edit.OnCommand(id, this);
@@ -466,10 +481,11 @@ namespace csg3mf
     int IOleCommandTarget.Exec(ref Guid guid, uint nCmdId, uint nCmdExcept, IntPtr pIn, IntPtr vOut)
     {
       if (edit == null) return -2147221248;
-      var id = CDXPane.transcmd(guid, (int)nCmdId);
+      var id = CDXWindowPane.transcmd(guid, (int)nCmdId);
       if (id != 0) { edit.OnCommand(id, null); return 0; }
       return -2147221248;
     }
+    
   }
 
 }

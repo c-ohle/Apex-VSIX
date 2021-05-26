@@ -99,6 +99,8 @@ namespace csg3mf
       return -1;
     }
 
+    int idtool;
+
     int OnDelete(object test)
     {
       if (scene.SelectionCount == 0) return 0;
@@ -240,7 +242,7 @@ namespace csg3mf
     {
       if (scene.SelectionCount != 1) return 0;
       if (test != null) return 1;
-      var p = CDXPackage.Package.FindToolWindow(typeof(ScriptToolWindow), 0, true);
+      var p = CDXPackage.Package.FindToolWindow(typeof(ScriptToolWindowPane), 0, true);
       if (p.Frame is Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame f) f.Show();
       return 0;
     }

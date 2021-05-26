@@ -17,7 +17,8 @@ namespace csg3mf
 {
   public static unsafe partial class CDX
   {
-    public static readonly IFactory Factory = COM.CreateInstance<IFactory>(IntPtr.Size == 8 ? "cdx64.dll" : "cdx32.dll", typeof(CFactory).GUID);
+    public static readonly IFactory Factory = (IFactory)COM.CreateInstance(
+      IntPtr.Size == 8 ? "cdx64.dll" : "cdx32.dll", typeof(CFactory).GUID, typeof(IFactory).GUID);
 
     [ComImport, Guid("4e957503-5aeb-41f2-975b-3e6ae9f9c75a")]
     public class CFactory { }

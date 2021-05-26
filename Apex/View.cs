@@ -66,30 +66,23 @@ namespace csg3mf
     protected override void OnHandleCreated(EventArgs e)
     {
       base.OnHandleCreated(e);
-      //Application.Idle += Idle;
     }
     protected override void OnHandleDestroyed(EventArgs e)
     {
-      //Application.Idle -= Idle;
       if (view != null) { Marshal.ReleaseComObject(view); view = null; }
       scene = null; undos = null;
       base.OnHandleDestroyed(e);
     }
 
-    internal CDXPane pane;
+    internal CDXWindowPane pane;
     IScene scene; IView view; static long drvsettings = 0x400000000;
     INode defcam; int flags = 1;// | 2; //1:Checkboard 2:Collisions
 
-    [DllImport("kernel32.dll")]
-    static extern int SetDllDirectory(string s);
     static CDXView()
     {
-      SetDllDirectory(Path.GetDirectoryName(typeof(CDXView).Assembly.Location));
       var reg = Application.UserAppDataRegistry;
       var drv = reg.GetValue("drv"); if (drv is long v) drvsettings = v;
       Factory.SetDevice((uint)drvsettings);
-      //var ver = CSG.Factory.Version;
-      //SetDllDirectory(null);
     }
     internal void LoadDocData(string path)
     {
@@ -139,9 +132,9 @@ namespace csg3mf
       scene.Export3MF(path, str, null, view.Camera);
     }
 
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    static extern bool IsWindowVisible(IntPtr hWnd);
+    //[DllImport("user32.dll")]
+    //[return: MarshalAs(UnmanagedType.Bool)]
+    //static extern bool IsWindowVisible(IntPtr hWnd);
     protected override void OnSizeChanged(EventArgs e)
     {
       //if (view != null) return;
@@ -303,8 +296,6 @@ namespace csg3mf
       var hr = uishell.ShowContextMenu(0, ref guid, id, pnts, pane); Enabled = true;
       Focus();
     }
-
-    int idtool;
 
     internal int OnInfo(object test)
     {

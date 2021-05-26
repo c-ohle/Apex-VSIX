@@ -1252,7 +1252,7 @@ namespace csg3mf
         });
     }
     TypeExplorer flyer;
-    internal ScriptToolWindow pane;
+    internal ScriptToolWindowPane pane;
 
     void EditFlyer(int i1, int i2, TypeExplorer.Item[] items)
     {

@@ -13,7 +13,8 @@ namespace csg3mf
 {
   public unsafe static class CSG
   {
-    public static readonly IFactory Factory = COM.CreateInstance<IFactory>(IntPtr.Size == 8 ? "csg64.dll" : "csg32.dll", typeof(CFactory).GUID);
+    public static readonly IFactory Factory = (IFactory)COM.CreateInstance(
+      IntPtr.Size == 8 ? "csg64.dll" : "csg32.dll", typeof(CFactory).GUID, typeof(IFactory).GUID);
     //public static readonly IFactory Factory = (IFactory)new CFactory(); //alternative from registry
     public static ITesselator Tesselator => tess ?? (tess = Factory.CreateTessalator(Unit.Rational));
     [ThreadStatic] static ITesselator tess;
@@ -504,8 +505,20 @@ namespace csg3mf
 
   public static unsafe class COM
   {
+    public static object CreateInstance(string path, in Guid clsid, in Guid iid)
+    {
+      path = Path.Combine(Path.GetDirectoryName(typeof(CDXView).Assembly.Location),path);
+      var t1 = LoadLibrary(path);
+      if (t1 == IntPtr.Zero) throw new FileNotFoundException(path);
+      var t2 = GetProcAddress(t1, "DllGetClassObject");
+      var t3 = Marshal.GetDelegateForFunctionPointer<DllGetClassObject>(t2);
+      t3(clsid, typeof(IClassFactory).GUID, out var cf);
+      return cf.CreateInstance(IntPtr.Zero, iid);
+    }
+    /*
     public static T CreateInstance<T>(string path, in Guid clsid)
     {
+      //Path.Combine(Path.GetDirectoryName(typeof(CDXView).Assembly.Location),path);
       var t1 = LoadLibrary(path);
       if (t1 == IntPtr.Zero)
       {
@@ -517,6 +530,7 @@ namespace csg3mf
       t3(clsid, typeof(IClassFactory).GUID, out var cf);
       return (T)cf.CreateInstance(IntPtr.Zero, typeof(T).GUID);
     }
+    */
     [DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
     static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string s);
     [DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
