@@ -200,6 +200,7 @@ namespace csg3mf
     // ////  System.Reflection.BindingFlags.Instance| System.Reflection.BindingFlags.NonPublic);
     // //t3[2].KeyboardInputSite = null;
     //}
+
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e) { }
     protected override void OnKeyPress(KeyPressEventArgs e) { }
     protected override void OnKeyDown(KeyEventArgs e)
@@ -212,6 +213,8 @@ namespace csg3mf
       switch (k)
       {
         //case Keys.O: test(); return;
+        //case Keys.Tab: pane.tbonoff(); return;
+        //case Keys.Apps: onapps(); return;
         case Keys.S:
         case Keys.Space: tool = camera_movxy2(3); break;
         case Keys.Shift | Keys.S:
@@ -266,25 +269,31 @@ namespace csg3mf
       var main = mainover(); //if (main == null) tool = camera_free();
       var cam = main == null || main.IsStatic;
 
+      if (toolid != 0 && keys == 0)
+        switch (toolid)
+        {
+          case 1: tool = camera_movxy(); goto ok;
+          case 2: tool = camera_movz(); goto ok;
+          case 3: tool = camera_free2(); goto ok;
+        }
+
       if (main != null && main.Tag is Node n)
       {
         var ft = n.GetMethod<Func<IView, Action<int>>>();
-        if (ft != null) try { tool = ft(view); } catch { }
+        if (ft != null) try { if ((tool = ft(view)) != null) goto ok; } catch { }
       }
-
-      if (tool == null)
-        switch (keys)
-        {
-          case Keys.None: tool = cam ? tool_select() : obj_movxy(main); break;
-          case Keys.Control: tool = cam ? camera_movxy() : obj_drag(main); break;
-          case Keys.Shift: tool = cam ? camera_movz() : obj_movz(main); break;
-          case Keys.Alt: tool = cam ? camera_rotz(null) : obj_rotz(main); break;
-          case Keys.Control | Keys.Shift: tool = cam ? camera_rotx() : obj_rot(main, 0); break;
-          case Keys.Control | Keys.Alt: tool = cam && mainselect() != null ? camera_rotz(mainselect()) : obj_rot(main, 1); break;
-          case Keys.Control | Keys.Alt | Keys.Shift: if (cam && main != null) { main.Select(); Invalidate(Inval.Select); } else tool = obj_rot(main, 2); break;
-          default: tool = tool_select(); break;
-        }
-      if (tool == null) return; Capture = true; Invalidate();
+      switch (keys)
+      {
+        case Keys.None: tool = cam ? tool_select() : obj_movxy(main); break;
+        case Keys.Control: tool = cam ? camera_movxy() : obj_drag(main); break;
+        case Keys.Shift: tool = cam ? camera_movz() : obj_movz(main); break;
+        case Keys.Alt: tool = cam ? camera_rotz(null) : obj_rotz(main); break;
+        case Keys.Control | Keys.Shift: tool = cam ? camera_rotx() : obj_rot(main, 0); break;
+        case Keys.Control | Keys.Alt: tool = cam && mainselect() != null ? camera_rotz(mainselect()) : obj_rot(main, 1); break;
+        case Keys.Control | Keys.Alt | Keys.Shift: if (cam && main != null) { main.Select(); Invalidate(Inval.Select); } else tool = obj_rot(main, 2); break;
+        default: tool = tool_select(); break;
+      }
+      if (tool == null) return; ok: Capture = true; Invalidate();
     }
     protected override void OnMouseMove(MouseEventArgs e)
     {
@@ -299,7 +308,7 @@ namespace csg3mf
     }
     protected override void OnMouseUp(MouseEventArgs e)
     {
-      if (tool == null) { if (e.Button == MouseButtons.Right) ShowContextMenu(0x2100); return; }
+      if (tool == null) return;
       var t = tool; tool = null; Capture = false; t(1); Invalidate(Inval.Properties);
     }
     protected override void OnLostFocus(EventArgs e)
@@ -316,9 +325,12 @@ namespace csg3mf
           { var w = m.WParam.ToInt32(); if ((w & 0x8) != 0) OnMouseWheel(w >> 15); else OnScroll(0, w >> 16); return; }
         case 0x020E: //WM_MOUSEWHEEL2
           { OnScroll(m.WParam.ToInt32() >> 16, 0); return; }
+        case 0x007B: // WM_CONTEXTMENU
+          ShowContextMenu(this, 0x2100, m.LParam); return;
       }
       base.WndProc(ref m);
     }
+
     void OnScroll(int xdelta, int ydelta)
     {
       if (tool != null) return;

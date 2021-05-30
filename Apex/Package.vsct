@@ -1,739 +1,763 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <Extern href="stdidcmd.h"/>
-  <Extern href="vsshlids.h"/>
-  <Extern href="virtkeys.h"/>
-  <Commands package="guidPackage">
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+  <Extern href="stdidcmd.h" />
+  <Extern href="vsshlids.h" />
+  <Extern href="virtkeys.h" />
+  <Commands package="g1">
     <Menus>
-      <Menu guid="guidCmdSet" id="contmenuScript" priority="0x0000" type="Context">
+      <Menu guid="g2" id="_0x2100" type="Context">
         <Strings>
-          <ButtonText>Context Menu</ButtonText>
+          <ButtonText />
         </Strings>
       </Menu>
-      <Menu guid="guidCmdSet" id="contmenu3DView" priority="0x0000" type="Context">
+      <Menu guid="g2" id="_1000001" type="Menu" priority="2">
+        <Parent guid="g2" id="_1000000" />
         <Strings>
-          <ButtonText>Context Menu</ButtonText>
+          <ButtonText>Navigation</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="guidCmdSet" id="contmenuTree" priority="0x0000" type="Context">
-        <Strings>
-          <ButtonText>Context Menu</ButtonText>
-        </Strings>
-      </Menu>
-      <Menu guid="guidCmdSet" id="ToolbarScript" type="ToolWindowToolbar">
-        <CommandFlag>DefaultDocked</CommandFlag>
-        <Strings>
-          <ButtonText>Script Toolbar</ButtonText>
-          <CommandName>Script Toolbar</CommandName>
-        </Strings>
-      </Menu>
-      <Menu guid="guidCmdSet" id="Toolbar3D" type="ToolWindowToolbar" >
-        <CommandFlag>DefaultDocked</CommandFlag>
-        <Strings>
-          <ButtonText>Apex 3D-Editor</ButtonText>
-        </Strings>
-      </Menu>
-      <!--EditGrp-->
-      <Menu guid="guidCmdSet" id="menuEdit3D" priority="0x0100" type="Menu">
-        <Parent guid="guidCmdSet" id="EditGrp"/>
+      <Menu guid="g2" id="_1000004" type="Menu" priority="3">
+        <Parent guid="g2" id="_1000000" />
         <Strings>
           <ButtonText>Edit</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="guidCmdSet" id="menuGraphicsDriver" priority="0x0101" type="Menu">
-        <Parent guid="guidCmdSet" id="EditGrp"/>
+      <Menu guid="g2" id="_1000008" type="Menu" priority="4">
+        <Parent guid="g2" id="_1000000" />
         <Strings>
-          <ButtonText>Graphics Driver</ButtonText>
+          <ButtonText>View</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="guidCmdSet" id="menuSelectStyle" priority="0x0102" type="Menu">
-        <Parent guid="guidCmdSet" id="EditGrp"/>
+      <Menu guid="g2" id="_1000011" type="Menu" priority="5">
+        <Parent guid="g2" id="_1000000" />
         <Strings>
           <ButtonText>Select Style</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="guidCmdSet" id="menuTools" priority="0x0100" type="Menu">
-        <Parent guid="guidCmdSet" id="EditGrp"/>
+      <Menu guid="g2" id="_0x2104" type="Context">
         <Strings>
-          <ButtonText>Tools</ButtonText>
+          <ButtonText />
         </Strings>
-      </Menu>    
+      </Menu>
+      <Menu guid="g2" id="_0x2101" type="Context">
+        <Strings>
+          <ButtonText />
+        </Strings>
+      </Menu>
+      <Menu guid="g2" id="_0x1002" type="ToolWindowToolbar">
+        <Strings>
+          <ButtonText />
+        </Strings>
+      </Menu>
+      <Menu guid="g2" id="_0x1003" type="Toolbar">
+        <Strings>
+          <ButtonText>Apex 3D Toolbar</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid="g2" id="_1000030" type="Menu" priority="18">
+        <Parent guid="g2" id="_1000029" />
+        <Strings>
+          <ButtonText>Select Style</ButtonText>
+        </Strings>
+      </Menu>
     </Menus>
     <Groups>
-      <!--contmenuScript-->
-      <Group guid="guidCmdSet" id="CtxEditGrp1" priority="0x200">
-        <Parent guid="guidCmdSet" id="contmenuScript"/>
+      <Group guid="g2" id="_1000000" priority="1">
+        <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="guidCmdSet" id="CtxEditGrp2" priority="0x201">
-        <Parent guid="guidCmdSet" id="contmenuScript"/>
+      <Group guid="g2" id="_1000002" priority="1">
+        <Parent guid="g2" id="_1000001" />
       </Group>
-      <!--contmenu3DView-->
-      <Group guid="guidCmdSet" id="CustGrp" priority="0x100">
-        <Parent guid="guidCmdSet" id="contmenu3DView"/>
+      <Group guid="g2" id="_1000003" priority="6">
+        <Parent guid="g2" id="_1000001" />
       </Group>
-      <!--
-      <Group guid="guidCmdSet" id="EditGrp" priority="0x101">
-        <Parent guid="guidCmdSet" id="contmenu3DView"/>
-      </Group>-->
-      <Group guid="guidCmdSet" id="groupToolWindows" priority="0x102">
-        <Parent guid="guidCmdSet" id="contmenu3DView"/>
+      <Group guid="g2" id="_1000005" priority="1">
+        <Parent guid="g2" id="_1000004" />
       </Group>
-      <!--contmenuTree-->
-      <Group guid="guidCmdSet" id="groupMenuTree" priority="0x100">
-        <Parent guid="guidCmdSet" id="contmenuTree"/>
+      <Group guid="g2" id="_1000006" priority="6">
+        <Parent guid="g2" id="_1000004" />
       </Group>
-      <!--SubMenuSelectStyle-->
-      <Group guid="guidCmdSet" id="SubMenuSelectStyleGroup" priority="0x100">
-        <Parent guid="guidCmdSet" id="menuSelectStyle"/>
+      <Group guid="g2" id="_1000007" priority="9">
+        <Parent guid="g2" id="_1000004" />
       </Group>
-      <!--menuGraphicsDriver-->
-      <Group guid="guidCmdSet" id="groupGraphicsDriver" priority="0x0000">
-        <Parent guid="guidCmdSet" id="menuGraphicsDriver"/>
+      <Group guid="g2" id="_1000009" priority="1">
+        <Parent guid="g2" id="_1000008" />
       </Group>
-      <Group guid="guidCmdSet" id="groupGraphicsSamples" priority="0x0000">
-        <Parent guid="guidCmdSet" id="menuGraphicsDriver"/>
+      <Group guid="g2" id="_1000010" priority="4">
+        <Parent guid="g2" id="_1000008" />
       </Group>
-      <!--ToolbarScript-->
-      <Group guid="guidCmdSet" id="ToolbarScriptGroup" priority="0x0000">
-        <Parent guid="guidCmdSet" id="ToolbarScript" />
+      <Group guid="g2" id="_1000012" priority="1">
+        <Parent guid="g2" id="_1000011" />
       </Group>
-      <!--Toolbar3D-->
-      <Group guid="guidCmdSet" id="group3DTools" priority="0x100">
-        <Parent guid="guidCmdSet" id="Toolbar3D"/>
+      <Group guid="g2" id="_1000013" priority="6">
+        <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="guidCmdSet" id="Toolbar3DGroup" priority="0x200">
-        <Parent guid="guidCmdSet" id="Toolbar3D" />
+      <Group guid="g2" id="_1000014" priority="9">
+        <Parent guid="g2" id="_0x2100" />
       </Group>
-      <!--menuEdit3D-->
-      <Group guid="guidCmdSet" id="groupEdit3D" priority="0x100">
-        <Parent guid="guidCmdSet" id="menuEdit3D"/>
+      <Group guid="g2" id="_1000015" priority="1">
+        <Parent guid="g2" id="_0x2104" />
+      </Group>
+      <Group guid="g2" id="_1000016" priority="5">
+        <Parent guid="g2" id="_0x2104" />
+      </Group>
+      <Group guid="g2" id="_1000017" priority="8">
+        <Parent guid="g2" id="_0x2104" />
+      </Group>
+      <Group guid="g2" id="_1000018" priority="11">
+        <Parent guid="g2" id="_0x2104" />
+      </Group>
+      <Group guid="g2" id="_1000019" priority="1">
+        <Parent guid="g2" id="_0x2101" />
+      </Group>
+      <Group guid="g2" id="_1000020" priority="8">
+        <Parent guid="g2" id="_0x2101" />
+      </Group>
+      <Group guid="g2" id="_1000021" priority="12">
+        <Parent guid="g2" id="_0x2101" />
+      </Group>
+      <Group guid="g2" id="_1000022" priority="1">
+        <Parent guid="g2" id="_0x1002" />
+      </Group>
+      <Group guid="g2" id="_1000023" priority="11">
+        <Parent guid="g2" id="_0x1002" />
+      </Group>
+      <Group guid="g2" id="_1000024" priority="13">
+        <Parent guid="g2" id="_0x1002" />
+      </Group>
+      <Group guid="g2" id="_1000025" priority="17">
+        <Parent guid="g2" id="_0x1002" />
+      </Group>
+      <Group guid="g2" id="_1000026" priority="20">
+        <Parent guid="g2" id="_0x1002" />
+      </Group>
+      <Group guid="g2" id="_1000027" priority="1">
+        <Parent guid="g2" id="_0x1003" />
+      </Group>
+      <Group guid="g2" id="_1000028" priority="14">
+        <Parent guid="g2" id="_0x1003" />
+      </Group>
+      <Group guid="g2" id="_1000029" priority="17">
+        <Parent guid="g2" id="_0x1003" />
+      </Group>
+      <Group guid="g2" id="_1000031" priority="1">
+        <Parent guid="g2" id="_1000030" />
+      </Group>
+      <Group guid="g2" id="_1000032" priority="19">
+        <Parent guid="g2" id="_0x1003" />
       </Group>
     </Groups>
     <Buttons>
-      <!-- CustGrp-->
-      <Button guid="guidCmdSet" id="cmdidGroup" priority="0x0110" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_6200" type="Button" priority="2">
+        <Parent guid="g2" id="_1000002" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Camera move horizontal -&gt; Ctrl+Click</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_6201" type="Button" priority="3">
+        <Parent guid="g2" id="_1000002" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Camera move vertical -&gt; Ctrl+Shift+Click</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_6203" type="Button" priority="4">
+        <Parent guid="g2" id="_1000002" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Camera rotate -&gt; Alt+Click</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_6204" type="Button" priority="5">
+        <Parent guid="g2" id="_1000002" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Camera inclination -&gt; Ctrl+Shift+Click</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2300" type="Button" priority="7">
+        <Parent guid="g2" id="_1000003" />
+        <Icon guid="g3" id="i1" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Center</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2330" type="Button" priority="8">
+        <Parent guid="g2" id="_1000003" />
+        <Icon guid="g3" id="i9" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Collisions</ButtonText>
+          <ToolTipText>Switch collision mode on/off.</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2035" type="Button" priority="7">
+        <Parent guid="g2" id="_1000006" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Group</ButtonText>
-          <ToolTipText>Group objects</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidUngroup" priority="0x0111" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2036" type="Button" priority="8">
+        <Parent guid="g2" id="_1000006" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Ungroup</ButtonText>
-          <ToolTipText>Ungroup objects</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidUnion" priority="0x0113" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2301" type="Button" priority="10">
+        <Parent guid="g2" id="_1000007" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Union</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidIntersection" priority="0x0113" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2302" type="Button" priority="11">
+        <Parent guid="g2" id="_1000007" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Intersection</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidDifference" priority="0x0114" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2303" type="Button" priority="12">
+        <Parent guid="g2" id="_1000007" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Difference</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidPlaneCut" priority="0x0115" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2304" type="Button" priority="13">
+        <Parent guid="g2" id="_1000007" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>PlaneCut</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidNormalize" priority="0x0116" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Normalize</ButtonText>
-          <ToolTipText>Normalize scalings</ToolTipText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidCenter" priority="0x0117" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Center</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidShadows" priority="0x0118" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2220" type="Button" priority="2">
+        <Parent guid="g2" id="_1000009" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Shadows</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidCheckboard" priority="0x0118" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2320" type="Button" priority="3">
+        <Parent guid="g2" id="_1000009" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Checkboard</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidCollisions" priority="0x0118" type="Button">
-        <Parent guid="guidCmdSet" id="CustGrp"/>
+      <Button guid="g2" id="_2210" type="Button" priority="2">
+        <Parent guid="g2" id="_1000012" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Box</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2211" type="Button" priority="3">
+        <Parent guid="g2" id="_1000012" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Pivot</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2212" type="Button" priority="4">
+        <Parent guid="g2" id="_1000012" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Normals</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2213" type="Button" priority="5">
+        <Parent guid="g2" id="_1000012" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Wireframe</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2214" type="Button" priority="6">
+        <Parent guid="g2" id="_1000012" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Outline</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2300" type="Button" priority="7">
+        <Parent guid="g2" id="_1000013" />
+        <Icon guid="g3" id="i1" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Center</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2330" type="Button" priority="8">
+        <Parent guid="g2" id="_1000013" />
+        <Icon guid="g3" id="i9" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Collisions</ButtonText>
+          <ToolTipText>Switch collision mode on/off.</ToolTipText>
         </Strings>
       </Button>
-      <!--groupMenuTree-->
-      <Button guid="guidCmdSet" id="cmdidGroup" priority="0x0200" type="Button">
-        <Parent guid="guidCmdSet" id="groupMenuTree"/>
+      <Button guid="g2" id="_2037" type="Button" priority="10">
+        <Parent guid="g2" id="_1000014" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Script</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2035" type="Button" priority="9">
+        <Parent guid="g2" id="_1000017" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Group</ButtonText>
-          <ToolTipText>Group objects</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidUngroup" priority="0x0201" type="Button">
-        <Parent guid="guidCmdSet" id="groupMenuTree"/>
+      <Button guid="g2" id="_2036" type="Button" priority="10">
+        <Parent guid="g2" id="_1000017" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Ungroup</ButtonText>
-          <ToolTipText>Ungroup objects</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidCenter" priority="0x0202" type="Button">
-        <Parent guid="guidCmdSet" id="groupMenuTree"/>
+      <Button guid="g2" id="_2300" type="Button" priority="12">
+        <Parent guid="g2" id="_1000018" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Center</ButtonText>
         </Strings>
       </Button>
-      <!--groupToolWindows-->
-      <Button guid="guidCmdSet" id="cmdidScript" priority="0x0602" type="Button">
-        <Parent guid="guidCmdSet" id="groupToolWindows"/>
-        <Strings>
-          <ButtonText>Script...</ButtonText>
-        </Strings>
-      </Button>
-      <!--SubMenuSelectStyleGroup-->
-      <Button guid="guidCmdSet" id="cmdidSelectBox" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="SubMenuSelectStyleGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>SelectBox</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidSelectPivot" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="SubMenuSelectStyleGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>SelectPivot</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidSelectNormals" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="SubMenuSelectStyleGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>SelectNormals</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidSelectWireframe" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="SubMenuSelectStyleGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>SelectWireframe</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidSelectOutline" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="SubMenuSelectStyleGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>SelectOutline</ButtonText>
-        </Strings>
-      </Button>
-      <!-- groupGraphicsDriver--> 
-      <Button guid="guidCmdSet" id="cmdidsDrv1" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsDriver" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <Strings>
-          <ButtonText>Driver1</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsDrv2" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsDriver" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <Strings>
-          <ButtonText>Driver2</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsDrv3" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsDriver" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <Strings>
-          <ButtonText>Driver3</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsDrv4" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsDriver" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <Strings>
-          <ButtonText>Driver4</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsSampl1" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsSamples" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <Strings>
-          <ButtonText>Samples 1</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsSampl2" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsSamples" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <Strings>
-          <ButtonText>Samples 2</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsSampl4" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsSamples" />
-        <Strings>
-          <ButtonText>Samples 4</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsSampl8" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsSamples" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <Strings>
-          <ButtonText>Samples 8</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidsSampl16" type="Button" priority="0x0100">
-        <Parent guid="guidCmdSet" id="groupGraphicsSamples" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <Strings>
-          <ButtonText>Samples 16</ButtonText>
-        </Strings>
-      </Button>
-      <!--groupEdit3D-->
-      <Button guid="guidCmdSet" id="cmdidGroup" priority="0x0200" type="Button">
-        <Parent guid="guidCmdSet" id="groupEdit3D"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Group</ButtonText>
-          <ToolTipText>Group objects</ToolTipText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidUngroup" priority="0x0201" type="Button">
-        <Parent guid="guidCmdSet" id="groupEdit3D"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Ungroup</ButtonText>
-          <ToolTipText>Ungroup objects</ToolTipText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidCenter" priority="0x0202" type="Button">
-        <Parent guid="guidCmdSet" id="groupEdit3D"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Center</ButtonText>
-        </Strings>
-      </Button>
-      <!--Toolbar3DGroup-->
-      <Button guid="guidCmdSet" id="cmdidCheckboard" priority="0x0118" type="Button">
-        <Parent guid="guidCmdSet" id="Toolbar3DGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Checkboard</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidCollisions" priority="0x0118" type="Button">
-        <Parent guid="guidCmdSet" id="Toolbar3DGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Collisions</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidCmdSet" id="cmdidCenter" priority="0x0202" type="Button">
-        <Parent guid="guidCmdSet" id="Toolbar3DGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <Strings>
-          <ButtonText>Center</ButtonText>
-        </Strings>
-      </Button>
-      <!--group3DTools-->
-      <Button guid="guidCmdSet" id="cmdidTool1" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic1" />
+      <Button guid="g2" id="_2401" type="Button" priority="2">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i0" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool1</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool2" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic2" />
+      <Button guid="g2" id="_2402" type="Button" priority="3">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i1" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool2</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool3" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic3" /> 
+      <Button guid="g2" id="_2403" type="Button" priority="4">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i2" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool3</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool4" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic4" />
+      <Button guid="g2" id="_2404" type="Button" priority="5">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i3" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool4</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool5" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic5" />
+      <Button guid="g2" id="_2405" type="Button" priority="6">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i4" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool5</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool6" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic6" />
+      <Button guid="g2" id="_2406" type="Button" priority="7">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i5" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool6</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool7" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic7" />
+      <Button guid="g2" id="_2407" type="Button" priority="8">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i6" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool7</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool8" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic8" />
+      <Button guid="g2" id="_2408" type="Button" priority="9">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i7" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool8</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCmdSet" id="cmdidTool9" priority="0x0100" type="Button">
-        <Parent guid="guidCmdSet" id="group3DTools"/>
-        <Icon guid="guidImages" id="bmpPic9" />
+      <Button guid="g2" id="_2409" type="Button" priority="10">
+        <Parent guid="g2" id="_1000022" />
+        <Icon guid="g3" id="i8" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Tool9</ButtonText>
         </Strings>
       </Button>
-    </Buttons> 
+      <Button guid="g2" id="_2330" type="Button" priority="12">
+        <Parent guid="g2" id="_1000023" />
+        <Icon guid="g3" id="i9" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Collisions</ButtonText>
+          <ToolTipText>Switch collision mode on/off.</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2401" type="Button" priority="2">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i0" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool1</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2402" type="Button" priority="3">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i1" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool2</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2403" type="Button" priority="4">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i2" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool3</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2404" type="Button" priority="5">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i3" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool4</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2405" type="Button" priority="6">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i4" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool5</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2406" type="Button" priority="7">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i5" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool6</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2407" type="Button" priority="8">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i6" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool7</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2408" type="Button" priority="9">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i7" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool8</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2409" type="Button" priority="10">
+        <Parent guid="g2" id="_1000027" />
+        <Icon guid="g3" id="i8" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Tool9</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2330" type="Button" priority="15">
+        <Parent guid="g2" id="_1000028" />
+        <Icon guid="g3" id="i9" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Collisions</ButtonText>
+          <ToolTipText>Switch collision mode on/off.</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2210" type="Button" priority="2">
+        <Parent guid="g2" id="_1000031" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Box</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2211" type="Button" priority="3">
+        <Parent guid="g2" id="_1000031" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Pivot</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2212" type="Button" priority="4">
+        <Parent guid="g2" id="_1000031" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Normals</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2213" type="Button" priority="5">
+        <Parent guid="g2" id="_1000031" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Wireframe</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2214" type="Button" priority="6">
+        <Parent guid="g2" id="_1000031" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Outline</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+    <Combos>
+      <Combo guid="g2" priority="5" defaultWidth="150" id="_2756" idCommandList="_2755" type="IndexCombo">
+        <Parent guid="g2" id="_1000010" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Graphics</ButtonText>
+        </Strings>
+      </Combo>
+      <Combo guid="g2" priority="6" defaultWidth="30" id="_2758" idCommandList="_2757" type="DynamicCombo">
+        <Parent guid="g2" id="_1000010" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>MultiSamples</ButtonText>
+        </Strings>
+      </Combo>
+      <Combo guid="g2" priority="18" defaultWidth="100" id="_2756" idCommandList="_2755" type="IndexCombo">
+        <Parent guid="g2" id="_1000025" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Driver</ButtonText>
+        </Strings>
+      </Combo>
+      <Combo guid="g2" priority="19" defaultWidth="30" id="_2758" idCommandList="_2757" type="DynamicCombo">
+        <Parent guid="g2" id="_1000025" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Samples</ButtonText>
+        </Strings>
+      </Combo>
+      <Combo guid="g2" priority="16" defaultWidth="100" id="_12346" idCommandList="_12345" type="DynamicCombo">
+        <Parent guid="g2" id="_1000028" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Collisions Options</ButtonText>
+        </Strings>
+      </Combo>
+    </Combos>
     <Bitmaps>
-      <Bitmap guid="guidImages" href="Resources\Images_32bit.bmp" 
-              usedList="bmpPic1, bmpPic2, bmpPic3, bmpPic4, bmpPic5, bmpPic6, bmpPic7, bmpPic8, bmpPic9"/>    
+      <Bitmap guid="g3" href="Resources\Images_32bit.bmp" usedList="i0,i1,i2,i3,i4,i5,i6,i7,i8,i9" />
     </Bitmaps>
   </Commands>
-  <UsedCommands>
-    <UsedCommand guid="guidVSStd97" id="cmdidCut"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidCopy"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidPaste"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidDelete"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidDocOutlineWindow"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidPropertiesWindow"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidToolbox"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidStartNoDebug"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidStop"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidToggleBreakpoint"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidStart"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidStepInto"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidStepOver"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidStepOut"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidBringForward"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidSendBackward"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidBringToFront"/>
-    <UsedCommand guid="guidVSStd97" id="cmdidSendToBack"/>
-    <!--
-      AlignBottom = 1,
-      AlignHorizontalCenters = 2,
-      AlignLeft = 3,
-      AlignRight = 4,
-      AlignToGrid = 5,
-      AlignTop = 6,
-      AlignVerticalCenters = 7,
-      ArrangeBottom = 8,
-      ArrangeRight = 9,
-      BringForward = 10,
-      BringToFront = 11,
-      CenterHorizontally = 12,
-      CenterVertically = 13,
-      SendBackward = 32,
-      SendToBack = 33,
-      
-    <UsedCommand guid="guidVSStd2K" id="ECMD_OUTLN_TOGGLE_CURRENT"/>
-    <UsedCommand guid="guidVSStd2K" id="ECMD_OUTLN_TOGGLE_ALL"/>
-    <UsedCommand guid="guidVSStd2K" id="ECMD_OUTLN_COLLAPSE_TO_DEF"/>-->
-  </UsedCommands>
   <CommandPlacements>
-    <!--CtxEditGrp1-->
-    <!--
-    <CommandPlacement guid="guidVSStd97" id="cmdidStartNoDebug" priority="0x0100">
-      <Parent guid="guidCmdSet" id="CtxEditGrp1"/>
-    </CommandPlacement> -->
-    <CommandPlacement guid="guidVSStd97" id="cmdidStart" priority="0x0101">
-      <Parent guid="guidCmdSet" id="CtxEditGrp1"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="2">
+      <Parent guid="g2" id="_1000005" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepOver" priority="0x0102">
-      <Parent guid="guidCmdSet" id="CtxEditGrp1"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="3">
+      <Parent guid="g2" id="_1000005" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepInto" priority="0x0103">
-      <Parent guid="guidCmdSet" id="CtxEditGrp1"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="4">
+      <Parent guid="g2" id="_1000005" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepOut" priority="0x0104">
-      <Parent guid="guidCmdSet" id="CtxEditGrp1"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="5">
+      <Parent guid="g2" id="_1000005" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidToggleBreakpoint" priority="0x0105">
-      <Parent guid="guidCmdSet" id="CtxEditGrp1"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidToolbox" priority="11">
+      <Parent guid="g2" id="_1000014" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStop" priority="0x0106">
-      <Parent guid="guidCmdSet" id="CtxEditGrp1"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidDocOutlineWindow" priority="12">
+      <Parent guid="g2" id="_1000014" />
     </CommandPlacement>
-    <!--CtxEditGrp2-->
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="0x0100">
-      <Parent guid="guidCmdSet" id="CtxEditGrp2"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="13">
+      <Parent guid="g2" id="_1000014" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="0x0102">
-      <Parent guid="guidCmdSet" id="CtxEditGrp2"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="2">
+      <Parent guid="g2" id="_1000015" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="0x0103">
-      <Parent guid="guidCmdSet" id="CtxEditGrp2"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="3">
+      <Parent guid="g2" id="_1000015" />
     </CommandPlacement>
-    <!--CustGrp-->
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="0x0100">
-      <Parent guid="guidCmdSet" id="CustGrp"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="4">
+      <Parent guid="g2" id="_1000015" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="0x0101">
-      <Parent guid="guidCmdSet" id="CustGrp"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidBringToFront" priority="6">
+      <Parent guid="g2" id="_1000016" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="0x0102">
-      <Parent guid="guidCmdSet" id="CustGrp"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidSendToBack" priority="7">
+      <Parent guid="g2" id="_1000016" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x0103">
-      <Parent guid="guidCmdSet" id="CustGrp"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidStart" priority="2">
+      <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <!--groupMenuTree-->
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="0x0100">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidStepOver" priority="3">
+      <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="0x0101">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidStepInto" priority="4">
+      <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="0x0102">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidStepOut" priority="5">
+      <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x0104">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidToggleBreakpoint" priority="6">
+      <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidBringToFront" priority="0x0105">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidStop" priority="7">
+      <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <!--
-    <CommandPlacement guid="guidVSStd97" id="cmdidBringForward" priority="0x0106">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="9">
+      <Parent guid="g2" id="_1000020" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidSendBackward" priority="0x0107">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
-    </CommandPlacement>-->
-    <CommandPlacement guid="guidVSStd97" id="cmdidSendToBack" priority="0x0108">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="10">
+      <Parent guid="g2" id="_1000020" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="0x0605">
-      <Parent guid="guidCmdSet" id="groupMenuTree"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="11">
+      <Parent guid="g2" id="_1000020" />
     </CommandPlacement>
-    <!--groupToolWindows-->   
-    <CommandPlacement guid="guidVSStd97" id="cmdidToolbox" priority="0x0603">
-      <Parent guid="guidCmdSet" id="groupToolWindows"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="13">
+      <Parent guid="g2" id="_1000021" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidDocOutlineWindow" priority="0x0604">
-      <Parent guid="guidCmdSet" id="groupToolWindows"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="14">
+      <Parent guid="g2" id="_1000024" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="0x0605">
-      <Parent guid="guidCmdSet" id="groupToolWindows"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="15">
+      <Parent guid="g2" id="_1000024" />
     </CommandPlacement>
-    <!--ToolbarScriptGroup-->
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="0x0100">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup" />
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="16">
+      <Parent guid="g2" id="_1000024" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="0x0101">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup" />
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="21">
+      <Parent guid="g2" id="_1000026" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="0x0102">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup" />
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="11">
+      <Parent guid="g2" id="_1000027" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStart" priority="0x0103">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup" />
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="12">
+      <Parent guid="g2" id="_1000027" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStart" priority="0x0103">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup"/>
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="13">
+      <Parent guid="g2" id="_1000027" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepOver" priority="0x0103">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepInto" priority="0x0103">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepOut" priority="0x0103">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidToggleBreakpoint" priority="0x0103">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStop" priority="0x0103">
-      <Parent guid="guidCmdSet" id="ToolbarScriptGroup"/>
-    </CommandPlacement>
-    <!--Toolbar3DGroup-->
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="0x0100">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="0x0101">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="0x0102">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement>
-    <!-- 
-    <CommandPlacement guid="guidCmdSet" id="cmdidGroup" priority="0x0104">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" /> 
-    </CommandPlacement>
-    <CommandPlacement guid="guidCmdSet" id="cmdidUngroup" priority="0x0105">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement> -->
-    <CommandPlacement guid="guidCmdSet" id="menuEdit3D" priority="0x0105">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement>
-    <CommandPlacement guid="guidCmdSet" id="menuSelectStyle" priority="0x0106">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement> 
-    <CommandPlacement guid="guidCmdSet" id="menuGraphicsDriver" priority="0x0107">
-      <Parent guid="guidCmdSet" id="Toolbar3DGroup" />
-    </CommandPlacement>
-    <!--menuTools-->
-    <CommandPlacement guid="guidCmdSet" id="group3DTools" priority="0x0106">
-      <Parent guid="guidCmdSet" id="menuTools" />
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="20">
+      <Parent guid="g2" id="_1000032" />
     </CommandPlacement>
   </CommandPlacements>
   <KeyBindings>
-    <KeyBinding guid="guidCmdSet" id="cmdidGroup" editor="guidVSStd97" key1="W" key2="G" mod1="Control" mod2="Control" />
-    <KeyBinding guid="guidCmdSet" id="cmdidUngroup" editor="guidVSStd97" key1="W" key2="U" mod1="Control" mod2="Control" />
-    <KeyBinding guid="guidCmdSet" id="cmdidCenter" editor="guidVSStd97" key1="W" key2="C" mod1="Control" mod2="Control" />
-    <!--<KeyBinding guid="guidVSStd2K" id="ECMD_OUTLN_COLLAPSE_TO_DEF" editor="guidVSStd97" key1="M" key2="O" mod1="Control" mod2="Control" />-->
+    <KeyBinding guid="g2" id="_2300" editor="guidVSStd97" key1="W" key2="C" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2035" editor="guidVSStd97" key1="W" key2="G" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2036" editor="guidVSStd97" key1="W" key2="U" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2301" editor="guidVSStd97" key1="E" key2="U" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2302" editor="guidVSStd97" key1="E" key2="I" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2303" editor="guidVSStd97" key1="E" key2="D" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2304" editor="guidVSStd97" key1="E" key2="P" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2300" editor="guidVSStd97" key1="W" key2="C" mod1="Control" mod2="Control" />
   </KeyBindings>
   <Symbols>
-    <GuidSymbol name="guidPackage" value="{785bd27f-9b97-45c5-b877-b701378798ac}" />
-    <GuidSymbol name="guidCmdSet" value="{d761bf5e-28df-41a8-9168-07703f46cac1}">
-      <!-- Menus -->
-      <IDSymbol name="contmenu3DView" value="0x2100" />
-      <IDSymbol name="contmenuScript" value="0x2101" />
-      <IDSymbol name="menuSelectStyle" value="0x2102" />
-      <IDSymbol name="menuTools" value="0x2103" />
-      <IDSymbol name="contmenuTree" value="0x2104" />
-      <IDSymbol name="menuEdit3D" value="0x2105" />
-      <!-- Groups -->
-      <IDSymbol name="EditGrp" value="0x1030" />
-      <IDSymbol name="CustGrp" value="0x1040" />
-      <IDSymbol name="CtxEditGrp1" value="0x1041"/>
-      <IDSymbol name="CtxEditGrp2" value="0x1042"/>
-      <IDSymbol name="SubMenuSelectStyleGroup" value="0x1043"/>
-      <IDSymbol name="groupToolWindows" value="0x1044"/>
-      <IDSymbol name="groupMenuTree" value="0x1045"/>
-      <IDSymbol name="groupEdit3D" value="0x1046"/> 
-      <!-- Commands-->
-      <IDSymbol name="cmdidGroup" value="2035" />
-      <IDSymbol name="cmdidUngroup" value="2036" />
-      <IDSymbol name="cmdidScript" value="2037" />
-      <IDSymbol name="cmdidNormalize" value="2038" />
-      <IDSymbol name="cmdidCenter" value="2300" />
-      <IDSymbol name="cmdidSelectBox" value="2210" />
-      <IDSymbol name="cmdidSelectPivot" value="2211" />
-      <IDSymbol name="cmdidSelectNormals" value="2212" />
-      <IDSymbol name="cmdidSelectWireframe" value="2213" />
-      <IDSymbol name="cmdidSelectOutline" value="2214" />
-      <IDSymbol name="cmdidShadows" value="2220" />
-
-      <IDSymbol name="cmdidUnion" value="2301" />
-      <IDSymbol name="cmdidIntersection" value="2302" />
-      <IDSymbol name="cmdidDifference" value="2303" />
-      <IDSymbol name="cmdidPlaneCut" value="2304" />
-
-      <IDSymbol name="cmdidCheckboard" value="2320" />
-      <IDSymbol name="cmdidCollisions" value="2330" />
-
-      <IDSymbol name="cmdidTool1" value="2401" />
-      <IDSymbol name="cmdidTool2" value="2402" />
-      <IDSymbol name="cmdidTool3" value="2403" />
-      <IDSymbol name="cmdidTool4" value="2404" />
-      <IDSymbol name="cmdidTool5" value="2405" />
-      <IDSymbol name="cmdidTool6" value="2406" />
-      <IDSymbol name="cmdidTool7" value="2407" />
-      <IDSymbol name="cmdidTool8" value="2408" />
-      <IDSymbol name="cmdidTool9" value="2409" />
-
-      <IDSymbol name="cmdidsDrv1" value="2751" />
-      <IDSymbol name="cmdidsDrv2" value="2752" />
-      <IDSymbol name="cmdidsDrv3" value="2753" />
-      <IDSymbol name="cmdidsDrv4" value="2754" />
-      <IDSymbol name="cmdidsSampl1" value="2701" />
-      <IDSymbol name="cmdidsSampl2" value="2702" />
-      <IDSymbol name="cmdidsSampl4" value="2704" />
-      <IDSymbol name="cmdidsSampl8" value="2708" />
-      <IDSymbol name="cmdidsSampl16" value="2716" />
-      
-      <IDSymbol name="menuGraphicsDriver" value="0x11000"/>
-      <IDSymbol name="groupGraphicsDriver" value="0x11001"/>
-      <IDSymbol name="groupGraphicsSamples" value="0x11080"/>
-      
-      <!-- toolbars-->
-      <IDSymbol name="ToolbarScript" value="0x1000" />
-      <IDSymbol name="ToolbarScriptGroup" value="0x1001" />
-      <IDSymbol name="Toolbar3D" value="0x1002" />
-      <IDSymbol name="Toolbar3DGroup" value="0x1003" />
-      <IDSymbol name="group3DTools" value="0x1004" />
+    <GuidSymbol name="g1" value="{785bd27f-9b97-45c5-b877-b701378798ac}" />
+    <GuidSymbol name="g2" value="{d761bf5e-28df-41a8-9168-07703f46cac1}">
+      <IDSymbol name="_0x2100" value="0x2100" />
+      <IDSymbol name="_1000000" value="1000000" />
+      <IDSymbol name="_1000001" value="1000001" />
+      <IDSymbol name="_1000002" value="1000002" />
+      <IDSymbol name="_6200" value="6200" />
+      <IDSymbol name="_6201" value="6201" />
+      <IDSymbol name="_6203" value="6203" />
+      <IDSymbol name="_6204" value="6204" />
+      <IDSymbol name="_1000003" value="1000003" />
+      <IDSymbol name="_2300" value="2300" />
+      <IDSymbol name="_2330" value="2330" />
+      <IDSymbol name="_1000004" value="1000004" />
+      <IDSymbol name="_1000005" value="1000005" />
+      <IDSymbol name="_1000006" value="1000006" />
+      <IDSymbol name="_2035" value="2035" />
+      <IDSymbol name="_2036" value="2036" />
+      <IDSymbol name="_1000007" value="1000007" />
+      <IDSymbol name="_2301" value="2301" />
+      <IDSymbol name="_2302" value="2302" />
+      <IDSymbol name="_2303" value="2303" />
+      <IDSymbol name="_2304" value="2304" />
+      <IDSymbol name="_1000008" value="1000008" />
+      <IDSymbol name="_1000009" value="1000009" />
+      <IDSymbol name="_2220" value="2220" />
+      <IDSymbol name="_2320" value="2320" />
+      <IDSymbol name="_1000010" value="1000010" />
+      <IDSymbol name="_2756" value="2756" />
+      <IDSymbol name="_2755" value="2755" />
+      <IDSymbol name="_2758" value="2758" />
+      <IDSymbol name="_2757" value="2757" />
+      <IDSymbol name="_1000011" value="1000011" />
+      <IDSymbol name="_1000012" value="1000012" />
+      <IDSymbol name="_2210" value="2210" />
+      <IDSymbol name="_2211" value="2211" />
+      <IDSymbol name="_2212" value="2212" />
+      <IDSymbol name="_2213" value="2213" />
+      <IDSymbol name="_2214" value="2214" />
+      <IDSymbol name="_1000013" value="1000013" />
+      <IDSymbol name="_1000014" value="1000014" />
+      <IDSymbol name="_2037" value="2037" />
+      <IDSymbol name="_0x2104" value="0x2104" />
+      <IDSymbol name="_1000015" value="1000015" />
+      <IDSymbol name="_1000016" value="1000016" />
+      <IDSymbol name="_1000017" value="1000017" />
+      <IDSymbol name="_1000018" value="1000018" />
+      <IDSymbol name="_0x2101" value="0x2101" />
+      <IDSymbol name="_1000019" value="1000019" />
+      <IDSymbol name="_1000020" value="1000020" />
+      <IDSymbol name="_1000021" value="1000021" />
+      <IDSymbol name="_0x1002" value="0x1002" />
+      <IDSymbol name="_1000022" value="1000022" />
+      <IDSymbol name="_2401" value="2401" />
+      <IDSymbol name="_2402" value="2402" />
+      <IDSymbol name="_2403" value="2403" />
+      <IDSymbol name="_2404" value="2404" />
+      <IDSymbol name="_2405" value="2405" />
+      <IDSymbol name="_2406" value="2406" />
+      <IDSymbol name="_2407" value="2407" />
+      <IDSymbol name="_2408" value="2408" />
+      <IDSymbol name="_2409" value="2409" />
+      <IDSymbol name="_1000023" value="1000023" />
+      <IDSymbol name="_1000024" value="1000024" />
+      <IDSymbol name="_1000025" value="1000025" />
+      <IDSymbol name="_1000026" value="1000026" />
+      <IDSymbol name="_0x1003" value="0x1003" />
+      <IDSymbol name="_1000027" value="1000027" />
+      <IDSymbol name="_1000028" value="1000028" />
+      <IDSymbol name="_12346" value="12346" />
+      <IDSymbol name="_12345" value="12345" />
+      <IDSymbol name="_1000029" value="1000029" />
+      <IDSymbol name="_1000030" value="1000030" />
+      <IDSymbol name="_1000031" value="1000031" />
+      <IDSymbol name="_1000032" value="1000032" />
     </GuidSymbol>
-    <GuidSymbol name="guidImages" value="{8410C7B1-EA41-4466-B68E-FDB2E9A41237}" >
-      <IDSymbol name="bmpPic1" value="1" />
-      <IDSymbol name="bmpPic2" value="2" />
-      <IDSymbol name="bmpPic3" value="3" />
-      <IDSymbol name="bmpPic4" value="4" />
-      <IDSymbol name="bmpPic5" value="5" />
-      <IDSymbol name="bmpPic6" value="6" />
-      <IDSymbol name="bmpPic7" value="7" />
-      <IDSymbol name="bmpPic8" value="8" />
-      <IDSymbol name="bmpPic9" value="9" />
+    <GuidSymbol name="g3" value="{8410C7B1-EA41-4466-B68E-FDB2E9A41237}">
+      <IDSymbol name="i0" value="1" />
+      <IDSymbol name="i1" value="2" />
+      <IDSymbol name="i2" value="3" />
+      <IDSymbol name="i3" value="4" />
+      <IDSymbol name="i4" value="5" />
+      <IDSymbol name="i5" value="6" />
+      <IDSymbol name="i6" value="7" />
+      <IDSymbol name="i7" value="8" />
+      <IDSymbol name="i8" value="9" />
+      <IDSymbol name="i9" value="10" />
     </GuidSymbol>
   </Symbols>
 </CommandTable>
-

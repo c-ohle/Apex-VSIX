@@ -61,46 +61,72 @@ namespace csg3mf
         case 5103: //SendToBack:  
         case 5102: //BringToFront
           return OnOrder(id, test);
-          //case 5104: return 1; //InsertObject
+        //case 5104: return 1; //InsertObject
+        case 2755: //combo driver
+        case 2756: return comboDriver(id, test);
+        case 2757: //combo samples
+        case 2758: return comboSamples(id, test);
       }
-      if (id >= 2751 && id <= 2754) //driver
-      {
-        if (test is IntPtr p)
-        {
-          var ii = (int*)p.ToPointer(); var s = driver[2 + ((id - 2751) << 1)]; ii[0] = 1;
-          fixed (char* ps = s) Native.memcpy(ii + 3, ps, (void*)((ii[1] = Math.Min(s.Length, ii[2] - 1) + 1) << 1)); return 1;
-        }
-        if (driver == null) driver = Factory.Devices.Split('\n');
-        if (((driver.Length - 1) >> 1) <= id - 2751) return -1;
-        if (test != null) return 0x80 | ((int.Parse(driver[0]) == int.Parse(driver[1 + ((id - 2751) << 1)])) ? 3 : 1);
-        var di = uint.Parse(driver[1 + ((id - 2751) << 1)]); Factory.SetDevice(di); driver = null; samples = null;
-        drvsettings = (drvsettings >> 32 << 32) | di;
-        Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
-        return 1;
-      }
-      if (id >= 2701 && id <= 2716) //samples
-      {
-        if (samples == null) samples = view.Samples.Split('\n'); id -= 2700;
-        int i = 1; for (; i < samples.Length && int.Parse(samples[i]) != id; i++) ;
-        if (i == samples.Length) return -1;
-        if (test != null) return int.Parse(samples[0]) == id ? 3 : 1;
-        view.Samples = id.ToString(); samples = null;
-        drvsettings = (drvsettings & 0xffffffff) | ((long)id << 32);
-        Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
-
-        return 1;
-      }
+      //if (id >= 2751 && id <= 2754) //driver
+      //{
+      //  if (test is IntPtr p)
+      //  {
+      //    var ii = (int*)p.ToPointer(); var s = driver[2 + ((id - 2751) << 1)]; ii[0] = 1;
+      //    fixed (char* ps = s) Native.memcpy(ii + 3, ps, (void*)((ii[1] = Math.Min(s.Length, ii[2] - 1) + 1) << 1)); return 1;
+      //  }
+      //  if (driver == null) driver = Factory.Devices.Split('\n');
+      //  if (((driver.Length - 1) >> 1) <= id - 2751) return -1;
+      //  if (test != null) return 0x80 | ((int.Parse(driver[0]) == int.Parse(driver[1 + ((id - 2751) << 1)])) ? 3 : 1);
+      //  var di = uint.Parse(driver[1 + ((id - 2751) << 1)]); Factory.SetDevice(di); driver = null; samples = null;
+      //  drvsettings = (drvsettings >> 32 << 32) | di;
+      //  Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
+      //  return 1;
+      //}
+      //if (id >= 2701 && id <= 2716) //samples
+      //{
+      //  if (samples == null) samples = view.Samples.Split('\n'); id -= 2700;
+      //  int i = 1; for (; i < samples.Length && int.Parse(samples[i]) != id; i++) ;
+      //  if (i == samples.Length) return -1;
+      //  if (test != null) return int.Parse(samples[0]) == id ? 3 : 1;
+      //  view.Samples = id.ToString(); samples = null;
+      //  drvsettings = (drvsettings & 0xffffffff) | ((long)id << 32);
+      //  Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
+      //  return 1;
+      //}
       if (id >= 2401 && id <= 2409) //tools
       {
-        if (idtool == id - 2401) return 3;
+        if (toolid == id - 2401) return 3;
         if (test != null) return 1;
-        idtool = id - 2401; return 1;
+        toolid = id - 2401; return 1;
       }
       return -1;
     }
+    int toolid;
 
-    int idtool;
-
+    int comboDriver(int id, object test)
+    {
+      if (!(test is object[] a)) return 1;
+      if (driver == null) driver = Factory.Devices.Split('\n');
+      if (id == 2755) { a[1] = driver.Where((p, i) => i != 0 && (i & 1) == 0).ToArray(); return 1; }
+      if (a[0] == null) { a[1] = driver[Array.IndexOf(driver, driver[0], 1) + 1]; return 1; }
+      var x = (int)a[0];
+      var di = uint.Parse(driver[1 + (x << 1)]); Factory.SetDevice(di); driver = null; samples = null;
+      drvsettings = (drvsettings >> 32 << 32) | di;
+      Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
+      return 1;
+    }
+    int comboSamples(int id, object test)
+    {
+      if (!(test is object[] a)) return 1;
+      if (samples == null) samples = view.Samples.Split('\n');
+      if (id == 2757) { a[1] = samples.Skip(1).ToArray(); return 1; }
+      if (a[0] == null) { a[1] = samples[0]; return 1; }
+      var s = (string)a[0]; view.Samples = s; samples = null;
+      drvsettings = (drvsettings & 0xffffffff) | ((long)int.Parse(s) << 32);
+      Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
+      return 1;
+    }
+    
     int OnDelete(object test)
     {
       if (scene.SelectionCount == 0) return 0;

@@ -42,9 +42,9 @@ namespace csg3mf
       return 0;
     }
     [EnvironmentPermission(SecurityAction.Demand, Unrestricted = true)]
-    int IVsEditorFactory.CreateEditorInstance(uint grfCreateDoc, string pszMkDocument, 
-      string pszPhysicalView, IVsHierarchy pvHier, uint itemid, IntPtr punkDocDataExisting, 
-      out IntPtr ppunkDocView, out IntPtr ppunkDocData, out string pbstrEditorCaption, 
+    int IVsEditorFactory.CreateEditorInstance(uint grfCreateDoc, string pszMkDocument,
+      string pszPhysicalView, IVsHierarchy pvHier, uint itemid, IntPtr punkDocDataExisting,
+      out IntPtr ppunkDocView, out IntPtr ppunkDocData, out string pbstrEditorCaption,
       out Guid pguidCmdUI, out int pgrfCDW)
     {
       pguidCmdUI = default; ppunkDocView = default; ppunkDocData = default; pgrfCDW = default; pbstrEditorCaption = default;
@@ -139,14 +139,22 @@ namespace csg3mf
     protected override void Initialize()
     {
       //base.Initialize();
-      var frame = (IVsWindowFrame)base.GetService(typeof(SVsWindowFrame));
-      frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out var t);
-      var host = t as IVsToolWindowToolbarHost;
-      host.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, Guids.CmdSet, 0x1002);
-    
+      var host = gettbh(); host.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, Guids.CmdSet, 0x1002); tbon = true;
       if (toolbox != null) return;
       toolbox = (IVsToolbox)GetService(typeof(SVsToolbox));
       toolbox.RegisterDataProvider(new ToolboxDataProvider { toolbox = toolbox }, out var id);
+    }
+    bool tbon;
+    internal void tbonoff()
+    {
+      var host = gettbh(); var guid = Guids.CmdSet;
+      tbon = !tbon; host.ShowHideToolbar(ref guid, 0x1002, tbon ? 1 : 0);
+    }
+    IVsToolWindowToolbarHost gettbh()
+    {
+      var frame = (IVsWindowFrame)base.GetService(typeof(SVsWindowFrame));
+      frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out var t);
+      return t as IVsToolWindowToolbarHost;
     }
 
     CDXView view; string fileName;
@@ -220,7 +228,7 @@ namespace csg3mf
     int IVsPersistDocData.Close()
     {
       //if (view != null) { view.Dispose(); view = null; }
-      return 0; 
+      return 0;
     }
     int IVsPersistDocData.OnRegisterDocData(uint docCookie, IVsHierarchy pHierNew, uint itemidNew)
     {
@@ -283,7 +291,7 @@ namespace csg3mf
     {
       if (prgCmds == null || cCmds != 1) return VSConstants.E_INVALIDARG;
       var id = transcmd(guid, (int)prgCmds[0].cmdID);
-      if (id == 0) return -2147221248; //OLECMDERR_E_NOTSUPPORTED
+      if (id == 0) return -2147221248; //OLECMDERR_E_NOTSUPPORTED 
       var fl = view.OnCommand(id, this); if (fl == -1) return -2147221248;
       if ((fl & 0x80) != 0) view.OnCommand(id, pCmdText);
       //OLECMDF_SUPPORTED = 0x1, OLECMDF_ENABLED = 0x2, OLECMDF_LATCHED = 0x4, OLECMDF_NINCHED = 0x8, OLECMDF_INVISIBLE = 0x10, OLECMDF_DEFHIDEONCTXTMENU = 0x20
@@ -294,12 +302,17 @@ namespace csg3mf
     {
       var id = transcmd(guid, (int)nCmdID);
       if (id == 0) return -2147221248; //OLECMDERR_E_NOTSUPPORTED
-      try { view.OnCommand(id, null); } // view.Invalidate(Inval.Render); }
+      try
+      {
+        var a = pvaIn != IntPtr.Zero || pvaOut != IntPtr.Zero ? (exa2 ?? (exa2 = new object[2])) : null;
+        if (a != null) { a[0] = pvaIn != IntPtr.Zero ? Marshal.GetObjectForNativeVariant(pvaIn) : null; a[1] = null; }
+        view.OnCommand(id, a);
+        if (pvaOut != IntPtr.Zero && a[1] != null) Marshal.GetNativeVariantForObject(a[1], pvaOut);
+      }
       catch (Exception e) { view.MessageBox(e.Message); }
       return 0;
     }
-
-    internal CDXView.TreeView treeview;
+    internal CDXView.TreeView treeview; static object[] exa2;
     int IVsDocOutlineProvider.GetOutlineCaption(VSOUTLINECAPTION nCaptionType, out string pbstrCaption)
     {
       pbstrCaption = null; return 0; //caption TreeView
@@ -485,7 +498,7 @@ namespace csg3mf
       if (id != 0) { edit.OnCommand(id, null); return 0; }
       return -2147221248;
     }
-    
+
   }
 
 }

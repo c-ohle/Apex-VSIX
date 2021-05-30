@@ -14,7 +14,11 @@ namespace csg3mf
       internal CDXView view; TreeNode newsel; bool invok;
       protected override void WndProc(ref Message m)
       {
-        if (m.Msg == 0x000F) update(); //WM_PAINT
+        switch (m.Msg)
+        {
+          case 0x000F: update(); break;//WM_PAINT
+          case 0x007B: view.ShowContextMenu(this, 0x2104, m.LParam); return;
+        }
         base.WndProc(ref m);
       }
       internal void inval() { invok = false; Invalidate(); }
@@ -143,8 +147,8 @@ namespace csg3mf
       protected override void OnMouseUp(MouseEventArgs e)
       {
         base.OnMouseUp(e);
-        if (e.Button == MouseButtons.Right)
-          view.ShowContextMenu(0x2104);
+        //if (e.Button == MouseButtons.Right)
+        //  view.ShowContextMenu(0x2104);
       }
       protected override void OnKeyDown(KeyEventArgs e)
       {

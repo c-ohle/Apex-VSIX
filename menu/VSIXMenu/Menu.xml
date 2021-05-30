@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Root>
+  <ContextMenu name="3DView" id="0x2100" >
+    <SubMenu text="Navigation">
+      <MenuItem text="Camera move horizontal -> Ctrl+Click" id="6200" />
+      <MenuItem text="Camera move vertical -> Ctrl+Shift+Click" id="6201" />
+      <MenuItem text="Camera rotate -> Alt+Click" id="6203" />
+      <MenuItem text="Camera inclination -> Ctrl+Shift+Click" id="6204" /> 
+      <Seperator/>
+      <MenuItem text="Center" id="2300" img="1" keys="Control|W|C" />
+      <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
+    </SubMenu>
+    <SubMenu text="Edit">
+      <MenuItem id="cmdidCut" />
+      <MenuItem id="cmdidCopy" />
+      <MenuItem id="cmdidPaste" />
+      <MenuItem id="cmdidDelete" />
+      <Seperator/>
+      <MenuItem text="Group" id="2035" keys="Control|W|G" />
+      <MenuItem text="Ungroup" id="2036" keys="Control|W|U" />
+      <Seperator/>
+      <MenuItem text="Union" id="2301" keys="Control|E|U" />
+      <MenuItem text="Intersection" id="2302" keys="Control|E|I" />
+      <MenuItem text="Difference" id="2303" keys="Control|E|D" />
+      <MenuItem text="PlaneCut" id="2304" keys="Control|E|P" />
+    </SubMenu>
+    <SubMenu text="View">
+      <MenuItem text="Shadows" id="2220" />
+      <MenuItem text="Checkboard" id="2320" />
+      <Seperator/>
+      <Combo text="Graphics" idlist="2755" id="2756" width="150" type="IndexCombo"/>
+      <Combo text="MultiSamples" idlist="2757" id="2758" width="30" type="DynamicCombo" />
+    </SubMenu>
+    <SubMenu text="Select Style">
+      <MenuItem text="Box" id="2210" />
+      <MenuItem text="Pivot" id="2211" />
+      <MenuItem text="Normals" id="2212" />
+      <MenuItem text="Wireframe" id="2213" />
+      <MenuItem text="Outline" id="2214" />
+    </SubMenu>
+    <!--
+    <SubMenu text="Graphics">
+      <Combo text="Driver" idlist="2755" id="2756" width="150" type="IndexCombo"/>
+      <Combo text="MultiSamples" idlist="2757" id="2758" width="30" type="DynamicCombo" />
+      <MenuItem text="Driver 1" id="2751" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 2" id="2752" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 3" id="2753" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 4" id="2754" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <Seperator/>
+      <MenuItem text="Samples 1" id="2701" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 2" id="2702" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 4" id="2704" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 8" id="2708" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 16" id="2716" fl="DefaultInvisible|DynamicVisibility"/>
+    </SubMenu>
+      -->
+    <Seperator/>
+    <MenuItem text="Center" id="2300" img="1" keys="Control|W|C" />
+    <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
+    <Seperator/>
+    <MenuItem text="Script" id="2037" />
+    <MenuItem id="cmdidToolbox" />
+    <MenuItem id="cmdidDocOutlineWindow" />
+    <MenuItem id="cmdidPropertiesWindow" />
+  </ContextMenu>
+  <ContextMenu name="Tree" id="0x2104" >
+    <MenuItem id="cmdidCut" />
+    <MenuItem id="cmdidCopy" />
+    <MenuItem id="cmdidPaste" />
+    <Seperator/>
+    <MenuItem id="cmdidBringToFront" />
+    <MenuItem id="cmdidSendToBack" />
+    <Seperator/>
+    <MenuItem text="Group" id="2035" />
+    <MenuItem text="Ungroup" id="2036" />
+    <Seperator/>
+    <MenuItem text="Center" id="2300" />
+  </ContextMenu>  
+  <ContextMenu name="Script" id="0x2101" >
+    <MenuItem id="cmdidStart" />
+    <MenuItem id="cmdidStepOver" />
+    <MenuItem id="cmdidStepInto" />
+    <MenuItem id="cmdidStepOut" />
+    <MenuItem id="cmdidToggleBreakpoint" />
+    <MenuItem id="cmdidStop" />
+    <Seperator/>
+    <MenuItem id="cmdidCut" />
+    <MenuItem id="cmdidCopy" />
+    <MenuItem id="cmdidPaste" />
+    <Seperator/>
+    <MenuItem id="cmdidPropertiesWindow" />
+  </ContextMenu>
+
+  <ToolWindowToolbar name="Toolbar3D" id="0x1002" >
+    <MenuItem text="Tool1" id="2401" img="0"/>
+    <MenuItem text="Tool2" id="2402" img="1"/>
+    <MenuItem text="Tool3" id="2403" img="2"/>
+    <MenuItem text="Tool4" id="2404" img="3"/>
+    <MenuItem text="Tool5" id="2405" img="4"/>
+    <MenuItem text="Tool6" id="2406" img="5"/>
+    <MenuItem text="Tool7" id="2407" img="6"/>
+    <MenuItem text="Tool8" id="2408" img="7"/>
+    <MenuItem text="Tool9" id="2409" img="8"/>
+    <Seperator/>
+    <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
+    <Seperator/>
+    <MenuItem id="cmdidCut" />
+    <MenuItem id="cmdidCopy" />
+    <MenuItem id="cmdidPaste" />
+    <Seperator/>
+    <Combo text="Driver" idlist="2755" id="2756" width="100" type="IndexCombo"/>
+    <Combo text="Samples" idlist="2757" id="2758" width="30" type="DynamicCombo" _t="DropDownCombo|DynamicCombo|IndexCombo|MRUCombo|AppID|Shared"/>
+    <Seperator/>
+    <MenuItem id="cmdidPropertiesWindow" />
+  </ToolWindowToolbar>
+
+  <Toolbar text="Apex 3D Toolbar" id="0x1003" >
+    <MenuItem text="Tool1" id="2401" img="0"/>
+    <MenuItem text="Tool2" id="2402" img="1"/>
+    <MenuItem text="Tool3" id="2403" img="2"/>
+    <MenuItem text="Tool4" id="2404" img="3"/>
+    <MenuItem text="Tool5" id="2405" img="4"/>
+    <MenuItem text="Tool6" id="2406" img="5"/>
+    <MenuItem text="Tool7" id="2407" img="6"/>
+    <MenuItem text="Tool8" id="2408" img="7"/>
+    <MenuItem text="Tool9" id="2409" img="8"/>
+    <MenuItem id="cmdidCut" />
+    <MenuItem id="cmdidCopy" />
+    <MenuItem id="cmdidPaste" />
+    <Seperator/>
+    <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
+    <Combo text="Collisions Options" idlist="12345" id="12346" width="100" _fl="DynamicVisibility"
+           type="DynamicCombo" _t="DropDownCombo|DynamicCombo|IndexCombo|MRUCombo|AppID|Shared"/>
+    <Seperator/>
+    <SubMenu text="Select Style">
+      <MenuItem text="Box" id="2210" />
+      <MenuItem text="Pivot" id="2211" />
+      <MenuItem text="Normals" id="2212" />
+      <MenuItem text="Wireframe" id="2213" />
+      <MenuItem text="Outline" id="2214" />
+    </SubMenu>
+    <!--
+    <SubMenu text="Graphics Driver">
+      <MenuItem text="Driver 1" id="2751" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 2" id="2752" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 3" id="2753" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 4" id="2754" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <Seperator/>
+      <MenuItem text="Samples 1" id="2701" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 2" id="2702" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 4" id="2704" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 8" id="2708" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 16" id="2716" fl="DefaultInvisible|DynamicVisibility"/>
+    </SubMenu>
+    -->
+    <Seperator/>
+    <MenuItem id="cmdidPropertiesWindow" />
+  </Toolbar>
+
+</Root>

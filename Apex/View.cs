@@ -286,15 +286,27 @@ namespace csg3mf
       };
     }
 
-    void ShowContextMenu(int id)
+    static int ctxon;
+    void ShowContextMenu(Control wnd, int id, IntPtr lParam)
     {
-      var uishell = pane.GetService<SVsUIShell, IVsUIShell>();
-      if (uishell == null) return;
-      var pt = Cursor.Position;
-      var pnts = new[] { new POINTS { x = (short)pt.X, y = (short)pt.Y } };
-      var guid = Guids.CmdSet; Enabled = false;
-      var hr = uishell.ShowContextMenu(0, ref guid, id, pnts, pane); Enabled = true;
-      Focus();
+      var l = lParam.ToInt32();
+      if (l == -1)
+      {
+        if (Environment.TickCount - ctxon < 100) return; 
+        var p = wnd.PointToScreen(new System.Drawing.Point());
+        ((short*)&l)[0] = (short)p.X;
+        ((short*)&l)[1] = (short)p.Y;
+      }
+      else if (wnd == this)
+      {
+        var p = mainover();
+        if (p != null && !p.IsSelect) { p.Select(); Invalidate(Inval.Select); }
+      }
+      var shell = pane.GetService<SVsUIShell, IVsUIShell>();
+      var guid = Guids.CmdSet;
+      var pnts = new[] { new POINTS { x = ((short*)&l)[0], y = ((short*)&l)[1] } };
+      shell.ShowContextMenu(0, ref guid, id, pnts, pane);
+      ctxon = Environment.TickCount;
     }
 
     internal int OnInfo(object test)
