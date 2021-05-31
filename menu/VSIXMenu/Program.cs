@@ -70,11 +70,17 @@ namespace VSIXMenu
                   ));
                 continue;
               }
-              var iid = (string)e.Attribute("id"); var siid = '_' + iid;
+              var iid = (string)e.Attribute("id");
+              if (iid == null)
+              {
+                var gid = freeid++; var sgid = "_" + gid; iid = gid.ToString();
+                cmds.Add(new XElement(ns + "IDSymbol", new XAttribute("name", sgid), new XAttribute("value", gid)));
+              }
+              var siid = '_' + iid;
               if (!cmds.Elements().Any(p => (string)p.Attribute("value") == iid))
                 cmds.Add(new XElement(ns + "IDSymbol", new XAttribute("name", siid), new XAttribute("value", iid)));
               var btn = new XElement(ns + "Button", new XAttribute("guid", "g2"),
-                new XAttribute("id", siid), new XAttribute("type", "Button"), new XAttribute("priority", pri++),
+                new XAttribute("id", siid), new XAttribute("type", (string)e.Attribute("type") ?? "Button"), new XAttribute("priority", pri++),
                 new XElement(ns + "Parent", new XAttribute("guid", "g2"),
                   new XAttribute("id", (string)group.Attribute("id"))));
               buttons.Add(btn);
@@ -116,7 +122,7 @@ namespace VSIXMenu
               menus.Add(new XElement(ns + "Menu",
                 new XAttribute("guid", "g2"),
                 new XAttribute("id", sgid),
-                new XAttribute("type", "Menu"), new XAttribute("priority", pri++),
+                new XAttribute("type", (string)e.Attribute("type") ?? "Menu"), new XAttribute("priority", pri++),
                 new XElement(ns + "Parent", new XAttribute("guid", "g2"),
                   new XAttribute("id", (string)group.Attribute("id"))),
                 new XElement(ns + "Strings",
@@ -127,7 +133,7 @@ namespace VSIXMenu
             {
               //var cid = freeid++; var scid = "_" + cid;
               //cmds.Add(new XElement(ns + "IDSymbol", new XAttribute("name", scid), new XAttribute("value", cid)));
-              
+
               var iid = (string)e.Attribute("id"); var siid = '_' + iid;
               if (!cmds.Elements().Any(p => (string)p.Attribute("value") == iid))
                 cmds.Add(new XElement(ns + "IDSymbol", new XAttribute("name", siid), new XAttribute("value", iid)));

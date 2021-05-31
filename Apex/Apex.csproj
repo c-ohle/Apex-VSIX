@@ -64,6 +64,7 @@
     <Compile Include="CDXScript.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="ToolsToolWindow.cs" />
     <Compile Include="Trash.cs" />
     <Compile Include="View.Command.cs">
       <SubType>UserControl</SubType>

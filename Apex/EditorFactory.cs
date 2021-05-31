@@ -139,23 +139,23 @@ namespace csg3mf
     protected override void Initialize()
     {
       //base.Initialize();
-      var host = gettbh(); host.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, Guids.CmdSet, 0x1002); tbon = true;
+      //var host = gettbh(); host.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, Guids.CmdSet, 0x1002); tbon = true;
       if (toolbox != null) return;
       toolbox = (IVsToolbox)GetService(typeof(SVsToolbox));
       toolbox.RegisterDataProvider(new ToolboxDataProvider { toolbox = toolbox }, out var id);
     }
-    bool tbon;
-    internal void tbonoff()
-    {
-      var host = gettbh(); var guid = Guids.CmdSet;
-      tbon = !tbon; host.ShowHideToolbar(ref guid, 0x1002, tbon ? 1 : 0);
-    }
-    IVsToolWindowToolbarHost gettbh()
-    {
-      var frame = (IVsWindowFrame)base.GetService(typeof(SVsWindowFrame));
-      frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out var t);
-      return t as IVsToolWindowToolbarHost;
-    }
+    //bool tbon;
+    //internal void tbonoff()
+    //{
+    //  var host = gettbh(); var guid = Guids.CmdSet;
+    //  tbon = !tbon; host.ShowHideToolbar(ref guid, 0x1002, tbon ? 1 : 0);
+    //}
+    //IVsToolWindowToolbarHost gettbh()
+    //{
+    //  var frame = (IVsWindowFrame)base.GetService(typeof(SVsWindowFrame));
+    //  frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out var t);
+    //  return t as IVsToolWindowToolbarHost;
+    //}
 
     CDXView view; string fileName;
     static IVsToolbox toolbox;
@@ -354,6 +354,7 @@ namespace csg3mf
     }
   }
 
+ 
   [Guid("381f778f-1111-4f04-88dd-241de0ad3e71")]
   public class ScriptToolWindowPane : ToolWindowPane, IVsSelectionEvents, IOleCommandTarget//IVsFindTarget
   {
@@ -379,7 +380,7 @@ namespace csg3mf
     public override IWin32Window Window => host;
     public ScriptToolWindowPane() : base(null)
     {
-      this.Caption = "Script";
+      this.Caption = "Apex Script";
       using (DpiAwareness.EnterDpiScope(DpiAwarenessContext.SystemAware))
         host = new UserControl();
       //this.ToolBar = new CommandID(Guids.CmdSet, 0x1000);

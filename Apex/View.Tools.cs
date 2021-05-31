@@ -215,12 +215,12 @@ namespace csg3mf
         //case Keys.O: test(); return;
         //case Keys.Tab: pane.tbonoff(); return;
         //case Keys.Apps: onapps(); return;
-        case Keys.S:
+        //case Keys.S:
         case Keys.Space: tool = camera_movxy2(3); break;
-        case Keys.Shift | Keys.S:
+        //case Keys.Shift | Keys.S:
         case Keys.Shift | Keys.Space: tool = camera_movz(); break;
-        case Keys.A: tool = camera_rotz(null); Cursor = Cursors.SizeWE; break;
-        case Keys.Shift | Keys.A: tool = camera_rotx(); Cursor = Cursors.SizeNS; break;
+        case Keys.A: tool = camera_rotz(null); break;
+        case Keys.Shift | Keys.A: tool = camera_rotx(); break;
         case Keys.Q: { var p = mainover(); if (p == null || !p.IsSelect) p = mainselect(); if (p != null) tool = camera_rotz(p); } break;
         case Keys.W: { tool = camera_free2(); Cursor = Cursors.SizeAll; } break;
 
@@ -289,7 +289,7 @@ namespace csg3mf
         case Keys.Shift: tool = cam ? camera_movz() : obj_movz(main); break;
         case Keys.Alt: tool = cam ? camera_rotz(null) : obj_rotz(main); break;
         case Keys.Control | Keys.Shift: tool = cam ? camera_rotx() : obj_rot(main, 0); break;
-        case Keys.Control | Keys.Alt: tool = cam && mainselect() != null ? camera_rotz(mainselect()) : obj_rot(main, 1); break;
+        case Keys.Control | Keys.Alt: tool = cam && mainselect() != null ? camera_rotz(mainselect()) : main != null?obj_rot(main, 1) : null; break;
         case Keys.Control | Keys.Alt | Keys.Shift: if (cam && main != null) { main.Select(); Invalidate(Inval.Select); } else tool = obj_rot(main, 2); break;
         default: tool = tool_select(); break;
       }
@@ -453,7 +453,7 @@ namespace csg3mf
     }
     Action<int> camera_rotz(INode prot)
     {
-      var cam = view.Camera; var m = cam.Transform;
+      var cam = view.Camera; var m = cam.Transform; Cursor = Cursors.SizeWE;
       var rot = (prot ?? cam).GetTransform(null).mp;
       var wp = overwp(); var mp = new float3(rot.x, rot.y, wp.z);
       view.SetPlane(mp);
@@ -478,7 +478,7 @@ namespace csg3mf
     }
     Action<int> camera_rotx()
     {
-      var camera = view.Camera; var m = camera.GetTransform();
+      var camera = view.Camera; var m = camera.GetTransform(); Cursor = Cursors.SizeNS;
       view.SetPlane(m * m.mz); var p1 = view.PickPlane(); var p2 = p1; //var mover = move(camera);
       return id =>
       {

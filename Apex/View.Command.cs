@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -56,6 +57,8 @@ namespace csg3mf
         case 2330://Collision
           if (test != null) return (flags & 2) != 0 ? 3 : 1;
           flags ^= 2; return 1;
+
+        case 2340: return OnTools(test);
         case 5100: //BringForward:
         case 5101: //SendBackward:
         case 5103: //SendToBack:  
@@ -99,8 +102,21 @@ namespace csg3mf
         if (test != null) return 1;
         toolid = id - 2401; return 1;
       }
+      if (id >= 6200 && id <= 6250)
+      {
+        return 1;
+      }
       return -1;
     }
+
+    int OnTools(object test)
+    {
+      if (test != null) return 1;
+      var p = CDXPackage.Package.FindToolWindow(typeof(ToolsToolWindowPane), 0, true);
+      if (p.Frame is Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame f) f.Show();
+      return 1;
+    }
+    
     int toolid;
 
     int comboDriver(int id, object test)
@@ -126,7 +142,7 @@ namespace csg3mf
       Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
       return 1;
     }
-    
+
     int OnDelete(object test)
     {
       if (scene.SelectionCount == 0) return 0;
