@@ -12,12 +12,106 @@ namespace csg3mf
 {
   unsafe partial class CDXView : UserControl
   {
-    //static void DisableBlockPrecisionTrackpad()
-    //{
-    //  Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\PrecisionTouchPad", true);
-    //  RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\PrecisionTouchPad", true);
-    //  key.SetValue("AAPThreshold", "0", RegistryValueKind.DWord);
-    //}
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+      if (tool != null || view == null || view.Camera == null) return;
+      Focus();
+      var main = mainover();
+      if (main != null && main.Tag is Node n)
+      {
+        var ft = n.GetMethod<Func<IView, Action<int>>>();
+        if (ft != null) try { tool = ft(view); } catch { }
+      }
+      if (tool == null)
+      {
+        var k = ModifierKeys | (
+          e.Button == MouseButtons.Left ? Keys.LButton :
+          e.Button == MouseButtons.Right ? Keys.RButton :
+          e.Button == MouseButtons.Middle ? Keys.MButton : 0);
+        var f = main == null || main.IsStatic ? ToolFlags.GroundClick : ToolFlags.ObjectClick;
+        var a = ToolProvider.kvs; int i = 0; for (; i < a.Length && !(a[i].k == k && a[i].f == f); i++) ;
+        if (i < a.Length) tool = id2tool(a[i].i, main);
+        if (tool == null && main != null && main.IsStatic && k == (Keys.LButton | Keys.Control | Keys.Alt | Keys.Shift)) { main.Select(); Invalidate(Inval.Select); }
+      }
+      if (tool == null) return; Capture = true; Invalidate();
+    }
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+      //Debug.WriteLine(Capture);
+      if (tool != null) { tool(0); Invalidate(); return; }
+      var id = view != null ? view.MouseOverId : 0;
+      Cursor =
+        (id & 0x1000) != 0 ? Cursors.Cross :
+        (id & 0x8000) != 0 ? Cursors.UpArrow :
+        Cursors.Default;
+      //Debug.WriteLine(view.MouseOverNode + " " + view.MouseOverPoint);
+    }
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+      if (tool == null) return;
+      var t = tool; tool = null; Capture = false; t(1); Invalidate(Inval.Properties);
+    }
+    protected override void OnLostFocus(EventArgs e)
+    {
+      if (tool == null) return;
+      tool(1); tool = null; Invalidate();
+    }
+
+    protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e) { }
+    protected override void OnKeyPress(KeyPressEventArgs e) { }
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+      if (tool != null || view == null || view.Camera == null) return;
+      var main = mainover();
+      var k = e.KeyCode | e.Modifiers;
+      var f = main != null && main.IsSelect ? ToolFlags.TouchpadSelection | ToolFlags.TouchpadAlways : ToolFlags.TouchpadAlways | ToolFlags.TouchpadGround;
+      var a = ToolProvider.kvs; int i = 0; for (; i < a.Length && !(a[i].k == k && (a[i].f & f) != 0); i++) ;
+      if (i < a.Length) tool = id2tool(a[i].i, main);
+      if (tool != null) { Capture = true; Invalidate(); }
+      //var k = e.KeyData;
+      ////var num=IsKeyLocked(Keys.NumLock); if(num) { }
+      //var caps = IsKeyLocked(Keys.CapsLock); //if (caps) { }
+      //if (caps) { k |= Keys.Shift; }
+    }
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+      if (tool == null) return;
+      if ((MouseButtons & (MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle)) != 0) return;
+      OnMouseUp(null);
+    }
+
+    void OnScroll(int xdelta, int ydelta)
+    {
+      if (tool != null) return;
+      var t = Environment.TickCount;
+      if (t - lastzoom < 250) return;
+      var m = view.Camera.Transform;
+      for (int i = 0; i < 5; i++)
+      {
+        view.Camera.Transform = xdelta != 0 ?
+          m * -m.mp * RotationZ(i * xdelta * -0.00004f) * m.mp :
+          RotationX(i * ydelta * -0.00004f) * m;
+        Invalidate(); Update();
+      }
+      if (t - lastwheel > 500) AddUndo(undo(view.Camera, m)); lastwheel = t;
+    }
+    void OnMouseWheel(int delta)
+    {
+      if (tool != null) return;
+      var t = Environment.TickCount;
+      var wp = overwp();
+      var m = view.Camera.Transform;
+      var v = wp - m.mp;
+      var l = v.Length;
+      var d = (v.Normalize() * (l * 0.1f * delta * (1f / 120)));
+      for (int i = 0; i < 5; i++)
+      {
+        view.Camera.Transform = m * (d * (i * 0.2f));
+        Invalidate(); Update();
+      }
+      if (t - lastwheel > 500) AddUndo(undo(view.Camera, m)); lastwheel = lastzoom = t;
+    }
+    static int lastwheel, lastzoom;
 
     class CollCtrl
     {
@@ -156,6 +250,52 @@ namespace csg3mf
       internal void End() => setbox(false);
     }
 
+    Action<int> tool;
+    INode mainselect()
+    {
+      var sc = scene.SelectionCount;
+      return sc != 0 ? scene.GetSelection(sc - 1) : null;
+    }
+    INode mainover()
+    {
+      var p = view.MouseOverNode; if (p == null) return null;
+      for (INode t; !p.IsSelect && (t = p.Parent as INode) != null; p = t) ; return p;
+    }
+    float3 overwp()
+    {
+      var p = view.MouseOverPoint; var t = view.MouseOverNode;
+      if (t != null) p *= t.GetTransform(null); return p;
+    }
+
+    Action<int> id2tool(ToolEnum id, INode main)
+    {
+      switch (id)
+      {
+        case ToolEnum.SelectRect: return tool_select();
+        case ToolEnum.CameraMoveHorizontal: return camera_movxy();
+        case ToolEnum.CameraMoveVertical: return camera_movz();
+        case ToolEnum.CameraRotateHorizontal: return camera_rotz(null);
+        case ToolEnum.CameraRotateVerical: return camera_rotx();
+        case ToolEnum.CameraRotateDirectional: return camera_free2();
+        case ToolEnum.CameraMoveXAxis: return camera_movxy2(1);
+        case ToolEnum.CameraMoveYAxis: return camera_movxy2(2);
+        case ToolEnum.CameraMoveZAxis: return camera_movz();  //CameraMoveVertical
+        case ToolEnum.CameraSelectionRotateHorizontal: return camera_rotz(mainselect());
+        case ToolEnum.CameraSelectionRotateVertical: break;
+        case ToolEnum.ObjectMoveHorizontal: return obj_movxy(main);
+        case ToolEnum.ObjectMoveVertical: return obj_movz(main);
+        case ToolEnum.ObjectDragDrop: return obj_drag(main);
+        case ToolEnum.ObjectRotateHorizontal: return obj_rotz(main);
+        case ToolEnum.ObjectMoveXAxis: return obj_movxy2(main, 1);
+        case ToolEnum.ObjectMoveYAxis: return obj_movxy2(main, 2);
+        case ToolEnum.ObjectMoveZAxis: return obj_movxy2(main, 3);
+        case ToolEnum.ObjectRotateXAxis: return obj_rot(main, 0);
+        case ToolEnum.ObjectRotateYAxis: return obj_rot(main, 1);
+        case ToolEnum.ObjectRotateZAxis: return obj_rot(main, 2);
+      }
+      return null;
+    }
+
     Action<int, float4x3> getmover(bool coll)
     {
       var pp = view.Scene.Selection().ToArray();
@@ -174,199 +314,9 @@ namespace csg3mf
       };
     }
 
-    // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad\AAPThreshold 2
-    //[DllImport("user32.dll")]
-    //static extern short GetKeyState(Keys key);
-    //[DllImport("User32.dll")]
-    //static extern short GetAsyncKeyState(Keys k);
-    //static bool IsPressed(Keys k) => (GetAsyncKeyState(k) & 1) != 0;
-    //static void test()
-    //{
-    // //var val = Registry.GetValue("HKEY_CURRENT_USER" + '\\' +
-    // //  "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad",
-    // //  "AAPThreshold", null);
-    // //if (val is int i && i != 0)
-    // //{
-    // //  Registry.SetValue("HKEY_CURRENT_USER" + '\\' +
-    // //    "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad",
-    // //    "AAPThreshold", 0);
-    // //  System.Windows.Input.Mouse.PrimaryDevice.Synchronize();
-    // //  System.Windows.Input.Mouse.PrimaryDevice.UpdateCursor();
-    // //}
-    // //var t1 = System.Windows.Input.Mouse.PrimaryDevice.ActiveSource;
-    // //var t2 = t1 as System.Windows.Interop.HwndSource;
-    // //var t3 = t2.ChildKeyboardInputSinks.ToArray();
-    // ////var t2 = t1.GetType().GetProperty("ChildKeyboardInputSinks",
-    // ////  System.Reflection.BindingFlags.Instance| System.Reflection.BindingFlags.NonPublic);
-    // //t3[2].KeyboardInputSite = null;
-    //}
-
-    protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e) { }
-    protected override void OnKeyPress(KeyPressEventArgs e) { }
-    protected override void OnKeyDown(KeyEventArgs e)
-    {
-      var k = e.KeyData;
-      if (tool != null || view == null || view.Camera == null) return;
-      //var num=IsKeyLocked(Keys.NumLock); if(num) { }
-      var caps = IsKeyLocked(Keys.CapsLock); //if (caps) { }
-      if (caps) { k |= Keys.Shift; }
-      switch (k)
-      {
-        //case Keys.O: test(); return;
-        //case Keys.Tab: pane.tbonoff(); return;
-        //case Keys.Apps: onapps(); return;
-        //case Keys.S:
-        case Keys.Space: tool = camera_movxy2(3); break;
-        //case Keys.Shift | Keys.S:
-        case Keys.Shift | Keys.Space: tool = camera_movz(); break;
-        case Keys.A: tool = camera_rotz(null); break;
-        case Keys.Shift | Keys.A: tool = camera_rotx(); break;
-        case Keys.Q: { var p = mainover(); if (p == null || !p.IsSelect) p = mainselect(); if (p != null) tool = camera_rotz(p); } break;
-        case Keys.W: { tool = camera_free2(); Cursor = Cursors.SizeAll; } break;
-
-        case Keys.X: { var p = mainover(); if (p != null && p.IsSelect) { tool = obj_movxy2(p, 1); break; } tool = camera_movxy2(1); } break;
-        case Keys.Y: { var p = mainover(); if (p != null && p.IsSelect) { tool = obj_movxy2(p, 2); break; } tool = camera_movxy2(2); } break;
-        case Keys.Z: { var p = mainover(); if (p != null && p.IsSelect) { tool = obj_movxy2(p, 3); break; } tool = camera_movz(); } break;
-        case Keys.V: { var p = mainover(); if (p != null && p.IsSelect) { tool = obj_movz(p); break; } tool = camera_movz(); } break;
-
-        case Keys.Shift | Keys.X: { var p = mainover(); if (p != null && !p.IsStatic) tool = obj_rot(p, 0); } break;
-        case Keys.Shift | Keys.Y: { var p = mainover(); if (p != null && !p.IsStatic) tool = obj_rot(p, 1); } break;
-        case Keys.Shift | Keys.Z: { var p = mainover(); if (p != null && !p.IsStatic) tool = obj_rot(p, 2); } break;
-        case Keys.Shift | Keys.V: { var p = mainover(); if (p != null && !p.IsStatic) tool = obj_rotz(p); } break;
-      }
-      if (tool != null) { Capture = true; Invalidate(); }
-    }
-    protected override void OnKeyUp(KeyEventArgs e)
-    {
-      if (tool == null) return;
-      if ((MouseButtons & (MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle)) != 0) return;
-      OnMouseUp(null);
-    }
-
-    Action<int> tool;
-    INode mainselect()
-    {
-      var sc = scene.SelectionCount;
-      return sc != 0 ? scene.GetSelection(sc - 1) : null;
-    }
-    INode mainover()
-    {
-      var p = view.MouseOverNode; if (p == null) return null;
-      for (INode t; !p.IsSelect && (t = p.Parent as INode) != null; p = t) ; return p;
-    }
-    float3 overwp()
-    {
-      var p = view.MouseOverPoint; var t = view.MouseOverNode;
-      if (t != null) p *= t.GetTransform(null); return p;
-    }
-
-    protected override void OnMouseDown(MouseEventArgs e)
-    {
-      if (tool != null) return;
-      Focus(); if (e.Button != MouseButtons.Left) return;
-      if (view == null || view.Camera == null) return;
-      var keys = ModifierKeys;
-      var main = mainover(); //if (main == null) tool = camera_free();
-      var cam = main == null || main.IsStatic;
-
-      if (toolid != 0 && keys == 0)
-        switch (toolid)
-        {
-          case 1: tool = camera_movxy(); goto ok;
-          case 2: tool = camera_movz(); goto ok;
-          case 3: tool = camera_free2(); goto ok;
-        }
-
-      if (main != null && main.Tag is Node n)
-      {
-        var ft = n.GetMethod<Func<IView, Action<int>>>();
-        if (ft != null) try { if ((tool = ft(view)) != null) goto ok; } catch { }
-      }
-      switch (keys)
-      {
-        case Keys.None: tool = cam ? tool_select() : obj_movxy(main); break;
-        case Keys.Control: tool = cam ? camera_movxy() : obj_drag(main); break;
-        case Keys.Shift: tool = cam ? camera_movz() : obj_movz(main); break;
-        case Keys.Alt: tool = cam ? camera_rotz(null) : obj_rotz(main); break;
-        case Keys.Control | Keys.Shift: tool = cam ? camera_rotx() : obj_rot(main, 0); break;
-        case Keys.Control | Keys.Alt: tool = cam && mainselect() != null ? camera_rotz(mainselect()) : main != null?obj_rot(main, 1) : null; break;
-        case Keys.Control | Keys.Alt | Keys.Shift: if (cam && main != null) { main.Select(); Invalidate(Inval.Select); } else tool = obj_rot(main, 2); break;
-        default: tool = tool_select(); break;
-      }
-      if (tool == null) return; ok: Capture = true; Invalidate();
-    }
-    protected override void OnMouseMove(MouseEventArgs e)
-    {
-      //Debug.WriteLine(Capture);
-      if (tool != null) { tool(0); Invalidate(); return; }
-      var id = view != null ? view.MouseOverId : 0;
-      Cursor =
-        (id & 0x1000) != 0 ? Cursors.Cross :
-        (id & 0x8000) != 0 ? Cursors.UpArrow :
-        Cursors.Default;
-      //Debug.WriteLine(view.MouseOverNode + " " + view.MouseOverPoint);
-    }
-    protected override void OnMouseUp(MouseEventArgs e)
-    {
-      if (tool == null) return;
-      var t = tool; tool = null; Capture = false; t(1); Invalidate(Inval.Properties);
-    }
-    protected override void OnLostFocus(EventArgs e)
-    {
-      if (tool == null) return;
-      tool(1); tool = null; Invalidate();
-    }
-
-    protected override void WndProc(ref Message m)
-    {
-      switch (m.Msg)
-      {
-        case 0x020A: //WM_MOUSEWHEEL
-          { var w = m.WParam.ToInt32(); if ((w & 0x8) != 0) OnMouseWheel(w >> 15); else OnScroll(0, w >> 16); return; }
-        case 0x020E: //WM_MOUSEWHEEL2
-          { OnScroll(m.WParam.ToInt32() >> 16, 0); return; }
-        case 0x007B: // WM_CONTEXTMENU
-          ShowContextMenu(this, 0x2100, m.LParam); return;
-      }
-      base.WndProc(ref m);
-    }
-
-    void OnScroll(int xdelta, int ydelta)
-    {
-      if (tool != null) return;
-      var t = Environment.TickCount;
-      if (t - lastzoom < 250) return;
-      var m = view.Camera.Transform;
-      for (int i = 0; i < 5; i++)
-      {
-        view.Camera.Transform = xdelta != 0 ?
-          m * -m.mp * RotationZ(i * xdelta * -0.00004f) * m.mp :
-          RotationX(i * ydelta * -0.00004f) * m;
-        Invalidate(); Update();
-      }
-      if (t - lastwheel > 500) AddUndo(undo(view.Camera, m)); lastwheel = t;
-    }
-    void OnMouseWheel(int delta)
-    {
-      if (tool != null) return;
-      var t = Environment.TickCount;
-      var wp = overwp();
-      var m = view.Camera.Transform;
-      var v = wp - m.mp;
-      var l = v.Length;
-      var d = (v.Normalize() * (l * 0.1f * delta * (1f / 120)));
-      for (int i = 0; i < 5; i++)
-      {
-        view.Camera.Transform = m * (d * (i * 0.2f));
-        Invalidate(); Update();
-      }
-      if (t - lastwheel > 500) AddUndo(undo(view.Camera, m)); lastwheel = lastzoom = t;
-    }
-    static int lastwheel, lastzoom;
-
     Action<int> camera_free2()
     {
-      var camera = view.Camera; var m = camera.GetTransform();
+      var camera = view.Camera; var m = camera.GetTransform(); Cursor = Cursors.SizeAll;
       view.SetPlane(m * m.mz); var p1 = view.PickPlane(); var p2 = p1; //var mover = move(camera);
       return id =>
       {

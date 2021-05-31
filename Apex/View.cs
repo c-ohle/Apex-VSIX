@@ -171,6 +171,20 @@ namespace csg3mf
       }
     }
 
+    protected override void WndProc(ref Message m)
+    {
+      switch (m.Msg)
+      {
+        case 0x020A: //WM_MOUSEWHEEL
+          { var w = m.WParam.ToInt32(); if ((w & 0x8) != 0) OnMouseWheel(w >> 15); else OnScroll(0, w >> 16); return; }
+        case 0x020E: //WM_MOUSEWHEEL2
+          { OnScroll(m.WParam.ToInt32() >> 16, 0); return; }
+        case 0x007B: // WM_CONTEXTMENU
+          ShowContextMenu(this, 0x2100, m.LParam); return;
+      }
+      base.WndProc(ref m);
+    }
+
     int ISelectionContainer.CountObjects(uint dwFlags, out uint pc)
     {
       var sc = scene.SelectionCount; if (sc == 0) { pc = 1; return 0; }

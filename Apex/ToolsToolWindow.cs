@@ -28,8 +28,11 @@ namespace csg3mf
       grid.SelectedObject = new ToolProvider();
       ((Control)grid).Controls[2].MouseDoubleClick += (p, e) =>
       {
-        if (grid.SelectedGridItem.PropertyDescriptor is ToolProvider.PD pd && !pd.edit) 
-        { pd.edit = true; grid.SelectedGridItem.Select(); }
+        var t = grid.SelectedGridItem;
+        if (t?.PropertyDescriptor is ToolProvider.PD pd && !pd.edit)
+        {
+          pd.edit = true; grid.Refresh();
+        }
       };
       grid.SelectedGridItemChanged += (p, e) =>
       {
@@ -47,6 +50,7 @@ namespace csg3mf
 
   enum ToolEnum
   {
+    None,
     SelectRect,
     CameraMoveHorizontal,
     CameraMoveVertical,
@@ -189,7 +193,7 @@ namespace csg3mf
         }
         return new string(ss);
       }
-      public override string DisplayName => nice(kvs[i].i.ToString());
+      public override string DisplayName => nice(kvs[i].i.ToString()) + "\0\n" + Name;
       public override string Category => nice(kvs[i].f.ToString());
       public override object GetValue(object component) => kvs[i].k;
       public override void SetValue(object component, object value)

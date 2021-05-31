@@ -96,16 +96,16 @@ namespace csg3mf
       //  Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
       //  return 1;
       //}
-      if (id >= 2401 && id <= 2409) //tools
-      {
-        if (toolid == id - 2401) return 3;
-        if (test != null) return 1;
-        toolid = id - 2401; return 1;
-      }
-      if (id >= 6200 && id <= 6250)
-      {
-        return 1;
-      }
+      //if (id >= 2401 && id <= 2409) //tools
+      //{
+      //  if (toolid == id - 2401) return 3;
+      //  if (test != null) return 1;
+      //  toolid = id - 2401; return 1;
+      //}
+      //if (id >= 6200 && id <= 6250)
+      //{
+      //  return 1;
+      //}
       return -1;
     }
 
@@ -117,8 +117,6 @@ namespace csg3mf
       return 1;
     }
     
-    int toolid;
-
     int comboDriver(int id, object test)
     {
       if (!(test is object[] a)) return 1;

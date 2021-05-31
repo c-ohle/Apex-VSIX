@@ -330,6 +330,39 @@ namespace Apex
 #endif
 }
 
+// HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad\AAPThreshold 2
+//[DllImport("user32.dll")]
+//static extern short GetKeyState(Keys key);
+//[DllImport("User32.dll")]
+//static extern short GetAsyncKeyState(Keys k);
+//static bool IsPressed(Keys k) => (GetAsyncKeyState(k) & 1) != 0;
+//static void test()
+//{
+// //var val = Registry.GetValue("HKEY_CURRENT_USER" + '\\' +
+// //  "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad",
+// //  "AAPThreshold", null);
+// //if (val is int i && i != 0)
+// //{
+// //  Registry.SetValue("HKEY_CURRENT_USER" + '\\' +
+// //    "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad",
+// //    "AAPThreshold", 0);
+// //  System.Windows.Input.Mouse.PrimaryDevice.Synchronize();
+// //  System.Windows.Input.Mouse.PrimaryDevice.UpdateCursor();
+// //}
+// //var t1 = System.Windows.Input.Mouse.PrimaryDevice.ActiveSource;
+// //var t2 = t1 as System.Windows.Interop.HwndSource;
+// //var t3 = t2.ChildKeyboardInputSinks.ToArray();
+// ////var t2 = t1.GetType().GetProperty("ChildKeyboardInputSinks",
+// ////  System.Reflection.BindingFlags.Instance| System.Reflection.BindingFlags.NonPublic);
+// //t3[2].KeyboardInputSite = null;
+//}
+//static void DisableBlockPrecisionTrackpad()
+//{
+//  Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\PrecisionTouchPad", true);
+//  RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\PrecisionTouchPad", true);
+//  key.SetValue("AAPThreshold", "0", RegistryValueKind.DWord);
+//}
+
 
 #if (false)
     static void CopyCoords(INode sour, IBuffer destpp, IBuffer destii, ref float2[] btt)
@@ -399,7 +432,7 @@ namespace Apex
       }
     }
 #endif
-#if(false)
+#if (false)
 namespace DisableDevice
 {
   

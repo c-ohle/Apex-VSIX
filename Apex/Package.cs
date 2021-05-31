@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
 
+//todo: namespace Apex
 //todo: system.io block for scripts 
 //todo: VS for 2D
 //todo: texture names, io bin...
@@ -19,7 +20,7 @@ using System.Runtime.InteropServices;
 //todo: script typexplorer namespaces
 //todo: near,far, minz autoupdate 
 //todo: script stop debug on window hide
-//todo: AAPThreshold
+//todo: AAPThreshold Computer\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\PrecisionTouchPad
 //todo: wheel slow device (no ani)
 //todo: csg ops in groups
 //todo: csg ops progress with break?
