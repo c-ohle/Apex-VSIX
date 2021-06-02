@@ -7,10 +7,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using static csg3mf.CDX;
 
-
 namespace csg3mf
 {
-
   unsafe partial class CDXView : UserControl
   {
     protected override void OnMouseDown(MouseEventArgs e)
@@ -65,21 +63,23 @@ namespace csg3mf
     void tooltiptimer()
     {
       if (lastmove == 0) return;
-      var t = Environment.TickCount; if (t - lastmove < 1000) return;
+      var t = Environment.TickCount; if (t - lastmove < 500) return; if (!Focused) { lastmove = 0; return; }
       var p = Cursor.Position; if (Native.WindowFromPoint(p) != Handle) { lastmove = 0; return; }
-      if (view.MouseOverId != 0) { lastmove = 0; return; }
-      if (tooltip == null) tooltip = new ToolTip { };// UseAnimation = true, UseFading = true };
-      tooltipon = true; var node = mainover();
-      tooltipover = node != null ? node.GetHashCode() : 0; lastmove = 0;
-      tooltipupdate(node);
+      tooltipupdate();
     }
-    void tooltipupdate(INode node)
+    void tooltipupdate()
     {
+      if (view.MouseOverId != 0) { lastmove = 0; return; }
+      var node = mainover();
+      if (tooltip == null) tooltip = new ToolTip { };
       var list = new System.Collections.Generic.List<string>();
       if (tooltipmode == 0)
       {
-        tooltip.ToolTipTitle = ""; list.Add("Press Enter to show Tools");
-        //list.Add("List possible Tools\tEnter");
+        tooltip.ToolTipTitle = "❶ Tool Assistent ▼";
+        list.Add("Select Toolset\t\tArrows");
+        list.Add("Tool Assistent On/Off\tEnter");
+        //list.Add("Navigation\tArrows");
+        //list.Add("Continue\t\t\tRight");
       }
       else
       {
@@ -87,7 +87,7 @@ namespace csg3mf
         {
           if (tooltipmode == 1)
           {
-            tooltip.ToolTipTitle = "Object Mouse Tools"; //tooltip.ToolTipTitle = "";// $"{node.GetClassName()} {node.Name}";
+            tooltip.ToolTipTitle = "❷ Object Mouse Tools ▼▲"; //tooltip.ToolTipTitle = "";// $"{node.GetClassName()} {node.Name}";
             if (!node.IsSelect) list.Add("Select\t\tClick");
             list.Add("Toggle Selection\tStrg+Click");
             list.Add("Move Horizontal\tClick+Move");
@@ -97,14 +97,15 @@ namespace csg3mf
             list.Add("Rotate X-Axis\tCtrl+Shift+Click+Move");
             list.Add("Rotate Y-Axis\tCtrl+Alt+Click+Move");
             list.Add("Rotate Z-Axis\tCtrl+Shift+Alt+Click+Move");
-            list.Add("More...\t\tEnter");
+            //list.Add("Continue\t\tLeft, Right");
           }
           else if (tooltipmode == 2)
           {
-            tooltip.ToolTipTitle = "Object Touchpad Tools";
+            tooltip.ToolTipTitle = "❸ Object Touchpad Tools ▼▲";
             if (!node.IsSelect)
             {
-              list.Add("Select\t\tClick");
+              list.Add("Select\t\t\tClick");
+              list.Add("Toggle Select\t\tCtrl+Click");
               //list.Add("Camera Move Vertical\tV+Move");
               //list.Add("Camera Move X-Axis\tX+Move");
               //list.Add("Camera Move Y-Axis\tY+Move");
@@ -120,34 +121,34 @@ namespace csg3mf
               list.Add("Rotate Y-Axis\tShift+Y+Move");
               list.Add("Rotate Z-Axis\tShift+Z+Move");
             }
-            list.Add("More...\t\tEnter");
+            //list.Add("Continue\t\tLeft, Right");
           }
         }
         else
         {
           if (tooltipmode == 1)
           {
-            tooltip.ToolTipTitle = "Camera Mouse Tools";
+            tooltip.ToolTipTitle = "❷ Camera Mouse Tools ▼▲";
             list.Add("Select Rect\tClick+Move");
             list.Add("Move Horizontal\tStrg+Click+Move");
             list.Add("Move Vertical\tShift+Click+Move");
             list.Add("Rotate Horizontal\tAlt+Click+Move");
             list.Add("Rotate Vertical\tStrg+Shift+Click+Move");
-            list.Add("More...\t\tEnter");
+            //list.Add("Continue\t\tLeft, Right");
           }
           else if (tooltipmode == 2)
           {
-            tooltip.ToolTipTitle = "Camera Touchpad Tools";
+            tooltip.ToolTipTitle = "❸ Camera Touchpad Tools ▼▲";
             list.Add("Move Vertical\tV+Move");
             list.Add("Move X-Axis\tX+Move");
             list.Add("Move Y-Axis\tY+Move");
             list.Add("Move Z-Axis\tZ+Move");
-            list.Add("More...\t\tEnter");
+            //list.Add("Continue\t\tLeft, Right");
           }
         }
         if (tooltipmode == 3)
         {
-          tooltip.ToolTipTitle = "Touchpad Always Tools";
+          tooltip.ToolTipTitle = "❹ Touchpad Navigation Tools ▲";
           list.Add("Camera Move Horizontal\tSpace+Move");
           list.Add("Camera Move Vertical\tShift+Space+Move");
           list.Add("Camera Rotate Horizontal\tA+Move");
@@ -158,32 +159,31 @@ namespace csg3mf
             list.Add("Selection Rotate Horizontal\tQ+Move");
             list.Add("Selection Rotate Vertical\tShift+Q+Move");
           }
-          list.Add("More...\t\t\tEnter");
+          //list.Add("Continue\t\t\tLeft");
         }
       }
       tooltippt = PointToClient(Cursor.Position);
       var p = tooltippt; p.Y += Cursor.Current.Size.Height * 3 / 4;
       tooltip.Show(string.Join("\n", list), this, p);
+      tooltipon = true; lastmove = 0; tooltipover = node != null ? node.GetHashCode() : 0;
     }
     bool tooltipkey(KeyEventArgs e)
     {
-      if (!tooltipon) return false;
+      var vis = tooltipon && tooltippt.X >= 0;
       switch (e.KeyCode)
       {
         case Keys.Enter:
-          if (tooltippt.X >= 0) tooltipmode = (tooltipmode + 1) % 4;
-          tooltipupdate(mainover());
+          //if (vis) tooltipmode = (tooltipmode + 1) % 4;
+          if (!vis) { tooltipupdate(); flags |= 4; } else { tooltipoff(); flags &= ~4; }
           return true;
         case Keys.Left:
-          if (tooltippt.X < 0) return true;
-          if (tooltipmode == 0) return true; tooltipmode--;
-          tooltipupdate(mainover());
-          return true;
+        case Keys.Up:
+          if (!vis) break; if (tooltipmode <= 0) return true; tooltipmode--;
+          tooltipupdate(); return true;
         case Keys.Right:
-          if (tooltippt.X < 0) return true;
-          if (tooltipmode == 3) return true; tooltipmode++;
-          tooltipupdate(mainover());
-          return true;
+        case Keys.Down:
+          if (!vis) break; if (tooltipmode >= 3) return true; tooltipmode++;
+          tooltipupdate(); return true;
       }
       return false;
     }

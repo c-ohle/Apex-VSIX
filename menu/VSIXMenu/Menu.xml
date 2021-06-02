@@ -83,8 +83,7 @@
       <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
       <MenuItem text="Tools..." id="2340" />
     </SubMenu>-->
-
-    <MenuItem text="Center" id="2300" keys="Control|W|C" />
+    <MenuItem text="Tool Assistent [Enter]" id="2221" />
     <MenuItem text="Collisions" id="2330"/>
     <Seperator/>
     <MenuItem text="Group" id="2035" keys="Control|W|G" />
@@ -99,24 +98,9 @@
     <MenuItem id="cmdidCopy" />
     <MenuItem id="cmdidPaste" />
     <Seperator/>
-    <!--
-    <SubMenu text="Edit">
-      <MenuItem id="cmdidCut" />
-      <MenuItem id="cmdidCopy" />
-      <MenuItem id="cmdidPaste" />
-      <MenuItem id="cmdidDelete" />
-      <Seperator/>
-      <MenuItem text="Group" id="2035" keys="Control|W|G" />
-      <MenuItem text="Ungroup" id="2036" keys="Control|W|U" />
-      <Seperator/>
-      <MenuItem text="Union" id="2301" keys="Control|E|U" />
-      <MenuItem text="Intersection" id="2302" keys="Control|E|I" />
-      <MenuItem text="Difference" id="2303" keys="Control|E|D" />
-      <MenuItem text="PlaneCut" id="2304" keys="Control|E|P" />
-    </SubMenu>
-    -->
+    <MenuItem text="Center" id="2300" keys="Control|W|C" />
+    <Seperator/>
     <SubMenu text="Display">
-      <MenuItem text="Tooltips" id="2221" />
       <MenuItem text="Shadows" id="2220" />
       <MenuItem text="Checkboard" id="2320" />
       <Seperator/>
@@ -131,13 +115,13 @@
       <MenuItem text="Outline" id="2214" />
     </SubMenu>
     <Seperator/>
-    <!--<MenuItem text="Apex Tools..." id="2340" /> 
-    <MenuItem id="cmdidF1Help" />-->
+    <!--<MenuItem id="cmdidF1Help" />-->
     <MenuItem text="Script" id="2037" />
     <MenuItem id="cmdidToolbox" />
     <MenuItem id="cmdidDocOutlineWindow" />
     <MenuItem id="cmdidPropertiesWindow" />
   </ContextMenu>
+  
   <ContextMenu name="Tree" id="0x2104" >
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />

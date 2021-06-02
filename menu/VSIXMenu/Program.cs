@@ -102,7 +102,13 @@ namespace VSIXMenu
               if (keys != null)
               {
                 var ss = keys.Split('|');
-                keybinds.Add(new XElement(ns + "KeyBinding", new XAttribute("guid", "g2"),
+                if(ss.Length==1)
+                  keybinds.Add(new XElement(ns + "KeyBinding", new XAttribute("guid", "g2"),
+                    new XAttribute("id", siid),
+                    new XAttribute("editor", "guidVSStd97"),
+                    new XAttribute("key1", ss[0])));
+                else if(ss.Length == 3)
+                  keybinds.Add(new XElement(ns + "KeyBinding", new XAttribute("guid", "g2"),
                   new XAttribute("id", siid),
                   new XAttribute("editor", "guidVSStd97"),
                   new XAttribute("key1", ss[1]),

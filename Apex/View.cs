@@ -70,7 +70,7 @@ namespace csg3mf
     protected override void OnHandleDestroyed(EventArgs e)
     {
       if (view != null) { Marshal.ReleaseComObject(view); view = null; }
-      scene = null; undos = null;
+      scene = null; undos = null; if (tooltip != null) { tooltip.Dispose(); tooltip = null; }
       base.OnHandleDestroyed(e);
     }
 
