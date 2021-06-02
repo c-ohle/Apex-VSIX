@@ -38,7 +38,7 @@ namespace csg3mf
   [ProvideEditorExtension(typeof(EditorFactory), ".b3mf", 32)]
   [ProvideToolboxItems(1, NeedsCallBackAfterReset = true)]
   [ProvideToolWindow(typeof(ScriptToolWindowPane), Orientation = ToolWindowOrientation.Right, Window = EnvDTE.Constants.vsWindowKindOutput, Style = VsDockStyle.Tabbed)]
-  [ProvideToolWindow(typeof(ToolsToolWindowPane), Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindSolutionExplorer)]
+  //[ProvideToolWindow(typeof(ToolsToolWindowPane), Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindSolutionExplorer)]
   public sealed class CDXPackage : Package //AsyncPackage
   {
     internal static CDXPackage Package;

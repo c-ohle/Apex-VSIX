@@ -1,6 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Root>
   <ContextMenu name="3DView" id="0x2100" >
+    <!-- 
+    <SubMenu text="Tools">
+      <SubMenu text="Camera">
+        <MenuItem text="Camera Move Horizontal ⁦−► Ctrl+Click Ground" id="6200" />
+        <MenuItem text="Camera Move Vertical −► Shift+Click Ground" id="6201" />
+        <Seperator/>
+        <MenuItem text="Camera Rotate Horizontal −► Alt+Click Ground" id="6203" />
+        <MenuItem text="Camera Rotate Vertical−► Ctrl+Shift+Click Ground" id="6204" />
+      </SubMenu>
+      <SubMenu text="Object">
+        <MenuItem text="Object Move Horizontal −► Click Object" id="6210" />
+        <MenuItem text="Object Move Vertical −► Shift+Click Object" id="6211" />
+        <MenuItem text="Object Drag/Drop −► Ctrl+Click Object" id="6212" />
+        <Seperator/>
+        <MenuItem text="Object Rotate Horizontal −► Alt+Click Object" id="6213" />
+        <MenuItem text="Object Rotate X-Axis −► Ctrl+Shift+Click Object" id="6214" />
+        <MenuItem text="Object Rotate Y-Axis −► Ctrl+Alt+Click Object" id="6215" />
+        <MenuItem text="Object Rotate Z-Axis −► Ctrl+Shift+Alt+Click Object" id="6216" />
+      </SubMenu>
+      <SubMenu text="Touchpad Camera">
+        <MenuItem text="Camera Move Horizontal ⁦−► Space+Touchpad" id="6220" />
+        <MenuItem text="Camera Move Vertical ⁦−► V+Touchpad Ground" id="6221" />
+        <MenuItem text="Camera Move X-Axis ⁦−► X+Touchpad Ground" id="6222" />
+        <MenuItem text="Camera Move Y-Axis ⁦−► Y+Touchpad Ground" id="6223" />
+        <MenuItem text="Camera Move Z-Axis ⁦−► Z+Touchpad Ground" id="6224" />
+        <Seperator/>
+        <MenuItem text="Camera Rotate Horizontal −► A+Touchpad" id="6225" />
+        <MenuItem text="Camera Rotate Vertical −► Shift+A+Touchpad" id="6226" />
+        <MenuItem text="Camera Rotate Direction −► W+Touchpad" id="6227" />
+      </SubMenu>
+      <SubMenu text="Touchpad Object">
+        <MenuItem text="Object Move Vertical −► V+Touchpad Object" id="6230" />
+        <MenuItem text="Object Move X-Axis ⁦−► X+Touchpad Object" id="6231" />
+        <MenuItem text="Object Move Y-Axis ⁦−► Y+Touchpad Object" id="6232" />
+        <MenuItem text="Object Move Z-Axis ⁦−► Z+Touchpad Object" id="6233" />
+        <Seperator/>
+        <MenuItem text="Object Rotate X-Axis ⁦−► Shift+X+Touchpad Object" id="6234" />
+        <MenuItem text="Object Rotate Y-Axis ⁦−► Shift+Y+Touchpad Object" id="6235" />
+        <MenuItem text="Object Rotate Z-Axis ⁦−► Shift+Z+Touchpad Object" id="6236" />
+        <Seperator/>
+        <MenuItem text="Selection Rotate ⁦Horizontal −► Q+Touchpad" id="6240" />
+        <MenuItem text="Selection Rotate ⁦Vertical −► Shift+Q+Touchpad" id="6241" />
+      </SubMenu>
+    </SubMenu>
+-->
     <!--
     <SubMenu text="Tools">
       <MenuItem text="Camera Move Horizontal ⁦−► Ctrl+Click Ground" id="6200" />
@@ -38,7 +83,23 @@
       <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
       <MenuItem text="Tools..." id="2340" />
     </SubMenu>-->
-   
+
+    <MenuItem text="Center" id="2300" keys="Control|W|C" />
+    <MenuItem text="Collisions" id="2330"/>
+    <Seperator/>
+    <MenuItem text="Group" id="2035" keys="Control|W|G" />
+    <MenuItem text="Ungroup" id="2036" keys="Control|W|U" />
+    <Seperator/>
+    <MenuItem text="Union" id="2301" keys="Control|E|U" fl="DefaultInvisible|DynamicVisibility"/>
+    <MenuItem text="Intersection" id="2302" keys="Control|E|I" fl="DefaultInvisible|DynamicVisibility"/>
+    <MenuItem text="Difference" id="2303" keys="Control|E|D" fl="DefaultInvisible|DynamicVisibility"/>
+    <MenuItem text="PlaneCut" id="2304" keys="Control|E|P" fl="DefaultInvisible|DynamicVisibility"/>
+    <Seperator/>
+    <MenuItem id="cmdidCut" />
+    <MenuItem id="cmdidCopy" />
+    <MenuItem id="cmdidPaste" />
+    <Seperator/>
+    <!--
     <SubMenu text="Edit">
       <MenuItem id="cmdidCut" />
       <MenuItem id="cmdidCopy" />
@@ -53,7 +114,9 @@
       <MenuItem text="Difference" id="2303" keys="Control|E|D" />
       <MenuItem text="PlaneCut" id="2304" keys="Control|E|P" />
     </SubMenu>
-    <SubMenu text="View">
+    -->
+    <SubMenu text="Display">
+      <MenuItem text="Tooltips" id="2221" />
       <MenuItem text="Shadows" id="2220" />
       <MenuItem text="Checkboard" id="2320" />
       <Seperator/>
@@ -68,11 +131,9 @@
       <MenuItem text="Outline" id="2214" />
     </SubMenu>
     <Seperator/>
-    <MenuItem text="Center" id="2300" img="1" keys="Control|W|C" />
-    <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
-    <Seperator/>
-    <MenuItem text="Apex Tools..." id="2340" />
-    <MenuItem text="Apex Script..." id="2037" />
+    <!--<MenuItem text="Apex Tools..." id="2340" /> 
+    <MenuItem id="cmdidF1Help" />-->
+    <MenuItem text="Script" id="2037" />
     <MenuItem id="cmdidToolbox" />
     <MenuItem id="cmdidDocOutlineWindow" />
     <MenuItem id="cmdidPropertiesWindow" />
@@ -89,7 +150,7 @@
     <MenuItem text="Ungroup" id="2036" />
     <Seperator/>
     <MenuItem text="Center" id="2300" />
-  </ContextMenu>  
+  </ContextMenu>
   <ContextMenu name="Script" id="0x2101" >
     <MenuItem id="cmdidStart" />
     <MenuItem id="cmdidStepOver" />
@@ -124,7 +185,7 @@
       <MenuItem text="Tool4" id="2404" img="3"/>
       <Seperator/>
       <MenuItem text="Tool5" id="2405" img="4"/>
-    </SubMenu> 
+    </SubMenu>
     <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
     <Seperator/>
     <MenuItem id="cmdidCut" />
@@ -135,8 +196,22 @@
     <Combo text="Samples" idlist="2757" id="2758" width="30" type="DynamicCombo" _t="DropDownCombo|DynamicCombo|IndexCombo|MRUCombo|AppID|Shared"/>
     <Seperator/>
     <MenuItem id="cmdidPropertiesWindow" />
+    <!--
+    <SubMenu text="Graphics Driver">
+      <MenuItem text="Driver 1" id="2751" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 2" id="2752" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 3" id="2753" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <MenuItem text="Driver 4" id="2754" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
+      <Seperator/>
+      <MenuItem text="Samples 1" id="2701" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 2" id="2702" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 4" id="2704" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 8" id="2708" fl="DefaultInvisible|DynamicVisibility"/>
+      <MenuItem text="Samples 16" id="2716" fl="DefaultInvisible|DynamicVisibility"/>
+    </SubMenu>
+    -->
   </ToolWindowToolbar>
-
+  <!--
   <Toolbar text="Apex 3D Toolbar" id="0x1003" >
     <MenuItem text="Tool1" id="2401" img="0"/>
     <MenuItem text="Tool2" id="2402" img="1"/>
@@ -162,22 +237,9 @@
       <MenuItem text="Wireframe" id="2213" />
       <MenuItem text="Outline" id="2214" />
     </SubMenu>
-    <!--
-    <SubMenu text="Graphics Driver">
-      <MenuItem text="Driver 1" id="2751" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
-      <MenuItem text="Driver 2" id="2752" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
-      <MenuItem text="Driver 3" id="2753" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
-      <MenuItem text="Driver 4" id="2754" fl="DefaultInvisible|DynamicVisibility|TextChanges"/>
-      <Seperator/>
-      <MenuItem text="Samples 1" id="2701" fl="DefaultInvisible|DynamicVisibility"/>
-      <MenuItem text="Samples 2" id="2702" fl="DefaultInvisible|DynamicVisibility"/>
-      <MenuItem text="Samples 4" id="2704" fl="DefaultInvisible|DynamicVisibility"/>
-      <MenuItem text="Samples 8" id="2708" fl="DefaultInvisible|DynamicVisibility"/>
-      <MenuItem text="Samples 16" id="2716" fl="DefaultInvisible|DynamicVisibility"/>
-    </SubMenu>
-    -->
+    
     <Seperator/>
     <MenuItem id="cmdidPropertiesWindow" />
   </Toolbar>
-
+-->
 </Root>

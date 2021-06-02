@@ -544,7 +544,7 @@ namespace csg3mf
 
   public static unsafe partial class CDX
   {
-    [TypeConverter(typeof(VectorConverter))]
+    [TypeConverter(typeof(float2.Converter))]
     public struct float2 : IEquatable<float2>, IFormattable
     {
       public float x, y;
@@ -605,6 +605,10 @@ namespace csg3mf
       {
         v.x *= f; v.y *= f; return v;
       }
+      public static float2 operator *(float2 v, double f)
+      {
+        v.x = (float)(v.x * f); v.y = (float)(v.y * f); return v;
+      }
       public static float2 operator /(float2 v, float f)
       {
         v.x /= f; v.y /= f; return v;
@@ -623,9 +627,26 @@ namespace csg3mf
       public static float2 operator ~(float2 v) { float2 b; b.x = -v.y; b.y = v.x; return b; }
       public static float operator ^(float2 a, float2 b) => a.x * b.y - a.y * b.x;
       public static float operator &(float2 a, float2 b) => a.x * b.x + a.y * b.y;
+      internal class Converter : TypeConverter
+      {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => true;
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+          var a = (float2)value; return ((FormattableString)$"{a.x:R}; {a.y:R}").ToString(culture);
+        }
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+          var ss = ((string)value).Split(';');
+          return new float2(float.Parse(ss[0], culture), float.Parse(ss[1], culture));
+        }
+        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => true;
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
+          => FieldPD.GetProperties(value);
+      }
     }
 
-    [TypeConverter(typeof(VectorConverter))]
+    [TypeConverter(typeof(float3.Converter))]
     public struct float3 : IEquatable<float3>, IFormattable
     {
       public float x, y, z;
@@ -717,6 +738,10 @@ namespace csg3mf
       {
         v.x *= f; v.y *= f; v.z *= f; return v;
       }
+      public static float3 operator *(float3 v, double f)
+      {
+        v.x = (float)(v.x * f); v.y = (float)(v.y * f); v.z = (float)(v.z * f); return v;
+      }
       public static float3 operator /(float3 v, float f)
       {
         v.x /= f; v.y /= f; v.z /= f; return v;
@@ -737,9 +762,29 @@ namespace csg3mf
       {
         return a.x * b.x + a.y * b.y + a.z * b.z;
       }
+      internal class Converter : TypeConverter
+      {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => true;
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+          var a = (float3)value;
+          if (context?.PropertyDescriptor.Name == ".s" && a.x == a.y && a.y == a.z)
+            return ((FormattableString)$"{a.x:R}").ToString(culture);
+          return ((FormattableString)$"{a.x:R}; {a.y:R}; {a.z:R}").ToString(culture);
+        }
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+          var ss = ((string)value).Split(';');
+          if (ss.Length == 1 && context?.PropertyDescriptor.Name == ".s") { var v = float.Parse(ss[0], culture); return new float3(v, v, v); }
+          return new float3(float.Parse(ss[0], culture), float.Parse(ss[1], culture), float.Parse(ss[2], culture));
+        }
+        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => true;
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(value);
+      }
     }
 
-    [TypeConverter(typeof(VectorConverter))]
+    [TypeConverter(typeof(float4.Converter))]
     public struct float4 : IEquatable<float4>, IFormattable
     {
       public float x, y, z, w;
@@ -801,6 +846,22 @@ namespace csg3mf
         d.y = ((byte*)&p)[1] * (1.0f / 255);
         d.x = ((byte*)&p)[2] * (1.0f / 255);
         d.w = ((byte*)&p)[3] * (1.0f / 255); return d;
+      }
+      internal class Converter : TypeConverter
+      {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => true;
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+          var a = (float4)value; return ((FormattableString)$"{a.x:R}; {a.y:R}; {a.z:R}; {a.w:R}").ToString(culture);
+        }
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+          var ss = ((string)value).Split(';');
+          return new float4(float.Parse(ss[0], culture), float.Parse(ss[1], culture), float.Parse(ss[2], culture), float.Parse(ss[3], culture));
+        }
+        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => true;
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(value);
       }
     }
 

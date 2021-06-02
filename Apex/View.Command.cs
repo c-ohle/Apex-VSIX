@@ -16,6 +16,7 @@ namespace csg3mf
       if (view == null) return -1;
       switch (id)
       {
+        case 2000: if (test == null) return 1; return 1; //F1 
         case 2010: //Undo
           if (undos == null || undoi == 0) return 8;
           if (test == null) { undos[undoi - 1](); undoi--; Invalidate(Inval.Properties); }
@@ -57,7 +58,9 @@ namespace csg3mf
         case 2330://Collision
           if (test != null) return (flags & 2) != 0 ? 3 : 1;
           flags ^= 2; return 1;
-
+        case 2221: //Tooltips
+          if (test != null) return (flags & 4) != 0 ? 3 : 1;
+          flags ^= 4; return 1;
         case 2340: return OnTools(test);
         case 5100: //BringForward:
         case 5101: //SendBackward:
@@ -102,19 +105,20 @@ namespace csg3mf
       //  if (test != null) return 1;
       //  toolid = id - 2401; return 1;
       //}
-      //if (id >= 6200 && id <= 6250)
-      //{
-      //  return 1;
-      //}
+      if (id >= 6200 && id <= 6250)
+      {
+        return 1;
+      }
       return -1;
     }
 
     int OnTools(object test)
     {
-      if (test != null) return 1;
-      var p = CDXPackage.Package.FindToolWindow(typeof(ToolsToolWindowPane), 0, true);
-      if (p.Frame is Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame f) f.Show();
-      return 1;
+      return 0;
+      //if (test != null) return 1;
+      //var p = CDXPackage.Package.FindToolWindow(typeof(ToolsToolWindowPane), 0, true);
+      //if (p.Frame is Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame f) f.Show();
+      //return 1;
     }
     
     int comboDriver(int id, object test)

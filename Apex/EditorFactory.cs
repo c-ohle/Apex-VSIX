@@ -94,7 +94,8 @@ namespace csg3mf
           //case (int)VSConstants.VSStd97CmdID.SendBackward: return 5101; //not in vs
           case (int)VSConstants.VSStd97CmdID.BringToFront: return 5102;
           case (int)VSConstants.VSStd97CmdID.SendToBack: return 5103;
-            //case (int)VSConstants.VSStd97CmdID.InsertObject: return 5104;
+          //case (int)VSConstants.VSStd97CmdID.InsertObject: return 5104;
+          case (int)VSConstants.VSStd97CmdID.F1Help: return 2000;
         }
         return 0;
       }
@@ -295,7 +296,7 @@ namespace csg3mf
       var fl = view.OnCommand(id, this); if (fl == -1) return -2147221248;
       if ((fl & 0x80) != 0) view.OnCommand(id, pCmdText);
       //OLECMDF_SUPPORTED = 0x1, OLECMDF_ENABLED = 0x2, OLECMDF_LATCHED = 0x4, OLECMDF_NINCHED = 0x8, OLECMDF_INVISIBLE = 0x10, OLECMDF_DEFHIDEONCTXTMENU = 0x20
-      prgCmds[0].cmdf = (uint)(((fl & 1) != 0 ? 3 : 1) | ((fl & 2) != 0 ? 4 : 0));
+      prgCmds[0].cmdf = (uint)(((fl & 1) != 0 ? 3 : 0x11) | ((fl & 2) != 0 ? 4 : 0) | (fl & 0x10));
       return 0;
     }
     int IOleCommandTarget.Exec(ref Guid guid, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
@@ -380,7 +381,7 @@ namespace csg3mf
     public override IWin32Window Window => host;
     public ScriptToolWindowPane() : base(null)
     {
-      this.Caption = "Apex Script";
+      this.Caption = "Script";
       using (DpiAwareness.EnterDpiScope(DpiAwarenessContext.SystemAware))
         host = new UserControl();
       //this.ToolBar = new CommandID(Guids.CmdSet, 0x1000);

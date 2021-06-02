@@ -11,6 +11,7 @@ using System.Windows.Forms;
 
 namespace csg3mf
 {
+#if(false)
   [Guid("61C47B35-B845-44E3-A4DE-7C8751B64A44")]
   public class ToolsToolWindowPane : Microsoft.VisualStudio.Shell.ToolWindowPane
   {
@@ -47,6 +48,7 @@ namespace csg3mf
       //items.Add(new ToolStripMenuItem("Reset Values", null, (p, e) => { }));
     }
   }
+#endif
 
   enum ToolEnum
   {
@@ -126,13 +128,13 @@ namespace csg3mf
     {
       return TypeDescriptor.GetProperties(GetType());
     }
-    public virtual PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
     {
       return TypeDescriptor.GetProperties(GetType(), attributes);
     }
   }
 
-  class ToolProvider : SimpleTypeDescriptor//: ICustomTypeDescriptor
+  class ToolProvider : SimpleTypeDescriptor, ICustomTypeDescriptor
   {
     //internal static bool edit;
     internal static (ToolEnum i, Keys k, ToolFlags f)[] kvs = new (ToolEnum, Keys, ToolFlags)[] {
@@ -202,7 +204,7 @@ namespace csg3mf
       }
     }
     PropertyDescriptorCollection pdc;
-    public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
     {
       return pdc ?? (pdc = new PropertyDescriptorCollection(kvs.Select((p, i) => new PD(i)).ToArray()));
     }

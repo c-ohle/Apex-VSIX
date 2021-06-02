@@ -76,7 +76,7 @@ namespace csg3mf
 
     internal CDXWindowPane pane;
     IScene scene; IView view; static long drvsettings = 0x400000000;
-    INode defcam; int flags = 1;// | 2; //1:Checkboard 2:Collisions
+    INode defcam; int flags = 1|4;// | 2; //1:Checkboard 2:Collisions 4:Tooltips
 
     static CDXView()
     {
@@ -218,6 +218,7 @@ namespace csg3mf
 
     void ISink.Timer()
     {
+      tooltiptimer();
       animate();
       if (inval == 0) return;
       var f = inval; inval = 0;

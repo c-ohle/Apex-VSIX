@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -57,46 +58,21 @@ namespace csg3mf
       t2.PropertyValueChanged += h;
     }
   }
-
-  class VectorConverter : TypeConverter
+  
+  class FieldPD : PropertyDescriptor
   {
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => true;
-    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
-    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-    {
-      if (value is float2 a) return ((FormattableString)$"{a.x:R}; {a.y:R}").ToString(culture);
-      if (value is float3 b) return ((FormattableString)$"{b.x:R}; {b.y:R}; {b.z:R}").ToString(culture);
-      if (value is float4 c) return ((FormattableString)$"{c.x:R}; {c.y:R}; {c.z:R}; {c.w:R}").ToString(culture);
-      //if (value is double3 e) return ((FormattableString)$"{e.x:R}; {e.y:R}; {e.z:R}{(context == null ? "d" : "")}").ToString(culture);
-      return value != null ? value.ToString() : string.Empty;
-    }
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      var s = (string)value;
-      var e = '0'; if (context == null && s.Length != 0 && char.IsLetter(e = s[s.Length - 1])) s = s.Substring(0, s.Length - 1);
-      var ss = s.Split(';'); int id;
-      if (context == null)
-      {
-        id = ss.Length; if (e == 'd') id = 5;
-      }
-      else
-      {
-        var t = context.PropertyDescriptor.PropertyType;
-        if (t == typeof(float2)) id = 2;
-        else if (t == typeof(float3)) id = 3;
-        else if (t == typeof(float4)) id = 4;
-        //else if (t == typeof(double3)) id = 5;
-        else id = 0;
-      }
-      switch (id)
-      {
-        case 2: return new float2(float.Parse(ss[0], culture), float.Parse(ss[1], culture));
-        case 3: return new float3(float.Parse(ss[0], culture), float.Parse(ss[1], culture), float.Parse(ss[2], culture));
-        case 4: return new float4(float.Parse(ss[0], culture), float.Parse(ss[1], culture), float.Parse(ss[2], culture), float.Parse(ss[3], culture));
-          //case 5: return new double3(double.Parse(ss[0], culture), double.Parse(ss[1], culture), double.Parse(ss[2], culture));
-      }
-      return null;
-    }
+    FieldInfo fi;
+    public FieldPD(FieldInfo fi) : base(fi.Name, null) { this.fi = fi; }
+    public override Type ComponentType => fi.DeclaringType;
+    public override Type PropertyType => fi.FieldType;
+    public override bool IsReadOnly => false;
+    public override bool CanResetValue(object component) => false;
+    public override bool ShouldSerializeValue(object component) => false;
+    public override void ResetValue(object component) { }
+    public override object GetValue(object component) => fi.GetValue(component); 
+    public override void SetValue(object component, object value) => fi.SetValue(component, value);
+    public static PropertyDescriptorCollection GetProperties(object value) => 
+      new PropertyDescriptorCollection(value.GetType().GetFields().Select(fi => new FieldPD(fi)).ToArray());
   }
 
   class FormatConverter : TypeConverter

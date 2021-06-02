@@ -10,11 +10,12 @@ using static csg3mf.CDX;
 
 namespace csg3mf
 {
+
   unsafe partial class CDXView : UserControl
   {
     protected override void OnMouseDown(MouseEventArgs e)
     {
-      if (tool != null || view == null || view.Camera == null) return;
+      tooltipoff(); if (tool != null || view == null || view.Camera == null) return;
       Focus();
       var main = mainover();
       if (main != null && main.Tag is Node n)
@@ -37,23 +38,172 @@ namespace csg3mf
     }
     protected override void OnMouseMove(MouseEventArgs e)
     {
-      //Debug.WriteLine(Capture);
-      if (tool != null) { tool(0); Invalidate(); return; }
-      var id = view != null ? view.MouseOverId : 0;
+      if (tool != null) { tool(0); Invalidate(Inval.Render); return; }
+      if (view == null) return;
+      var id = view.MouseOverId;
       Cursor =
         (id & 0x1000) != 0 ? Cursors.Cross :
         (id & 0x8000) != 0 ? Cursors.UpArrow :
         Cursors.Default;
       //Debug.WriteLine(view.MouseOverNode + " " + view.MouseOverPoint);
+
+      if (tooltipon)
+      {
+        var over = mainover(); var overid = over != null ? over.GetHashCode() : 0;
+        if (tooltipover != overid) tooltipoff();
+        else if (tooltippt.X >= 0 && ((float2)tooltippt - e.Location).LengthSq > 32 * 32)
+        {
+          tooltipoff(); tooltipover = overid; tooltipon = true; tooltippt.X = -(tooltippt.X + 1);
+        }
+      }
+      if ((flags & 4) != 0 && !tooltipon) lastmove = Environment.TickCount;
     }
+
+    ToolTip tooltip; bool tooltipon; System.Drawing.Point tooltippt;
+    int lastmove, tooltipover, tooltipmode;
+
+    void tooltiptimer()
+    {
+      if (lastmove == 0) return;
+      var t = Environment.TickCount; if (t - lastmove < 1000) return;
+      var p = Cursor.Position; if (Native.WindowFromPoint(p) != Handle) { lastmove = 0; return; }
+      if (view.MouseOverId != 0) { lastmove = 0; return; }
+      if (tooltip == null) tooltip = new ToolTip { };// UseAnimation = true, UseFading = true };
+      tooltipon = true; var node = mainover();
+      tooltipover = node != null ? node.GetHashCode() : 0; lastmove = 0;
+      tooltipupdate(node);
+    }
+    void tooltipupdate(INode node)
+    {
+      var list = new System.Collections.Generic.List<string>();
+      if (tooltipmode == 0)
+      {
+        tooltip.ToolTipTitle = ""; list.Add("Press Enter to show Tools");
+        //list.Add("List possible Tools\tEnter");
+      }
+      else
+      {
+        if (node != null && !node.IsStatic)
+        {
+          if (tooltipmode == 1)
+          {
+            tooltip.ToolTipTitle = "Object Mouse Tools"; //tooltip.ToolTipTitle = "";// $"{node.GetClassName()} {node.Name}";
+            if (!node.IsSelect) list.Add("Select\t\tClick");
+            list.Add("Toggle Selection\tStrg+Click");
+            list.Add("Move Horizontal\tClick+Move");
+            list.Add("Move Vertical\tShift+Click+Move");
+            list.Add("Drag/Drop\tCtrl+Click+Move");
+            list.Add("Rotate Horizontal\tAlt+Click+Move");
+            list.Add("Rotate X-Axis\tCtrl+Shift+Click+Move");
+            list.Add("Rotate Y-Axis\tCtrl+Alt+Click+Move");
+            list.Add("Rotate Z-Axis\tCtrl+Shift+Alt+Click+Move");
+            list.Add("More...\t\tEnter");
+          }
+          else if (tooltipmode == 2)
+          {
+            tooltip.ToolTipTitle = "Object Touchpad Tools";
+            if (!node.IsSelect)
+            {
+              list.Add("Select\t\tClick");
+              //list.Add("Camera Move Vertical\tV+Move");
+              //list.Add("Camera Move X-Axis\tX+Move");
+              //list.Add("Camera Move Y-Axis\tY+Move");
+              //list.Add("Camera Move Z-Axis\tZ+Move");
+            }
+            else
+            {
+              list.Add("Move Vertical\tV+Move");
+              list.Add("Move X-Axis\tX+Move");
+              list.Add("Move Y-Axis\tY+Move");
+              list.Add("Move Z-Axis\tZ+Move");
+              list.Add("Rotate X-Axis\tShift+X+Move");
+              list.Add("Rotate Y-Axis\tShift+Y+Move");
+              list.Add("Rotate Z-Axis\tShift+Z+Move");
+            }
+            list.Add("More...\t\tEnter");
+          }
+        }
+        else
+        {
+          if (tooltipmode == 1)
+          {
+            tooltip.ToolTipTitle = "Camera Mouse Tools";
+            list.Add("Select Rect\tClick+Move");
+            list.Add("Move Horizontal\tStrg+Click+Move");
+            list.Add("Move Vertical\tShift+Click+Move");
+            list.Add("Rotate Horizontal\tAlt+Click+Move");
+            list.Add("Rotate Vertical\tStrg+Shift+Click+Move");
+            list.Add("More...\t\tEnter");
+          }
+          else if (tooltipmode == 2)
+          {
+            tooltip.ToolTipTitle = "Camera Touchpad Tools";
+            list.Add("Move Vertical\tV+Move");
+            list.Add("Move X-Axis\tX+Move");
+            list.Add("Move Y-Axis\tY+Move");
+            list.Add("Move Z-Axis\tZ+Move");
+            list.Add("More...\t\tEnter");
+          }
+        }
+        if (tooltipmode == 3)
+        {
+          tooltip.ToolTipTitle = "Touchpad Always Tools";
+          list.Add("Camera Move Horizontal\tSpace+Move");
+          list.Add("Camera Move Vertical\tShift+Space+Move");
+          list.Add("Camera Rotate Horizontal\tA+Move");
+          list.Add("Camera Rotate Verical\tShift+A+Move");
+          list.Add("Camera Rotate Directional\tW+Move");
+          if (mainselect() != null)
+          {
+            list.Add("Selection Rotate Horizontal\tQ+Move");
+            list.Add("Selection Rotate Vertical\tShift+Q+Move");
+          }
+          list.Add("More...\t\t\tEnter");
+        }
+      }
+      tooltippt = PointToClient(Cursor.Position);
+      var p = tooltippt; p.Y += Cursor.Current.Size.Height * 3 / 4;
+      tooltip.Show(string.Join("\n", list), this, p);
+    }
+    bool tooltipkey(KeyEventArgs e)
+    {
+      if (!tooltipon) return false;
+      switch (e.KeyCode)
+      {
+        case Keys.Enter:
+          if (tooltippt.X >= 0) tooltipmode = (tooltipmode + 1) % 4;
+          tooltipupdate(mainover());
+          return true;
+        case Keys.Left:
+          if (tooltippt.X < 0) return true;
+          if (tooltipmode == 0) return true; tooltipmode--;
+          tooltipupdate(mainover());
+          return true;
+        case Keys.Right:
+          if (tooltippt.X < 0) return true;
+          if (tooltipmode == 3) return true; tooltipmode++;
+          tooltipupdate(mainover());
+          return true;
+      }
+      return false;
+    }
+    void tooltipoff()
+    {
+      lastmove = 0; if (tooltipon) { tooltip.Hide(this); tooltipon = false; tooltipover = 0; }
+    }
+
     protected override void OnMouseUp(MouseEventArgs e)
     {
-      if (tool == null) return;
+      tooltipoff(); if (tool == null) return;
       var t = tool; tool = null; Capture = false; t(1); Invalidate(Inval.Properties);
+    }
+    protected override void OnMouseLeave(EventArgs e)
+    {
+      tooltipoff();
     }
     protected override void OnLostFocus(EventArgs e)
     {
-      if (tool == null) return;
+      tooltipoff(); if (tool == null) return;
       tool(1); tool = null; Invalidate();
     }
 
@@ -61,7 +211,8 @@ namespace csg3mf
     protected override void OnKeyPress(KeyPressEventArgs e) { }
     protected override void OnKeyDown(KeyEventArgs e)
     {
-      if (tool != null || view == null || view.Camera == null) return;
+      if (tooltipkey(e)) return;
+      tooltipoff(); if (tool != null || view == null || view.Camera == null) return;
       var main = mainover();
       var k = e.KeyCode | e.Modifiers;
       var f = main != null && main.IsSelect ? ToolFlags.TouchpadSelection | ToolFlags.TouchpadAlways : ToolFlags.TouchpadAlways | ToolFlags.TouchpadGround;
@@ -82,7 +233,7 @@ namespace csg3mf
 
     void OnScroll(int xdelta, int ydelta)
     {
-      if (tool != null) return;
+      if (tool != null) return; tooltipoff();
       var t = Environment.TickCount;
       if (t - lastzoom < 250) return;
       var m = view.Camera.Transform;
@@ -97,7 +248,7 @@ namespace csg3mf
     }
     void OnMouseWheel(int delta)
     {
-      if (tool != null) return;
+      if (tool != null) return; tooltipoff();
       var t = Environment.TickCount;
       var wp = overwp();
       var m = view.Camera.Transform;

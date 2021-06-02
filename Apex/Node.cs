@@ -26,15 +26,16 @@ namespace csg3mf
     bool Modified { get; }
   }
 
-  unsafe class Node : ICustomTypeDescriptor, ISite, IServiceProvider, IComponent, IMenuCommandService
+  unsafe class Node : SimpleTypeDescriptor, ICustomTypeDescriptor,
+    ISite, IServiceProvider, IComponent, IMenuCommandService
   {
     //~Node() { Debug.WriteLine("~Node()"); }
     private Node() { }
     internal static Node From(CDXView v, INode p)
     {
-      if (p.Tag is Node n) return n;
-      n = new Node { view = v, ptr = Marshal.GetIUnknownForObject(p) };
-      Marshal.Release(n.ptr); p.Tag = n; return n;
+      if (p.Tag is Node node) return node;
+      node = new Node { view = v, ptr = Marshal.GetIUnknownForObject(p) };
+      Marshal.Release(node.ptr); p.Tag = node; return node;
     }
     IntPtr ptr;
     internal INode node => (INode)Marshal.GetObjectForIUnknown(ptr);
@@ -61,7 +62,7 @@ namespace csg3mf
     {
       view.AddUndo(p);
     }
-    
+
     internal protected void WriteLine(string s)
     {
       Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
@@ -75,7 +76,7 @@ namespace csg3mf
       pane.OutputString("\n");
       pane.Activate();
     }
-    
+
     Action<int> animation
     {
       get => Annotation<Action<int>>();
@@ -258,18 +259,20 @@ namespace csg3mf
       }
       if (e.Category("Transform"))
       {
-        //var tm = node.GetTypeTransform(0);
-        //bool v = *(int*)&tm._33 == 0x7f000001;
-        //e.ReadOnly(); e.Exchange("0x7f000001", ref v);
-        var m = node.GetTypeTransform(1); var d = false;
-        var u = m.my * (float)(180 / Math.PI);
-        e.DisplayName("x"); d |= e.Exchange(".x", ref m._41);
-        e.DisplayName("y"); d |= e.Exchange(".y", ref m._42);
-        e.DisplayName("z"); d |= e.Exchange(".z", ref m._43);
-        e.DisplayName("α"); e.Format("{0:0.##} °"); if (e.Exchange(".α", ref u.x)) { m._21 = u.x * (float)(Math.PI / 180); d = true; }
-        e.DisplayName("β"); e.Format("{0:0.##} °"); if (e.Exchange(".β", ref u.y)) { m._22 = u.y * (float)(Math.PI / 180); d = true; }
-        e.DisplayName("γ"); e.Format("{0:0.##} °"); if (e.Exchange(".γ", ref u.z)) { m._23 = u.z * (float)(Math.PI / 180); d = true; }
-        e.DisplayName("δ"); e.Format(".s"); d |= e.Exchange(".s", ref *(float3*)&m._11);
+        var m = node.GetTypeTransform(1); 
+        var a = m.my * (180 / Math.PI); var d = false;
+        e.DisplayName("Position"); d |= e.Exchange(".p", ref *(float3*)&m._41);
+        e.DisplayName("Rotation"); if (e.Exchange(".a", ref a)) { *(float3*)&m._21 = a * (Math.PI / 180); d = true; }
+        e.DisplayName("Scaling"); //e.Format(".s"); 
+        d |= e.Exchange(".s", ref *(float3*)&m._11);
+
+        //e.DisplayName("x"); d |= e.Exchange(".x", ref m._41);
+        //e.DisplayName("y"); d |= e.Exchange(".y", ref m._42);
+        //e.DisplayName("z"); d |= e.Exchange(".z", ref m._43);
+        //e.DisplayName("α"); e.Format("{0:0.##} °"); if (e.Exchange(".α", ref u.x)) { m._21 = u.x * (float)(Math.PI / 180); d = true; }
+        //e.DisplayName("β"); e.Format("{0:0.##} °"); if (e.Exchange(".β", ref u.y)) { m._22 = u.y * (float)(Math.PI / 180); d = true; }
+        //e.DisplayName("γ"); e.Format("{0:0.##} °"); if (e.Exchange(".γ", ref u.z)) { m._23 = u.z * (float)(Math.PI / 180); d = true; }
+        //e.DisplayName("δ"); e.Format(".s"); d |= e.Exchange(".s", ref *(float3*)&m._11);
         if (d)
         {
           var t1 = node.GetTypeTransform(0); node.SetTypeTransform(0, m);
@@ -281,10 +284,6 @@ namespace csg3mf
       }
     }
 
-    AttributeCollection ICustomTypeDescriptor.GetAttributes()
-    {
-      return TypeDescriptor.GetAttributes(GetType());
-    }
     string ICustomTypeDescriptor.GetClassName()
     {
       return node.GetClassName();// GetType().Name;
@@ -292,18 +291,6 @@ namespace csg3mf
     string ICustomTypeDescriptor.GetComponentName()
     {
       return node.Name ?? "(noname)";
-    }
-    TypeConverter ICustomTypeDescriptor.GetConverter()
-    {
-      return TypeDescriptor.GetConverter(GetType());
-    }
-    EventDescriptor ICustomTypeDescriptor.GetDefaultEvent()
-    {
-      return TypeDescriptor.GetDefaultEvent(GetType());
-    }
-    PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty()
-    {
-      return TypeDescriptor.GetDefaultProperty(GetType());
     }
     object ICustomTypeDescriptor.GetEditor(Type editorBaseType)
     {
@@ -314,22 +301,6 @@ namespace csg3mf
     class ComponentEditor : System.ComponentModel.ComponentEditor
     {
       public override bool EditComponent(ITypeDescriptorContext context, object component) { ((Node)component).view.OnInfo(null); return false; }
-    }
-    EventDescriptorCollection ICustomTypeDescriptor.GetEvents()
-    {
-      return TypeDescriptor.GetEvents(GetType());
-    }
-    EventDescriptorCollection ICustomTypeDescriptor.GetEvents(Attribute[] attributes)
-    {
-      return TypeDescriptor.GetEvents(GetType(), attributes);
-    }
-    object ICustomTypeDescriptor.GetPropertyOwner(PropertyDescriptor pd)
-    {
-      return this;
-    }
-    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties()
-    {
-      return TypeDescriptor.GetProperties(GetType());
     }
     PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
     {
