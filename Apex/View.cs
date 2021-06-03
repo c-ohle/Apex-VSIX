@@ -8,10 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using static csg3mf.CDX;
+using static Apex.CDX;
 #pragma warning disable VSTHRD010
 
-namespace csg3mf
+namespace Apex
 {
   [Flags]
   enum Inval
@@ -70,7 +70,7 @@ namespace csg3mf
     protected override void OnHandleDestroyed(EventArgs e)
     {
       if (view != null) { Marshal.ReleaseComObject(view); view = null; }
-      scene = null; undos = null; if (tooltip != null) { tooltip.Dispose(); tooltip = null; }
+      scene = null; undos = null; tip.dispose();
       base.OnHandleDestroyed(e);
     }
 
@@ -218,7 +218,7 @@ namespace csg3mf
 
     void ISink.Timer()
     {
-      tooltiptimer();
+      tiptimer();
       animate();
       if (inval == 0) return;
       var f = inval; inval = 0;

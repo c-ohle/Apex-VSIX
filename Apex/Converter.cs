@@ -1,4 +1,4 @@
-﻿using csg3mf;
+﻿using Apex;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,9 +10,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static csg3mf.CDX;
+using static Apex.CDX;
 
-namespace csg3mf
+namespace Apex
 {
   class ArrayEditor : System.ComponentModel.Design.ArrayEditor
   {

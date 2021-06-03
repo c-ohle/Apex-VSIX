@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
 
-namespace csg3mf
+namespace Apex
 {
   class CodeEditor : UserControl
   {

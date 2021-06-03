@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace csg3mf
+namespace Apex
 {
 #if(false)
   [Guid("61C47B35-B845-44E3-A4DE-7C8751B64A44")]
@@ -134,7 +134,7 @@ namespace csg3mf
     }
   }
 
-  class ToolProvider : SimpleTypeDescriptor, ICustomTypeDescriptor
+  class ToolProvider //: SimpleTypeDescriptor, ICustomTypeDescriptor
   {
     //internal static bool edit;
     internal static (ToolEnum i, Keys k, ToolFlags f)[] kvs = new (ToolEnum, Keys, ToolFlags)[] {
@@ -175,38 +175,38 @@ namespace csg3mf
       (ToolEnum.CameraMoveZAxis, Keys.Z, ToolFlags.TouchpadGround),
     };
 
-    internal class PD : PropertyDescriptor
-    {
-      int i; Keys old; internal bool edit;
-      internal PD(int i) : base(i.ToString(), null) { old = kvs[this.i = i].k; }
-      public override Type ComponentType => typeof(ToolProvider);
-      public override bool IsReadOnly => !edit;
-      public override Type PropertyType => typeof(Keys);
-      public override bool CanResetValue(object component) => true;
-      public override void ResetValue(object component) => kvs[i].k = old;
-      public override bool ShouldSerializeValue(object component) => kvs[i].k != old;
-      static unsafe string nice(string s)
-      {
-        int ns = 0; var ss = stackalloc char[s.Length << 1];
-        for (int i = 0; i < s.Length; i++)
-        {
-          if (i != 0 && char.IsUpper(s[i])) ss[ns++] = char.IsUpper(s[i - 1]) ? '-' : ' ';
-          ss[ns++] = s[i];
-        }
-        return new string(ss);
-      }
-      public override string DisplayName => nice(kvs[i].i.ToString()) + "\0\n" + Name;
-      public override string Category => nice(kvs[i].f.ToString());
-      public override object GetValue(object component) => kvs[i].k;
-      public override void SetValue(object component, object value)
-      {
-        if (!(value is Keys k)) k = 0; kvs[i].k = k != 0 ? k : old;
-      }
-    }
-    PropertyDescriptorCollection pdc;
-    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
-    {
-      return pdc ?? (pdc = new PropertyDescriptorCollection(kvs.Select((p, i) => new PD(i)).ToArray()));
-    }
+    //internal class PD : PropertyDescriptor
+    //{
+    //  int i; Keys old; internal bool edit;
+    //  internal PD(int i) : base(i.ToString(), null) { old = kvs[this.i = i].k; }
+    //  public override Type ComponentType => typeof(ToolProvider);
+    //  public override bool IsReadOnly => !edit;
+    //  public override Type PropertyType => typeof(Keys);
+    //  public override bool CanResetValue(object component) => true;
+    //  public override void ResetValue(object component) => kvs[i].k = old;
+    //  public override bool ShouldSerializeValue(object component) => kvs[i].k != old;
+    //  static unsafe string nice(string s)
+    //  {
+    //    int ns = 0; var ss = stackalloc char[s.Length << 1];
+    //    for (int i = 0; i < s.Length; i++)
+    //    {
+    //      if (i != 0 && char.IsUpper(s[i])) ss[ns++] = char.IsUpper(s[i - 1]) ? '-' : ' ';
+    //      ss[ns++] = s[i];
+    //    }
+    //    return new string(ss);
+    //  }
+    //  public override string DisplayName => nice(kvs[i].i.ToString()) + "\0\n" + Name;
+    //  public override string Category => nice(kvs[i].f.ToString());
+    //  public override object GetValue(object component) => kvs[i].k;
+    //  public override void SetValue(object component, object value)
+    //  {
+    //    if (!(value is Keys k)) k = 0; kvs[i].k = k != 0 ? k : old;
+    //  }
+    //}
+    //PropertyDescriptorCollection pdc;
+    //PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
+    //{
+    //  return pdc ?? (pdc = new PropertyDescriptorCollection(kvs.Select((p, i) => new PD(i)).ToArray()));
+    //}
   }
 }

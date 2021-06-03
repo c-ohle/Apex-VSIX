@@ -115,6 +115,9 @@
     <Content Include="Toolbox.bin">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Compile Include="View.Tips.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="16.9.31025.194" ExcludeAssets="runtime">

@@ -123,7 +123,7 @@
         <Parent guid="g2" id="_1000000" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
-          <ButtonText>Tool Assistent [Enter]</ButtonText>
+          <ButtonText>Tool Assistent</ButtonText>
         </Strings>
       </Button>
       <Button guid="g2" id="_2330" type="Button" priority="3">
@@ -135,14 +135,16 @@
       </Button>
       <Button guid="g2" id="_2035" type="Button" priority="5">
         <Parent guid="g2" id="_1000001" />
-        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Group</ButtonText>
         </Strings>
       </Button>
       <Button guid="g2" id="_2036" type="Button" priority="6">
         <Parent guid="g2" id="_1000001" />
-        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Ungroup</ButtonText>
         </Strings>

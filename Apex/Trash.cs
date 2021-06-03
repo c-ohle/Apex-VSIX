@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Windows.Forms;
-using static csg3mf.CDX;
+using static Apex.CDX;
 namespace Apex
 {
 #if (false)

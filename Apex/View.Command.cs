@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using static csg3mf.CDX;
+using static Apex.CDX;
 #pragma warning disable VSTHRD010
 
-namespace csg3mf
+namespace Apex
 {
   unsafe partial class CDXView
   {

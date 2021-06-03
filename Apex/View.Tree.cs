@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using static csg3mf.CDX;
+using static Apex.CDX;
 
-namespace csg3mf
+namespace Apex
 {
   unsafe partial class CDXView : UserControl
   {

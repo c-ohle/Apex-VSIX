@@ -11,7 +11,7 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.TextManager.Interop;
 #pragma warning disable VSTHRD010
 
-namespace csg3mf
+namespace Apex
 {
   [Guid(Guids.GuidEditorFactory)]
   public class EditorFactory : IVsEditorFactory, IDisposable

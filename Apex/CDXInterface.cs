@@ -13,7 +13,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using System.Xml;
 
-namespace csg3mf
+namespace Apex
 {
   public static unsafe partial class CDX
   {
@@ -210,8 +210,8 @@ namespace csg3mf
       float Height { get; }
     }
 
-    public static bool Group(this IExchange p, string s) => p.Category(s);
-    public static void Display(this IExchange p, string s) => p.DisplayName(s);
+    //public static bool Group(this IExchange p, string s) => p.Category(s);
+    //public static void Display(this IExchange p, string s) => p.DisplayName(s);
     //public static bool HasTexture(this INode p) => p.HasBuffer(BUFFER.TEXTURE);
     //public static IBuffer Texture(this INode p) => p.GetBuffer(BUFFER.TEXTURE);
     //internal static bool IsInSelect(this INode p)
@@ -633,7 +633,7 @@ namespace csg3mf
         public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-          var a = (float2)value; return ((FormattableString)$"{a.x:R}; {a.y:R}").ToString(culture);
+          return value is float2 a ? ((FormattableString)$"{a.x:R}; {a.y:R}").ToString(culture) : null;
         }
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
@@ -768,7 +768,7 @@ namespace csg3mf
         public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-          var a = (float3)value;
+          if (!(value is float3 a)) return null;
           if (context?.PropertyDescriptor.Name == ".s" && a.x == a.y && a.y == a.z)
             return ((FormattableString)$"{a.x:R}").ToString(culture);
           return ((FormattableString)$"{a.x:R}; {a.y:R}; {a.z:R}").ToString(culture);
@@ -853,7 +853,7 @@ namespace csg3mf
         public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-          var a = (float4)value; return ((FormattableString)$"{a.x:R}; {a.y:R}; {a.z:R}; {a.w:R}").ToString(culture);
+          return value is float4 a ? ((FormattableString)$"{a.x:R}; {a.y:R}; {a.z:R}; {a.w:R}").ToString(culture) : null;
         }
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {

@@ -83,11 +83,11 @@
       <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
       <MenuItem text="Tools..." id="2340" />
     </SubMenu>-->
-    <MenuItem text="Tool Assistent [Enter]" id="2221" />
+    <MenuItem text="Tool Assistent" id="2221" />
     <MenuItem text="Collisions" id="2330"/>
     <Seperator/>
-    <MenuItem text="Group" id="2035" keys="Control|W|G" />
-    <MenuItem text="Ungroup" id="2036" keys="Control|W|U" />
+    <MenuItem text="Group" id="2035" keys="Control|W|G" fl="DefaultInvisible|DynamicVisibility"/>
+    <MenuItem text="Ungroup" id="2036" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>
     <MenuItem text="Union" id="2301" keys="Control|E|U" fl="DefaultInvisible|DynamicVisibility"/>
     <MenuItem text="Intersection" id="2302" keys="Control|E|I" fl="DefaultInvisible|DynamicVisibility"/>

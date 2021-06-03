@@ -497,7 +497,7 @@ void CView::Pick(const short* pt)
   {
     auto pickp = XMVectorSet(
       +((pc.x * 2) / viewport.Width - 1),
-      -((pc.y * 2) / viewport.Height - 1), (ppz & 0xffffff) / (float)0xffffff, 0);
+      -((pc.y * 2) / viewport.Height - 1), (ppz & 0xffffff) * (1.0f / 0xffffff), 0);
     auto m = XMMatrixInverse(0, overnode.p->gettrans(scene.p) * mm[MM_VIEWPROJ]);
     vv[VV_OVERPOS] = XMVector3TransformCoord(pickp, m);
   }

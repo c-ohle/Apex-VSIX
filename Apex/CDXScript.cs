@@ -14,7 +14,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.Shell.Interop;
 #pragma warning disable VSTHRD010
 
-namespace csg3mf
+namespace Apex
 {
   unsafe struct Script
   {
@@ -1305,7 +1305,7 @@ namespace csg3mf
       var code = EditText;
       var debug = map.Any(p => (p.v & 0x10) != 0);
       var isdebug = node.funcs != null && node.funcs.Length != 0 && node.funcs[0] == null;// node.funcs != null && ((object[])node.funcs[0]).Length == 4;
-      if (debug == isdebug && code == node.getcode()) return;
+      if (debug == isdebug && code == node.getcode()) return; 
       var inode = node.node;
       if (string.IsNullOrEmpty(code))
       {
@@ -1314,10 +1314,13 @@ namespace csg3mf
         inode.RemoveBuffer(CDX.BUFFER.SCRIPTDATA);
         node.Invalidate(Inval.PropertySet); return;
       }
-      var cd = Node.GetData(node.GetMethod<Action<IExchange>>());
+      if(node.funcs != null && node.funcs.Length != 0)
+      { 
+        var cd = Node.GetData(node.GetMethod<Action<IExchange>>());
+        inode.SetBytes(CDX.BUFFER.SCRIPTDATA, cd != null ? Encoding.UTF8.GetBytes(cd) : null);
+      }
       node.funcs = null;
       inode.SetBytes(CDX.BUFFER.SCRIPT, Encoding.UTF8.GetBytes(code));
-      inode.SetBytes(CDX.BUFFER.SCRIPTDATA, cd != null ? Encoding.UTF8.GetBytes(cd) : null);
       if (debug)
       {
         Script.bps = map.Where(p => p.v == 0x1A).Select(p => p.i).ToArray();

@@ -9,7 +9,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace csg3mf
+namespace Apex
 {
   public unsafe static class CSG
   {

@@ -9,9 +9,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using static csg3mf.CDX;
+using static Apex.CDX;
 
-namespace csg3mf
+namespace Apex
 {
   public static unsafe partial class CDX
   {

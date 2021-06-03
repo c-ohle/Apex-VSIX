@@ -11,7 +11,7 @@ using System.IO;
 using System.Runtime.Serialization;
 #pragma warning disable VSTHRD010 // Singlethread-Typen im Hauptthread aufrufen
 
-namespace csg3mf
+namespace Apex
 {
   [Serializable()]
   public class ToolboxItem : ISerializable

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using static csg3mf.CDX;
+using static Apex.CDX;
 
-namespace csg3mf
+namespace Apex
 {
   unsafe partial class CDXView
   {

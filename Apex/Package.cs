@@ -7,13 +7,11 @@ using System.Runtime.InteropServices;
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
 
-//todo: namespace Apex
 //todo: system.io block for scripts 
 //todo: VS for 2D
 //todo: texture names, io bin...
 //todo: collision
 //todo: import paint3d export
-//todo: cmd checkboard
 //todo: cmd check mesh
 //todo: search box in script
 //todo: script foreach
@@ -29,7 +27,7 @@ using System.Runtime.InteropServices;
 //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 //[ProvideEditorLogicalView(typeof(EditorFactory), "{7651a703-06e5-11d1-8ebd-00a0c90f26ea}")]
 
-namespace csg3mf
+namespace Apex
 {
   [Guid(Guids.guidPackage)]
   [PackageRegistration(UseManagedResourcesOnly = true)]//, AllowsBackgroundLoading = true)]
@@ -69,8 +67,8 @@ namespace csg3mf
     {
       var toolbox = GetService(typeof(SVsToolbox)) as IVsToolbox;
       if (toolbox == null) return;
-      csg3mf.ToolboxDataProvider.RemoveItems(toolbox);
-      csg3mf.ToolboxDataProvider.RestoreItems(toolbox);
+      Apex.ToolboxDataProvider.RemoveItems(toolbox);
+      Apex.ToolboxDataProvider.RestoreItems(toolbox);
     }
   }
 
