@@ -74,8 +74,8 @@ namespace Apex
 
     public enum Cmd
     {
-      Center = 1, //in float border
-      CenterSel = 2, //in float border
+      Center = 1, //in float border, zoom out camdat
+      CenterSel = 2, //in float border, zoom out camdat
       //GetBox = 3, //in float4x3, out float4[2] 
       //GetBoxSel = 4, //in float4x3, out float4[2] 
       SetPlane = 5, //in float4x3
@@ -112,8 +112,7 @@ namespace Apex
     {
       string Samples { get; set; }
       uint BkColor { get; set; }
-      float Projection { get; set; }
-      float ToolScale { get; set; }
+      //float Projection { get; set; }
       Render Render { get; set; }
       IScene Scene { get; set; }
       INode Camera { get; set; }

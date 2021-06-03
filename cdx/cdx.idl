@@ -35,8 +35,8 @@ typedef enum CDX_RENDER
 
 typedef enum CDX_CMD
 {
-  CDX_CMD_CENTER = 1, //XMFLOAT4 border, zoom, fnear, ffar
-  CDX_CMD_CENTERSEL = 2, //FLOAT border, zoom, fnear, ffar
+  CDX_CMD_CENTER = 1, //XMFLOAT4 in border,zoom  out fov,ner,far,minz
+  CDX_CMD_CENTERSEL = 2, //FLOAT border,zoom, out fov,ner,far,minz
   CDX_CMD_GETBOX = 3, //XMFLOAT4X3
   CDX_CMD_GETBOXSEL = 4, //XMFLOAT4X3
   CDX_CMD_SETPLANE = 5, //XMFLOAT4X3
@@ -80,10 +80,8 @@ interface ICDXView : IUnknown
   [propput] HRESULT Samples([in] BSTR p);
   [propget] HRESULT BkColor([out, retval] UINT* p);
   [propput] HRESULT BkColor([in] UINT p);
-  [propget] HRESULT Projection([out, retval] FLOAT* p);
-  [propput] HRESULT Projection([in] FLOAT p);
-  [propget] HRESULT ToolScale([out, retval] FLOAT* p);
-  [propput] HRESULT ToolScale([in] FLOAT p);
+  //[propget] HRESULT Projection([out, retval] FLOAT* p);
+  //[propput] HRESULT Projection([in] FLOAT p);
   [propget] HRESULT Render([out, retval] CDX_RENDER* p);
   [propput] HRESULT Render([in] CDX_RENDER p);
   [propget] HRESULT Scene([out, retval] ICDXScene** p);
@@ -130,18 +128,12 @@ interface ICDXRoot : IUnknown
 [object, uuid(98068F4F-7768-484B-A2F8-21D4F7B5D811), pointer_default(unique)]
 interface ICDXScene : ICDXRoot
 {
-  //HRESULT GetNode([in] UINT i, [out, retval] ICDXNode** p);
   [propget] HRESULT Tag([out, retval] IUnknown** p);
   [propput] HRESULT Tag([in] IUnknown* p);
   [propget] HRESULT Unit([out, retval] CDX_UNIT* p);
   [propput] HRESULT Unit([in] CDX_UNIT p);
-  //[propget] HRESULT Child([out, retval] ICDXNode** p);
-  //[propget] HRESULT Count([out, retval] UINT* p);
   [propget] HRESULT SelectionCount([out, retval] UINT* p);
   HRESULT GetSelection([in] UINT i, [out, retval] ICDXNode** p);
-  //HRESULT AddNode([in] BSTR name, [out, retval] ICDXNode** p);
-  //HRESULT RemoveAt([in] UINT i);
-  //HRESULT InsertAt([in] UINT i, [in] ICDXNode* p);
   HRESULT Clear();
   HRESULT SaveToStream([in] IStream* s, [in, optional] ICDXNode* cam);
   HRESULT LoadFromStream([in] IStream* s);
@@ -153,8 +145,6 @@ typedef enum CDX_BUFFER
   CDX_BUFFER_INDEXBUFFER = 1,
   CDX_BUFFER_TEXCOORDS = 2,
   CDX_BUFFER_TEXTURE = 3,
-  //CDX_BUFFER_TRANSFORM = 4,
-  //CDX_BUFFER_NAME = 5,
   CDX_BUFFER_CAMERA = 7,
   CDX_BUFFER_LIGHT = 8,
   CDX_BUFFER_SCRIPT = 20,
@@ -187,9 +177,6 @@ interface ICDXNode : ICDXRoot
   [propput] HRESULT Tag([in] IUnknown* p);
   HRESULT NextSibling([in] ICDXNode* root, [out, retval] ICDXNode** p);
   HRESULT GetTransform([in] ICDXNode* root, [out, retval] XMFLOAT4X3* p);
-  //HRESULT AddNode([in] BSTR name, [out, retval] ICDXNode** p);
-  //HRESULT RemoveAt([in] UINT i);
-  //HRESULT InsertAt([in] UINT i, [in] ICDXNode* p);
   HRESULT HasBuffer([in] CDX_BUFFER id, [out, retval] BOOL* p);
   HRESULT GetBuffer([in] CDX_BUFFER id, [out, retval] ICDXBuffer** p);
   HRESULT SetBuffer([in] ICDXBuffer* p);
@@ -225,15 +212,6 @@ interface ICDXBuffer : IUnknown
   HRESULT Update([in] const BYTE* p, [in] UINT n);
 };
 
-//[object, uuid(37E366F0-098E-45FB-9152-54CD33D05B21), pointer_default(unique)]
-//interface ICDXTexture : IUnknown
-//{
-//  [propget] HRESULT Name([out, retval] BSTR* p);
-//  [propput] HRESULT Name([in] BSTR p);
-//  HRESULT GetPtr([in, out] BYTE** p, [out, retval] UINT* size);
-//  HRESULT Update([in] const BYTE* p, [in] UINT n);
-//};
-
 typedef enum CDX_INFO
 {
   CDX_INFO_VERTEXBUFFER = 0,
@@ -243,7 +221,6 @@ typedef enum CDX_INFO
   CDX_INFO_FONTS = 4,
   CDX_INFO_VIEWS = 5,
 } CDX_INFO;
-
 
 [object, uuid(f0993d73-ea2a-4bf1-b128-826d4a3ba584), pointer_default(unique)]
 interface ICDXFactory : IUnknown

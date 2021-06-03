@@ -504,16 +504,16 @@ namespace Apex
           var pp = (new float3(), (float3)dp);
           dc.DrawPoints(&pp.Item1, 2);
 #if(DEBUG)
-          var vm = view.Camera.GetTransform();
-          var pw = (p1 + dp) * wm;
-          pw -= (pw - vm.mp).Normalize() * 50;
-          var d = (vm.mp - pw).Length; var f = -2 * view.Projection;
-          vm.mp = default;
-          dc.Transform = Scaling(d * f) * vm * pw;
-          var s = $"dx: {dp.x} mm";
-          var ds = dc.GetTextExtent(s); var fo = dc.Font; var r = fo.Descent * 0.5f;
-          dc.Color = 0x80ffffff; dc.FillRect(0, 20, ds.x + 4 * r, ds.y + 2 * r);
-          dc.Color = 0xff000000; dc.DrawText(r * 2, 20 + fo.Ascent + r, s);
+          //var vm = view.Camera.GetTransform();
+          //var pw = (p1 + dp) * wm;
+          //pw -= (pw - vm.mp).Normalize() * 50;
+          //var d = (vm.mp - pw).Length; var f = -2 * view.Projection;
+          //vm.mp = default;
+          //dc.Transform = Scaling(d * f) * vm * pw;
+          //var s = $"dx: {dp.x} mm";
+          //var ds = dc.GetTextExtent(s); var fo = dc.Font; var r = fo.Descent * 0.5f;
+          //dc.Color = 0x80ffffff; dc.FillRect(0, 20, ds.x + 4 * r, ds.y + 2 * r);
+          //dc.Color = 0xff000000; dc.DrawText(r * 2, 20 + fo.Ascent + r, s);
 #endif
         }
       };
@@ -553,7 +553,7 @@ namespace Apex
       var box = GetBox(scene.Selection());
       var miz = box.min.z; var lov = miz != float.MaxValue ? miz : 0;
       var boxz = lov; var ansch = Math.Abs(boxz) < 0.1f;
-      var min = view.ToolScale * 0.5f;
+      var min = 50 * 0.5f; //toolscale
       var cm = view.Camera.GetTransform();
 
       var op = view.MouseOverPoint * view.MouseOverNode.GetTransform(main.Parent as INode);

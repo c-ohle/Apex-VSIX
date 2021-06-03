@@ -11,27 +11,15 @@ void SetMode(UINT mode);
 void SetVertexBuffer(ID3D11Buffer* p);
 extern CComPtr<ID3D11DeviceContext> context;
 
+
 void CView::setproject()
 {
-  auto znear = this->znear;
-  auto zfar = this->zfar;
-  auto vscale = this->vscale;
-
-  struct cameradata { float znear, zfar, fov; };
-  auto pb = camera.p->getbuffer(CDX_BUFFER_CAMERA);
-  if (pb)
-  {
-    auto cd = (cameradata*)pb->data.p;
-    //znear = cd->znear;
-    //zfar = cd->zfar;
-    //vscale = cd->fov * 0.0004f;
-  }
-
-  auto vpx = viewport.Width * (znear * vscale);
-  auto vpy = viewport.Height * (znear * vscale);
+  camdat = *(const cameradata*)camera.p->getbuffer(CDX_BUFFER_CAMERA)->data.p;
+  auto vpx = viewport.Width * (camdat.znear * camdat.vscale);
+  auto vpy = viewport.Height * (camdat.znear * camdat.vscale);
   SetMatrix(MM_VIEWPROJ, XMMatrixInverse(0,
     camera.p->gettrans(camera.p->parent ? scene.p : 0)) *
-    XMMatrixPerspectiveOffCenterLH(vpx, -vpx, -vpy, vpy, znear, zfar));
+    XMMatrixPerspectiveOffCenterLH(vpx, -vpx, -vpy, vpy, camdat.znear, camdat.zfar));
 }
 
 void CView::renderekbox(CNode* main)
@@ -171,7 +159,8 @@ void CView::RenderScene()
   XMVECTOR light;
   if (plight) light = plight->gettrans(scene.p).r[2];
   else light = XMVector3Normalize(XMVectorSet(1, -1, 2, 0));
-  XMVECTOR lightdir = flags & CDX_RENDER_SHADOWS ? XMVectorSetW(XMVectorMultiply(light, XMVectorSet(0.3f, 0.3f, 0.3f, 0)), minwz) : light;
+  XMVECTOR lightdir = flags & CDX_RENDER_SHADOWS ? 
+    XMVectorSetW(XMVectorMultiply(light, XMVectorSet(0.3f, 0.3f, 0.3f, 0)), camdat.minwz) : light;
   SetVector(VV_LIGHTDIR, lightdir);
   for (UINT i = 0; i < nrecs; i++)
   {

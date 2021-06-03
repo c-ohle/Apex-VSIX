@@ -76,7 +76,7 @@ namespace Apex
 
     internal CDXWindowPane pane;
     IScene scene; IView view; static long drvsettings = 0x400000000;
-    INode defcam; int flags = 1|4;// | 2; //1:Checkboard 2:Collisions 4:Tooltips
+    INode defcam; int flags = 1 | 4; // | 2; //1:Checkboard 2:Collisions 4:Tooltips
 
     static CDXView()
     {
@@ -150,7 +150,6 @@ namespace Apex
     {
       view = Factory.CreateView(Handle, this, (uint)(drvsettings >> 32));
       view.BkColor = 0xffcccccc;
-      view.ToolScale = 50;
       view.Render = (Render)Application.UserAppDataRegistry.GetValue("fl",
         (int)(Render.BoundingBox | Render.Coordinates | Render.Wireframe | Render.Shadows))
         | Render.ZPlaneShadows;
@@ -159,16 +158,27 @@ namespace Apex
       {
         if (p.Scene == null) defcam = p;
         view.Camera = p; scene.Tag = null;
-        var data = new float4(0, 0, -1, +2);
-        view.Command(Cmd.Center, &data);
+        if (!p.HasBuffer(BUFFER.CAMERA))
+        {
+          var c1 = new float4(0.0002f, 1f, 10000, -1); //fov, near, far, minz
+          p.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(float4));
+          var c2 = new float4(0, 0, 0, 0);
+          view.Command(Cmd.Center, &c2);
+          //todo: check zrange 
+        }
       }
       else
       {
-        defcam = Factory.CreateNode(); defcam.Name = "(default)"; defcam.Transform = !LookAtLH(new float3(-3, -6, 3), default, new float3(0, 0, 1));
+        defcam = Factory.CreateNode(); defcam.Name = "(default)";
+        defcam.Transform = !LookAtLH(new float3(-3, -6, 3), default, new float3(0, 0, 1));
+        var cam = new float4(0.0002f, 1f, 10000, -1); //fov,near,far,minz
+        defcam.SetBufferPtr(BUFFER.CAMERA, &cam, sizeof(float4));
         view.Camera = defcam;
-        var data = new float4(100, 1, -1, +2);
+        var data = new float4(100, 1, 1, 0);
         view.Command(Cmd.Center, &data);
+        //todo: check zrange 
       }
+      inval |= Inval.Tree | Inval.Select; //-> PropertyGrid
     }
 
     protected override void WndProc(ref Message m)
@@ -193,6 +203,8 @@ namespace Apex
     int ISelectionContainer.GetObjects(uint dwFlags, uint cObjects, object[] apUnkObjects)
     {
       var sc = scene.SelectionCount;
+      //if (sc == 0) { apUnkObjects[0] = new CExchange(); return 0; }
+      //if (sc == 0) { apUnkObjects[0] = Node.From(this, view.Camera); return 0; }
       if (sc == 0) { apUnkObjects[0] = tempscene ?? (tempscene = new Scene { view = this }); return 0; }
       else tempscene = null;
       for (int i = 0, n = Math.Min(apUnkObjects.Length, sc); i < n; i++)
@@ -212,7 +224,6 @@ namespace Apex
     Inval inval;
     internal void Invalidate(Inval f)
     {
-      //if((f& Inval.Select)!=0) { }
       if (inval == 0) Invalidate(); inval |= f;
     }
 
@@ -307,7 +318,7 @@ namespace Apex
       var l = lParam.ToInt32();
       if (l == -1)
       {
-        if (Environment.TickCount - ctxon < 100) return; 
+        if (Environment.TickCount - ctxon < 100) return;
         var p = wnd.PointToScreen(new System.Drawing.Point());
         ((short*)&l)[0] = (short)p.X;
         ((short*)&l)[1] = (short)p.Y;
@@ -354,9 +365,45 @@ namespace Apex
     }
 
     string[] samples; static string[] driver;
-
+     
     Scene tempscene;
-    class Scene : ICustomTypeDescriptor
+    class Scene : NodeBase, ICustomTypeDescriptor
+    {
+      protected override void Exchange(IExchange ex)
+      {
+        if (ex.Category("General"))
+        {
+          var t1 = view.scene.Unit; if (ex.Exchange("Unit", ref t1)) view.scene.Unit = t1;
+          var t2 = System.Drawing.Color.FromArgb((int)view.view.BkColor);
+          if (ex.Exchange("BkColor", ref t2)) view.view.BkColor = (uint)t2.ToArgb();
+        }
+        if (ex.Category("Camera"))
+        {
+          var p = view.view.Camera;
+          float4* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); float4 cd = *t;
+          var fov = cd.x;// (float)(cd.x * (180 / Math.PI));
+          if (ex.Exchange("Fov", ref fov)) 
+          {
+            cd.x = fov;// (float)(fov * (Math.PI / 180) );
+            p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(float4));
+          }
+          if (ex.Exchange("NearPlane", ref cd.y) ||
+              ex.Exchange("FarPlane", ref cd.z)) 
+            p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(float4));
+        }
+      }
+
+      string ICustomTypeDescriptor.GetClassName() => GetType().Name;
+      string ICustomTypeDescriptor.GetComponentName() => "3MF";
+      PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
+      {
+        if (pdc == null) GetProps(pdc = new PropertyDescriptorCollection(null)); return pdc;
+      }
+      PropertyDescriptorCollection pdc;
+    }
+
+    /*
+    class Scene2 : SimpleTypeDescriptor, ICustomTypeDescriptor
     {
       //public Scene() { }
       internal CDXView view;
@@ -368,7 +415,11 @@ namespace Apex
       public System.Drawing.Color BkColor
       {
         get => System.Drawing.Color.FromArgb((int)view.view.BkColor);
-        set { view.view.BkColor = (uint)value.ToArgb(); view.Invalidate(0); }
+        set
+        {
+          var c = (uint)value.ToArgb();
+          view.Execute(() => { var t = view.view.BkColor; view.view.BkColor = c; c = t; view.Invalidate(Inval.Render); });
+        }
       }
       [TypeConverter(typeof(CamConv))]
       public INode Camera
@@ -383,6 +434,22 @@ namespace Apex
           }
           view.Execute(() => { var t = view.view.Camera; view.view.Camera = value; value = t; });
         }
+      }
+
+      public float Fov
+      {
+        get { float4* p; Camera.GetBufferPtr(BUFFER.CAMERA,(void**)&p); return p->x; }
+        set { }
+      }
+      public float NearPlane
+      {
+        get { float4* p; Camera.GetBufferPtr(BUFFER.CAMERA, (void**)&p); return p->y; }
+        set { }
+      }
+      public float FarPlane
+      {
+        get { float4* p; Camera.GetBufferPtr(BUFFER.CAMERA, (void**)&p); return p->z; }
+        set { }
       }
 
       class CamConv : TypeConverter
@@ -420,20 +487,10 @@ namespace Apex
         }
       }
 
-      AttributeCollection ICustomTypeDescriptor.GetAttributes() => TypeDescriptor.GetAttributes(GetType());
       string ICustomTypeDescriptor.GetClassName() => GetType().Name;
       string ICustomTypeDescriptor.GetComponentName() => "3MF";
-      TypeConverter ICustomTypeDescriptor.GetConverter() => TypeDescriptor.GetConverter(GetType());
-      EventDescriptor ICustomTypeDescriptor.GetDefaultEvent() => TypeDescriptor.GetDefaultEvent(GetType());
-      PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty() => TypeDescriptor.GetDefaultProperty(GetType());
-      object ICustomTypeDescriptor.GetEditor(Type t) => TypeDescriptor.GetEditor(GetType(), t);
-      EventDescriptorCollection ICustomTypeDescriptor.GetEvents() => TypeDescriptor.GetEvents(GetType());
-      EventDescriptorCollection ICustomTypeDescriptor.GetEvents(Attribute[] a) => TypeDescriptor.GetEvents(GetType(), a);
-      PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties() => TypeDescriptor.GetProperties(GetType());
-      PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] a) => TypeDescriptor.GetProperties(GetType(), a);
-      object ICustomTypeDescriptor.GetPropertyOwner(PropertyDescriptor pd) => this;
     }
-
+    */
   }
 
 }

@@ -25,8 +25,182 @@ namespace Apex
     void Annotation<T>(string name, T value);
     bool Modified { get; }
   }
+ 
+  unsafe abstract class NodeBase : SimpleTypeDescriptor
+  {
+    internal CDXView view;
+    protected abstract void Exchange(IExchange ex);
+    internal void GetProps(PropertyDescriptorCollection pdc)
+    {
+      if (ex.attris == null) ex.attris = new List<Attribute>();
+      ex.todo = 0; ex.value = pdc; Exchange(ex); ex.attris.Clear();
+    }
+    internal object GetProp(string name)
+    {
+      ex.todo = 1; ex.value = name; Exchange(ex);
+      return ex.todo != 1 ? ex.value : null;
+    }
+    internal bool SetProp(string name, object value)
+    {
+      ex.todo = 2; ex.value = (name, value); Exchange(ex);
+      if (ex.todo == 2) return false;
+      view.Invalidate(Inval.Properties);
+      return true;
+    }
+    internal static string GetData(Action<IExchange> func)
+    {
+      if (func == null) return null;
+      var e = new XElement("x"); ex.todo = 3; ex.value = e;
+      try { func(ex); } catch { }
+      return e.HasAttributes ? e.ToString() : null;
+    }
+    internal static void SetData(Action<IExchange> func, string s)
+    {
+      if (func == null) return;
+      var t1 = ex.todo; var t2 = ex.value;
+      try { ex.todo = 4; ex.value = XElement.Parse(s); func(ex); } catch { }
+      ex.todo = t1; ex.value = t2;
+    }
+    static readonly EX ex = new EX();
+    protected class EX : IExchange
+    {
+      internal int todo; internal object value; internal List<Attribute> attris;
+      bool IExchange.Category(string name)
+      {
+        if (todo < 0) return false;
+        if (todo == 0) { attris.RemoveAll(p => p is CategoryAttribute); attris.Add(new CategoryAttribute(name)); }
+        return true;
+      }
+      bool IExchange.DisplayName(string name)
+      {
+        if (todo != 0) return false;
+        if (name != null) attris.Add(new DisplayNameAttribute(name)); return true;
+      }
+      void IExchange.Description(string text)
+      {
+        if (todo == 0) attris.Add(new DescriptionAttribute(text));
+      }
+      void IExchange.TypeConverter(Type t)
+      {
+        if (todo == 0) attris.Add(new TypeConverterAttribute(t));
+      }
+      void IExchange.ReadOnly()
+      {
+        if (todo == 0) attris.Add(new ReadOnlyAttribute(true));
+        else if (todo == 3) todo = 5;
+      }
+      void IExchange.Format(string text)
+      {
+        if (todo != 0) return;
+        attris.Add(new TypeConverterAttribute(typeof(FormatConverter)));
+        attris.Add(new AmbientValueAttribute(text));
+      }
+      bool IExchange.Exchange<T>(string name, ref T value)
+      {
+        switch (todo)
+        {
+          case 0: create(name, typeof(T)); break;
+          case 1: if (name == (string)this.value) { this.value = value; todo = -1; } break;
+          case 2:
+            var v = ((string name, object value))this.value;
+            if (name == v.name) { value = (T)v.value; todo = -2; return true; }
+            break;
+          case 3: save(name, value, typeof(T)); break;
+          case 4: { var p = load(name, typeof(T)); if (p != null) value = (T)p; } break;
+          case 5: todo = 3; break;
+        }
+        return false;
+      }
+      void IExchange.Annotation<T>(string name, T value)
+      {
+        if (todo == 3) save(name, value, typeof(T));
+      }
+      bool IExchange.Modified { get => todo == -2; }
+      void create(string name, Type t)
+      {
+        for (var a = t; a.IsArray; a = a.GetElementType())
+        {
+          if (TypeDescriptor.GetConverter(a) is ArrayConverter) break;
+          TypeDescriptor.AddAttributes(a, new TypeConverterAttribute(typeof(ArrayConverter)));
+          TypeDescriptor.AddAttributes(a, new EditorAttribute(typeof(ArrayEditor), typeof(System.Drawing.Design.UITypeEditor)));
+        }
+        ((PropertyDescriptorCollection)value).Add(new PD(name, attris.ToArray()) { type = t });
+        attris.RemoveAll(p => !(p is CategoryAttribute));
+      }
+      static string savea(object value, Type t)
+      {
+        if (!t.IsArray) return TypeDescriptor.GetConverter(t).ConvertToInvariantString(value);
+        t = t.GetElementType(); return $"{{{string.Join("}{", ((Array)value).Cast<object>().Select(p => savea(p, t)))}}}";
+      }
+      static ReadOnlySpan<char> take(ref ReadOnlySpan<char> a, string sep)
+      {
+        var x = a.IndexOf(sep.AsSpan()); var r = a.Slice(0, x != -1 ? x : a.Length);
+        a = a.Slice(x != -1 ? x + sep.Length : a.Length); return r;
+      }
+      static object loada(ReadOnlySpan<char> s, Type t)
+      {
+        if (!t.IsArray) return TypeDescriptor.GetConverter(t).ConvertFromInvariantString(s.ToString());
+        int c = 0; for (int i = 0, k = 0; i < s.Length; i++) if (s[i] == '{') k++; else if (s[i] == '}' && --k == 0) c++;
+        var a = (Array)Activator.CreateInstance(t, c); t = t.GetElementType();
+        for (int i = 0, k = 0, j = 0, l = 0; i < s.Length; i++)
+          if (s[i] == '{') { if (k++ == 0) l = i + 1; }
+          else if (s[i] == '}' && --k == 0) a.SetValue(loada(s.Slice(l, i - l), t), j++);
+        return a;
+      }
+      void save(string name, object value, Type t)
+      {
+        if (value == null) return;
+        if (t.IsArray) value = savea(value, t);
+        else
+        {
+          var c = TypeDescriptor.GetConverter(t); if (!c.CanConvertFrom(typeof(string))) return;
+          value = c.ConvertToInvariantString(value);
+        }
+        name = name.Replace(' ', '_'); //name = System.Xml.XmlConvert.EncodeName(name);
+        ((XElement)this.value).SetAttributeValue(name, value);
+      }
+      object load(string name, Type t)
+      {
+        name = name.Replace(' ', '_'); //name = System.Xml.XmlConvert.EncodeName(name);
+        var a = ((XElement)value).Attribute(name); if (a == null) return null;
+        if (t.IsArray)
+        {
+          var p = loada(a.Value.AsSpan(), t); return p;
+        }
+        else
+        {
+          var c = TypeDescriptor.GetConverter(t);
+          var p = c.ConvertFromInvariantString(a.Value); return p;
+        }
+      }
+      class PD : PropertyDescriptor
+      {
+        internal Type type;
+        public PD(string s, Attribute[] a) : base(s, a) { }
+        public override Type ComponentType => typeof(NodeBase);
+        public override Type PropertyType => type;
+        public override bool IsReadOnly => this.Attributes.OfType<ReadOnlyAttribute>().Any();
+        public override bool ShouldSerializeValue(object component) => true;
+        public override bool CanResetValue(object component) => false;
+        public override void ResetValue(object component) { }
+        public override object GetValue(object component)
+        {
+          return ((NodeBase)component).GetProp(Name);
+        }
+        public override void SetValue(object component, object value)
+        {
+          if (value is Func<object, object> x) if ((value = x(component)) == null) return;
+          var node = (NodeBase)component; var name = Name; var up = node.view.undopos();
+          var old = node.GetProp(name); if (!node.SetProp(name, value)) return;
+          if (node.view.undopos() > up) return;
+          if (old != null && (value = node.GetProp(name)) != null && old.Equals(value)) return;
+          node.view.AddUndo(() => { var t = node.GetProp(name); node.SetProp(name, old); old = t; });
+        }
+      }
+    }
+  }
 
-  unsafe class Node : SimpleTypeDescriptor, ICustomTypeDescriptor,
+  unsafe class Node : NodeBase, ICustomTypeDescriptor,
     ISite, IServiceProvider, IComponent, IMenuCommandService
   {
     //~Node() { Debug.WriteLine("~Node()"); }
@@ -39,7 +213,7 @@ namespace Apex
     }
     IntPtr ptr;
     internal INode node => (INode)Marshal.GetObjectForIUnknown(ptr);
-    internal CDXView view; internal object[] funcs;
+    internal object[] funcs;
 
     internal protected INode this[string name]
     {
@@ -214,10 +388,10 @@ namespace Apex
       var a = getfuncs(); for (int i = 1; i < a.Length; i++) if (a[i] is T t) return t; return null;
     }
 
-    internal struct cameradata { internal float near, far, fov; }
+    internal struct cameradata { internal float fov, near, far, minz; }
     internal struct lightdata { internal float a, b, c, d; }
 
-    void Exchange(IExchange e)
+    override protected void Exchange(IExchange e)
     {
       GetMethod<Action<IExchange>>()?.Invoke(e);
       var node = this.node;
@@ -347,178 +521,5 @@ namespace Apex
     void IMenuCommandService.ShowContextMenu(CommandID menuID, int x, int y) { }
     void IDisposable.Dispose() { }
 
-    internal void GetProps(PropertyDescriptorCollection pdc)
-    {
-      if (ex.attris == null) ex.attris = new List<Attribute>();
-      ex.todo = 0; ex.value = pdc; Exchange(ex); ex.attris.Clear();
-    }
-    internal object GetProp(string name)
-    {
-      ex.todo = 1; ex.value = name; Exchange(ex);
-      return ex.todo != 1 ? ex.value : null;
-    }
-    internal bool SetProp(string name, object value)
-    {
-      ex.todo = 2; ex.value = (name, value); Exchange(ex);
-      if (ex.todo == 2) return false;
-      view.Invalidate(Inval.Properties);
-      //if (name.Length != 0 && name[0] == '.') return true;
-      //if (funcs == null || funcs.Length <= 1) return true;
-      //node.RemoveBuffer(BUFFER.SCRIPTDATA);
-      return true;
-    }
-
-    internal static string GetData(Action<IExchange> func)
-    {
-      if (func == null) return null;
-      var e = new XElement("x"); ex.todo = 3; ex.value = e;
-      try { func(ex); } catch { }
-      return e.HasAttributes ? e.ToString() : null;
-    }
-    internal static void SetData(Action<IExchange> func, string s)
-    {
-      if (func == null) return;
-      var t1 = ex.todo; var t2 = ex.value;
-      try { ex.todo = 4; ex.value = XElement.Parse(s); func(ex); } catch { }
-      ex.todo = t1; ex.value = t2;
-    }
-
-    static EX ex = new EX();
-    class EX : IExchange
-    {
-      internal int todo; internal object value; internal List<Attribute> attris;
-      bool IExchange.Category(string name)
-      {
-        if (todo < 0) return false;
-        if (todo == 0) { attris.RemoveAll(p => p is CategoryAttribute); attris.Add(new CategoryAttribute(name)); }
-        return true;
-      }
-      bool IExchange.DisplayName(string name)
-      {
-        if (todo != 0) return false;
-        if (name != null) attris.Add(new DisplayNameAttribute(name)); return true;
-      }
-      void IExchange.Description(string text)
-      {
-        if (todo == 0) attris.Add(new DescriptionAttribute(text));
-      }
-      void IExchange.TypeConverter(Type t)
-      {
-        if (todo == 0) attris.Add(new TypeConverterAttribute(t));
-      }
-      void IExchange.ReadOnly()
-      {
-        if (todo == 0) attris.Add(new ReadOnlyAttribute(true));
-        else if (todo == 3) todo = 5;
-      }
-      void IExchange.Format(string text)
-      {
-        if (todo != 0) return;
-        attris.Add(new TypeConverterAttribute(typeof(FormatConverter)));
-        attris.Add(new AmbientValueAttribute(text));
-      }
-      bool IExchange.Exchange<T>(string name, ref T value)
-      {
-        switch (todo)
-        {
-          case 0: create(name, typeof(T)); break;
-          case 1: if (name == (string)this.value) { this.value = value; todo = -1; } break;
-          case 2:
-            var v = ((string name, object value))this.value;
-            if (name == v.name) { value = (T)v.value; todo = -2; return true; }
-            break;
-          case 3: save(name, value, typeof(T)); break;
-          case 4: { var p = load(name, typeof(T)); if (p != null) value = (T)p; } break;
-          case 5: todo = 3; break;
-        }
-        return false;
-      }
-      void IExchange.Annotation<T>(string name, T value)
-      {
-        if (todo == 3) save(name, value, typeof(T));
-      }
-      bool IExchange.Modified { get => todo == -2; }
-      void create(string name, Type t)
-      {
-        for (var a = t; a.IsArray; a = a.GetElementType())
-        {
-          if (TypeDescriptor.GetConverter(a) is ArrayConverter) break;
-          TypeDescriptor.AddAttributes(a, new TypeConverterAttribute(typeof(ArrayConverter)));
-          TypeDescriptor.AddAttributes(a, new EditorAttribute(typeof(ArrayEditor), typeof(System.Drawing.Design.UITypeEditor)));
-        }
-        ((PropertyDescriptorCollection)value).Add(new PD(name, attris.ToArray()) { type = t });
-        attris.RemoveAll(p => !(p is CategoryAttribute));
-      }
-      static string savea(object value, Type t)
-      {
-        if (!t.IsArray) return TypeDescriptor.GetConverter(t).ConvertToInvariantString(value);
-        t = t.GetElementType(); return $"{{{string.Join("}{", ((Array)value).Cast<object>().Select(p => savea(p, t)))}}}";
-      }
-      static ReadOnlySpan<char> take(ref ReadOnlySpan<char> a, string sep)
-      {
-        var x = a.IndexOf(sep.AsSpan()); var r = a.Slice(0, x != -1 ? x : a.Length);
-        a = a.Slice(x != -1 ? x + sep.Length : a.Length); return r;
-      }
-      static object loada(ReadOnlySpan<char> s, Type t)
-      {
-        if (!t.IsArray) return TypeDescriptor.GetConverter(t).ConvertFromInvariantString(s.ToString());
-        int c = 0; for (int i = 0, k = 0; i < s.Length; i++) if (s[i] == '{') k++; else if (s[i] == '}' && --k == 0) c++;
-        var a = (Array)Activator.CreateInstance(t, c); t = t.GetElementType();
-        for (int i = 0, k = 0, j = 0, l = 0; i < s.Length; i++)
-          if (s[i] == '{') { if (k++ == 0) l = i + 1; }
-          else if (s[i] == '}' && --k == 0) a.SetValue(loada(s.Slice(l, i - l), t), j++);
-        return a;
-      }
-      void save(string name, object value, Type t)
-      {
-        if (value == null) return;
-        if (t.IsArray) value = savea(value, t);
-        else
-        {
-          var c = TypeDescriptor.GetConverter(t); if (!c.CanConvertFrom(typeof(string))) return;
-          value = c.ConvertToInvariantString(value);
-        }
-        name = name.Replace(' ', '_'); //name = System.Xml.XmlConvert.EncodeName(name);
-        ((XElement)this.value).SetAttributeValue(name, value);
-      }
-      object load(string name, Type t)
-      {
-        name = name.Replace(' ', '_'); //name = System.Xml.XmlConvert.EncodeName(name);
-        var a = ((XElement)value).Attribute(name); if (a == null) return null;
-        if (t.IsArray)
-        {
-          var p = loada(a.Value.AsSpan(), t); return p;
-        }
-        else
-        {
-          var c = TypeDescriptor.GetConverter(t);
-          var p = c.ConvertFromInvariantString(a.Value); return p;
-        }
-      }
-    }
-    class PD : PropertyDescriptor
-    {
-      internal Type type;
-      public PD(string s, Attribute[] a) : base(s, a) { }
-      public override Type ComponentType => typeof(Node);
-      public override Type PropertyType => type;
-      public override bool IsReadOnly => this.Attributes.OfType<ReadOnlyAttribute>().Any();
-      public override bool ShouldSerializeValue(object component) => true;
-      public override bool CanResetValue(object component) => false;
-      public override void ResetValue(object component) { }
-      public override object GetValue(object component)
-      {
-        return ((Node)component).GetProp(Name);
-      }
-      public override void SetValue(object component, object value)
-      {
-        if (value is Func<object, object> x) if ((value = x(component)) == null) return;
-        var node = (Node)component; var name = Name; var up = node.view.undopos();
-        var old = node.GetProp(name); if (!node.SetProp(name, value)) return;
-        if (node.view.undopos() > up) return;
-        if (old != null && (value = node.GetProp(name)) != null && old.Equals(value)) return;
-        node.view.AddUndo(() => { var t = node.GetProp(name); node.SetProp(name, old); old = t; });
-      }
-    }
   }
 }

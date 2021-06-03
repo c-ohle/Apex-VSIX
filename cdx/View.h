@@ -1,5 +1,7 @@
 #pragma once
 
+struct cameradata { float vscale, znear, zfar, minwz; };
+
 struct CView : ICDXView
 {
   WNDPROC                           proc;
@@ -19,7 +21,8 @@ struct CView : ICDXView
   CComPtr<CNode>                    overnode; 
   UINT                              iover = 0, pickprim = 0;
   CDX_RENDER                        flags = (CDX_RENDER)0;
-  float                             vscale = 0.0002f, znear = 0.1f, zfar = 100, minwz = -1, toolscale = 1;
+  cameradata                        camdat;
+  //float                             vscale = 0.0002f, znear = 0.1f, zfar = 1000, minwz = -1;
 
   struct MBOX { CNode* p; XMFLOAT4X3 m; XMFLOAT3 b[2]; };
   sarray<MBOX> boxes;
@@ -92,14 +95,14 @@ struct CView : ICDXView
   }
   HRESULT __stdcall get_BkColor(UINT* p);
   HRESULT __stdcall put_BkColor(UINT p);
-  HRESULT __stdcall get_Projection(FLOAT* p)
-  {
-    *p = vscale; return 0;
-  }
-  HRESULT __stdcall put_Projection(FLOAT p)
-  {
-    vscale = p; return 0;
-  }
+  //HRESULT __stdcall get_Projection(FLOAT* p)
+  //{
+  //  *p = vscale; return 0;
+  //}
+  //HRESULT __stdcall put_Projection(FLOAT p)
+  //{
+  //  vscale = p; return 0;
+  //}
   HRESULT __stdcall get_Render(CDX_RENDER* p)
   {
     *p = flags; return 0;
@@ -120,14 +123,6 @@ struct CView : ICDXView
   HRESULT __stdcall get_OverPoint(XMFLOAT3* p)
   {
     XMStoreFloat3(p, vv[VV_OVERPOS]); return 0;
-  }
-  HRESULT __stdcall get_ToolScale(FLOAT* p)
-  {
-    *p = toolscale; return 0;
-  }
-  HRESULT __stdcall put_ToolScale(FLOAT p)
-  {
-    toolscale = p; return 0;
   }
   HRESULT __stdcall Draw(CDX_DRAW id, UINT* data);
   HRESULT __stdcall Command(CDX_CMD  cmd, UINT* data);

@@ -187,7 +187,7 @@ namespace Apex
         var xml = package.GetPart(new Uri("/3D/3dmodel.model", UriKind.Relative));
         XDocument doc; long len; using (var str = xml.GetStream()) { doc = XDocument.Load(str); len = str.Length; } //560280 doc.Save("C:\\Users\\cohle\\Desktop\\test1.xml");
         var model = doc.Root; var ns = model.Name.Namespace;
-        var apex = model.GetPrefixOfNamespace(ax); if (apex == null) ax = string.Empty;
+        //var apex = model.GetPrefixOfNamespace(ax); if (apex == null) ax = string.Empty;
         var scene = Factory.CreateScene();
         var pt = model.Attribute(ax + "dragpt"); dragpt = pt != null ? (float3)pt.Value : float.NaN;
         if ((pt = model.Attribute(ax + "cam")) != null) { var pc = Factory.CreateNode(); pc.Name = "(default)"; pc.Transform = (float4x3)pt.Value; scene.Tag = pc; }
@@ -323,7 +323,7 @@ namespace Apex
           var bb = (string)obj.Attribute(ax + "cs");
           if (bb != null)
           {
-            node.SetBytes(BUFFER.SCRIPT, Convert.FromBase64String(bb)); apex = "x"; //todo: remove, detect old apex docs without x namespace
+            node.SetBytes(BUFFER.SCRIPT, Convert.FromBase64String(bb)); //apex = "x"; //todo: remove, detect old apex docs without x namespace
             if ((bb = (string)obj.Attribute(ax + "cd")) != null) node.SetBytes(BUFFER.SCRIPTDATA, Convert.FromBase64String(bb));
           }
           if ((bb = (string)obj.Attribute(ax + "ca")) != null)
@@ -336,7 +336,7 @@ namespace Apex
           if (cmp != null) foreach (var p in cmp.Elements(ns + "component")) convert(node.AddNode(null), p);
         };
         /////////////
-        if (apex == null)
+        if (model.GetPrefixOfNamespace(ax) == null)
         {
           var box = GetBox(scene.Nodes());
           if (!box.IsEmpty)

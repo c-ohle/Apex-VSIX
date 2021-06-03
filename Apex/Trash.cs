@@ -13,7 +13,8 @@ using System.Text;
 using System.Windows.Forms;
 using static Apex.CDX;
 namespace Apex
-{
+{ 
+
 #if (false)
 
             //ushort* iia; var nia = nodes[ia].GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&iia) / sizeof(ushort);
@@ -362,7 +363,6 @@ namespace Apex
 //  RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\PrecisionTouchPad", true);
 //  key.SetValue("AAPThreshold", "0", RegistryValueKind.DWord);
 //}
-
 
 #if (false)
     static void CopyCoords(INode sour, IBuffer destpp, IBuffer destii, ref float2[] btt)

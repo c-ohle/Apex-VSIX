@@ -202,9 +202,10 @@ namespace Apex
     {
       //if (!view.Scene.Descendants().Any(p => p.Mesh != null && p.Mesh.VertexCount != 0)) return 0;
       if (test != null) return 1;
-      var m = view.Camera.Transform; //view.Scene.Selection().Any(p=>p.Mesh!=null)
-      var data = new float4(100, 1, 0, 0);
+      var m = view.Camera.GetTypeTransform(0); // Transform;
+      var data = new float4(100, 1, 1, 0);
       view.Command(view.Scene.Selection().Any() ? Cmd.CenterSel : Cmd.Center, &data);
+      //todo: check nearfar
       AddUndo(undo(view.Camera, m)); Invalidate(); return 1;
     }
     int OnCut(object test)

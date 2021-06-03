@@ -199,15 +199,12 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
   {
     if (!camera.p) return 0;
     auto rand = ((float*)data)[0];
-    auto zoom = ((float*)data)[1];
-    auto fnea = ((float*)data)[2];
-    auto ffar = ((float*)data)[3];
     setproject();
     auto cwm = camera.p->getmatrix(); // gettrans(camera.p->parent ? scene.p : 0);
     auto icw = XMMatrixInverse(0, cwm);
-    auto ab = XMVectorSet((rcclient.right - rand) * vscale, (rcclient.bottom - rand) * vscale, 0, 0);
+    auto ab = XMVectorSet((rcclient.right - rand) * camdat.vscale, (rcclient.bottom - rand) * camdat.vscale, 0, 0);
     XMVECTOR box[4]; box[1] = box[3] = -(box[0] = box[2] = g_XMFltMax);
-   
+ 
     for (auto node = scene->child(); node; node = node->nextsibling(0))
     {
       if (cmd == CDX_CMD_CENTERSEL && !(node->flags & NODE_FL_INSEL)) continue;
@@ -223,13 +220,12 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
         box[1] = XMVectorMax(box[1], wp); //not in use
         wp = XMVector3Transform(op, tm); auto z = XMVectorSplatZ(wp) * ab;
         box[2] = XMVectorMin(box[2], wp + z);
-        box[3] = XMVectorMax(box[3], wp - z);
+        box[3] = XMVectorMax(box[3], wp - z); 
       }
-    }
-    
+    } 
     if (box[0].m128_f32[0] > box[1].m128_f32[0]) return 0;
     float fm = 0;
-    if (zoom != 0)
+    if (((float*)data)[1] != 0)
     {
       auto mp = (box[3] - box[2]) * 0.5;
       fm = -max(
@@ -240,16 +236,18 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
         box[2].m128_f32[1] + mp.m128_f32[1],
         fm) * cwm);
     }
-    if (fnea != 0)
-    {
-      auto z1 = box[2].m128_f32[2] - fm;
-      auto z2 = box[3].m128_f32[2] - fm;
-      z1 = max(1, min(1000, z1));
-      z2 = max(1, min(1000, z2));
-      z1 = powf(10, roundf(log10f(z1)) + fnea); // - 1);
-      z2 = powf(10, roundf(log10f(z2)) + ffar); // + 1);
-      znear = z1; zfar = z2; minwz = min(box[0].m128_f32[2], -1);
-    }
+    auto& cd = *(cameradata*)data;
+    cd.vscale = camdat.vscale;
+    cd.znear = box[2].m128_f32[2] - fm;
+    cd.zfar  = box[3].m128_f32[2] - fm;
+    cd.minwz = box[0].m128_f32[2];
+    //auto z1 = box[2].m128_f32[2] - fm;
+    //auto z2 = box[3].m128_f32[2] - fm;
+    //z1 = max(1, min(1000, z1));
+    //z2 = max(1, min(1000, z2));
+    //z1 = powf(10, roundf(log10f(z1)) + fnea); // - 1);
+    //z2 = powf(10, roundf(log10f(z2)) + ffar); // + 1);
+    //znear = z1; zfar = z2; minwz = min(box[0].m128_f32[2], -1);
     return 0;
   }
   case CDX_CMD_GETBOX:
