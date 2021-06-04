@@ -12,7 +12,7 @@ using System.Security;
 namespace Apex
 {
   public unsafe static class CSG
-  {
+  { 
     public static readonly IFactory Factory = (IFactory)COM.CreateInstance(
       IntPtr.Size == 8 ? "csg64.dll" : "csg32.dll", typeof(CFactory).GUID, typeof(IFactory).GUID);
     //public static readonly IFactory Factory = (IFactory)new CFactory(); //alternative from registry
