@@ -45,9 +45,7 @@ namespace Apex
         Cursors.Default;
       //Debug.WriteLine(view.MouseOverNode + " " + view.MouseOverPoint);
       tipmove(e);
-    }
-
-    
+    } 
     protected override void OnMouseUp(MouseEventArgs e)
     {
       tip.hide(); if (tool == null) return;
@@ -746,8 +744,7 @@ namespace Apex
         var box = GetBox(pp); if (box.IsEmpty) return;
         wp = (box.min + box.max) * 0.5f; wp.z = box.min.z;
       }
-      var del = undo(pp.Select((p, x) => undodel(p, scene, scene.Count + x)).ToArray());
-      del();
+      var del = undo(pp.Select((p, x) => undodel(p, scene, scene.Count + x)).ToArray()); del();
       var mm = pp.Select(p => p.Transform).ToArray();
       view.Command(Cmd.SetPlane, null); view.SetPlane(wp);
       tool = id =>
@@ -759,8 +756,8 @@ namespace Apex
         }
         if (id == 1)
         {
-          scene.Select(); for (int i = 0; i < pp.Length; i++) pp[i].IsSelect = true;
-          AddUndo(del); Invalidate(Inval.Tree | Inval.Select);
+          scene.Select(pp); Invalidate(Inval.Tree | Inval.Select);
+          AddUndo(undo(undosel(false, pp), del));
         }
         if (id == 2) { del(); Invalidate(Inval.Render); }
       };

@@ -6,7 +6,7 @@
 struct __declspec(novtable) CScene : ICDXScene
 {
   CDX_UNIT unit = CDX_UNIT_UNDEF;
-  CComPtr<CNode> lastchild;
+  CComPtr<CNode> lastchild, camera;
   sarray<CNode*> selection;
   CComPtr<IUnknown> tag;
   ~CScene()
@@ -43,6 +43,8 @@ struct __declspec(novtable) CScene : ICDXScene
   HRESULT __stdcall Clear();
   HRESULT __stdcall SaveToStream(IStream* str, ICDXNode* cam);
   HRESULT __stdcall LoadFromStream(IStream* str);
+  HRESULT __stdcall get_Camera(ICDXNode** p);
+  HRESULT __stdcall put_Camera(ICDXNode* p);
   HRESULT __stdcall get_Tag(IUnknown** p)
   {
     return tag.CopyTo(p);

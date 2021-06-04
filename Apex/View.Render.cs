@@ -44,12 +44,10 @@ namespace Apex
         }
         tool?.Invoke(4);
 
-        if (scene.SelectionCount == 1)
+        for (int i = 0, n = scene.SelectionCount; i < n; i++)
         {
-          var node = scene.GetSelection(0);
-          if (node.Tag is Node n)
-            try { n.GetMethod<Action<DC>>()?.Invoke(dc); }
-            catch (Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
+          var f = Node.From(this, scene.GetSelection(i)).GetMethod<Action<DC>>();
+          if (f != null) try { f(dc); } catch (Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
         }
         return;
       }

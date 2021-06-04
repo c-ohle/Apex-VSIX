@@ -60,7 +60,11 @@ namespace Apex
       void Update(byte* p, int n);
     }
 
-    public enum Render
+    internal struct BUFFERLIGHT { internal float a, b, c, d; }
+    internal struct BUFFERCAMERA { internal float fov, near, far, minz; }
+
+    [Flags]
+    public enum RenderFlags
     {
       BoundingBox = 0x0001,
       Coordinates = 0x0002,
@@ -112,8 +116,7 @@ namespace Apex
     {
       string Samples { get; set; }
       uint BkColor { get; set; }
-      //float Projection { get; set; }
-      Render Render { get; set; }
+      RenderFlags Render { get; set; }
       IScene Scene { get; set; }
       INode Camera { get; set; }
       INode MouseOverNode { get; }
@@ -153,7 +156,7 @@ namespace Apex
       INode AddNode(string name);
       void InsertAt(int i, INode p);
       void RemoveAt(int i);
-
+      INode Camera { get; set; }
       object Tag { [return: MarshalAs(UnmanagedType.IUnknown)] get; [param: MarshalAs(UnmanagedType.IUnknown)] set; }
       Unit Unit { get; set; }
       int SelectionCount { get; }
@@ -164,17 +167,15 @@ namespace Apex
     }
 
     [ComImport, Guid("2BB87169-81D3-405E-9C16-E4C22177BBAA"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]
-    public interface INode // : IRoot
+    public interface INode 
     {
       INode Child { get; }
       int Count { get; }
       INode AddNode(string name);
       void InsertAt(int i, INode p);
       void RemoveAt(int i);
-
       string Name { get; set; }
       IRoot Parent { get; }
-      //INode Parent { get; set; }
       IScene Scene { get; }
       INode Next { get; }
       int Index { get; set; }

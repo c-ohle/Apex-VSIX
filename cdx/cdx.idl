@@ -80,8 +80,6 @@ interface ICDXView : IUnknown
   [propput] HRESULT Samples([in] BSTR p);
   [propget] HRESULT BkColor([out, retval] UINT* p);
   [propput] HRESULT BkColor([in] UINT p);
-  //[propget] HRESULT Projection([out, retval] FLOAT* p);
-  //[propput] HRESULT Projection([in] FLOAT p);
   [propget] HRESULT Render([out, retval] CDX_RENDER* p);
   [propput] HRESULT Render([in] CDX_RENDER p);
   [propget] HRESULT Scene([out, retval] ICDXScene** p);
@@ -128,6 +126,8 @@ interface ICDXRoot : IUnknown
 [object, uuid(98068F4F-7768-484B-A2F8-21D4F7B5D811), pointer_default(unique)]
 interface ICDXScene : ICDXRoot
 {
+  [propget] HRESULT Camera([out, retval] ICDXNode** p);
+  [propput] HRESULT Camera([in] ICDXNode* p);
   [propget] HRESULT Tag([out, retval] IUnknown** p);
   [propput] HRESULT Tag([in] IUnknown* p);
   [propget] HRESULT Unit([out, retval] CDX_UNIT* p);

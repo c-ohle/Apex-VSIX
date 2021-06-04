@@ -45,8 +45,8 @@ namespace Apex
         case 2213: //Select Wireframe
         case 2214: //Select Outline
         case 2220: //Shadows
-          if (test != null) return (view.Render & (CDX.Render)(1 << (id - 2210))) != 0 ? 3 : 1;
-          view.Render ^= (CDX.Render)(1 << (id - 2210)); Application.UserAppDataRegistry.SetValue("fl", (int)view.Render);
+          if (test != null) return (view.Render & (CDX.RenderFlags)(1 << (id - 2210))) != 0 ? 3 : 1;
+          view.Render ^= (CDX.RenderFlags)(1 << (id - 2210)); Application.UserAppDataRegistry.SetValue("fl", (int)view.Render);
           Invalidate(); return 1;
         case 2301: return OnJoin(test, id);//Union   
         case 2302: return OnJoin(test, id);//Intersection

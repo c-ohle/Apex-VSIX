@@ -15,8 +15,9 @@ extern CComPtr<ID3D11DeviceContext> context;
 void CView::setproject()
 {
   camdat = *(const cameradata*)camera.p->getbuffer(CDX_BUFFER_CAMERA)->data.p;
-  auto vpx = viewport.Width * (camdat.znear * camdat.vscale);
-  auto vpy = viewport.Height * (camdat.znear * camdat.vscale);
+  auto f = camdat.znear * camdat.fov * (0.00025f / 45);
+  auto vpx = viewport.Width * f;
+  auto vpy = viewport.Height * f;
   SetMatrix(MM_VIEWPROJ, XMMatrixInverse(0,
     camera.p->gettrans(camera.p->parent ? scene.p : 0)) *
     XMMatrixPerspectiveOffCenterLH(vpx, -vpx, -vpy, vpy, camdat.znear, camdat.zfar));

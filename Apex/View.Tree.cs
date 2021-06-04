@@ -135,20 +135,14 @@ namespace Apex
         if (type == 0) view.Execute(act);
         else if (type == 1)
         {
-          var data = new Node.cameradata() { near = 0.1f, far = 1000, fov = 50 * (float)(Math.PI / 180) };
-          view.Execute(undo(node, BUFFER.CAMERA, &data, sizeof(Node.cameradata)) + act);
+          var data = view.view.Camera.GetBytes(BUFFER.CAMERA);
+          view.Execute(undo(node, BUFFER.CAMERA, data) + act);
         }
         else if (type == 2)
         {
-          var data = new Node.lightdata() { };
-          view.Execute(undo(node, BUFFER.LIGHT, &data, sizeof(Node.lightdata)) + act);
+          var data = new BUFFERLIGHT { };
+          view.Execute(undo(node, BUFFER.LIGHT, &data, sizeof(BUFFERLIGHT)) + act);
         }
-      }
-      protected override void OnMouseUp(MouseEventArgs e)
-      {
-        base.OnMouseUp(e);
-        //if (e.Button == MouseButtons.Right)
-        //  view.ShowContextMenu(0x2104);
       }
       protected override void OnKeyDown(KeyEventArgs e)
       {

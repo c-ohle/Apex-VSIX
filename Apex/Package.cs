@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
+//todo: camera delete
+//todo: F1
+//todo: multisel undo 
 //todo: tool rot vert um obj
 //todo: system.io block for scripts 
 //todo: VS for 2D

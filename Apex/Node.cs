@@ -25,10 +25,10 @@ namespace Apex
     void Annotation<T>(string name, T value);
     bool Modified { get; }
   }
- 
+
   unsafe abstract class NodeBase : SimpleTypeDescriptor
   {
-    internal CDXView view;
+    internal CDXView view; // -> undo inval
     protected abstract void Exchange(IExchange ex);
     internal void GetProps(PropertyDescriptorCollection pdc)
     {
@@ -37,12 +37,12 @@ namespace Apex
     }
     internal object GetProp(string name)
     {
-      ex.todo = 1; ex.value = name; Exchange(ex);
+      ex.todo = 1; ex.name = name; Exchange(ex);
       return ex.todo != 1 ? ex.value : null;
     }
     internal bool SetProp(string name, object value)
     {
-      ex.todo = 2; ex.value = (name, value); Exchange(ex);
+      ex.todo = 2; ex.name = name; ex.value = value; Exchange(ex);
       if (ex.todo == 2) return false;
       view.Invalidate(Inval.Properties);
       return true;
@@ -62,9 +62,9 @@ namespace Apex
       ex.todo = t1; ex.value = t2;
     }
     static readonly EX ex = new EX();
-    protected class EX : IExchange
+    class EX : IExchange
     {
-      internal int todo; internal object value; internal List<Attribute> attris;
+      internal int todo; internal string name; internal object value; internal List<Attribute> attris;
       bool IExchange.Category(string name)
       {
         if (todo < 0) return false;
@@ -100,13 +100,10 @@ namespace Apex
         switch (todo)
         {
           case 0: create(name, typeof(T)); break;
-          case 1: if (name == (string)this.value) { this.value = value; todo = -1; } break;
-          case 2:
-            var v = ((string name, object value))this.value;
-            if (name == v.name) { value = (T)v.value; todo = -2; return true; }
-            break;
+          case 1: if (name == this.name) { this.value = value; todo = -1; } break;
+          case 2: if (name == this.name) { value = (T)this.value; todo = -2; return true; } break;
           case 3: save(name, value, typeof(T)); break;
-          case 4: { var p = load(name, typeof(T)); if (p != null) value = (T)p; } break;
+          case 4: if (load(name, typeof(T)) is T p) value = p; break;
           case 5: todo = 3; break;
         }
         return false;
@@ -179,7 +176,7 @@ namespace Apex
         public PD(string s, Attribute[] a) : base(s, a) { }
         public override Type ComponentType => typeof(NodeBase);
         public override Type PropertyType => type;
-        public override bool IsReadOnly => this.Attributes.OfType<ReadOnlyAttribute>().Any();
+        public override bool IsReadOnly => Attributes.OfType<ReadOnlyAttribute>().Any();
         public override bool ShouldSerializeValue(object component) => true;
         public override bool CanResetValue(object component) => false;
         public override void ResetValue(object component) { }
@@ -388,9 +385,6 @@ namespace Apex
       var a = getfuncs(); for (int i = 1; i < a.Length; i++) if (a[i] is T t) return t; return null;
     }
 
-    internal struct cameradata { internal float fov, near, far, minz; }
-    internal struct lightdata { internal float a, b, c, d; }
-
     override protected void Exchange(IExchange e)
     {
       GetMethod<Action<IExchange>>()?.Invoke(e);
@@ -414,26 +408,21 @@ namespace Apex
       }
       if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera"))
       {
-        byte* pt; int nt = node.GetBufferPtr(BUFFER.CAMERA, (void**)&pt); var data = *(cameradata*)pt;
-        var fov = Math.Round(data.fov * (180 / Math.PI), 4);
-        var a = e.Exchange("Plane Near", ref data.near) || e.Exchange("Plane Far", ref data.far);
-        //e.Format("{0:0.##} °");
-        e.Description("Field of view in °");
-        var b = e.Exchange("Fov", ref fov);
-        if (a || b)
-        {
-          if (b) data.fov = (float)(fov * (Math.PI / 180));
-          view.Execute(CDXView.undo(node, BUFFER.CAMERA, &data, sizeof(cameradata)));
-        }
+        BUFFERCAMERA* t; node.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
+        if (e.Exchange("Fov", ref cd.fov) ||
+            e.Exchange("NearPlane", ref cd.near) ||
+            e.Exchange("FarPlane", ref cd.far))
+          node.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
       }
       if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
       {
-        byte* pt; int nt = node.GetBufferPtr(BUFFER.LIGHT, (void**)&pt); var data = *(lightdata*)pt;
-        if (e.Exchange("Light Color", ref data.a)) view.Execute(CDXView.undo(node, BUFFER.LIGHT, &data, sizeof(lightdata)));
+        BUFFERLIGHT* t; node.GetBufferPtr(BUFFER.LIGHT, (void**)&t); var ld = *t;
+        if (e.Exchange("Light Color", ref ld.a))
+          node.SetBufferPtr(BUFFER.LIGHT, &ld, sizeof(BUFFERLIGHT));
       }
       if (e.Category("Transform"))
       {
-        var m = node.GetTypeTransform(1); 
+        var m = node.GetTypeTransform(1);
         var a = m.my * (180 / Math.PI); var d = false;
         e.DisplayName("Position"); d |= e.Exchange(".p", ref *(float3*)&m._41);
         e.DisplayName("Rotation"); if (e.Exchange(".a", ref a)) { *(float3*)&m._21 = a * (Math.PI / 180); d = true; }
@@ -520,6 +509,5 @@ namespace Apex
     void IMenuCommandService.RemoveVerb(DesignerVerb verb) { }
     void IMenuCommandService.ShowContextMenu(CommandID menuID, int x, int y) { }
     void IDisposable.Dispose() { }
-
   }
 }

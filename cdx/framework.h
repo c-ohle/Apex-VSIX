@@ -119,7 +119,7 @@ struct sarray
   {
     auto a = p ? _msize(p) / sizeof(T) : 0;
     if (n >= a) p = (T*)::realloc(p, max(4, a << 1) * sizeof(T));
-    n++; for (UINT t = i + 1; t < n; t++) p[t] = p[t - 1]; p[i] = t;
+    for (UINT t = n++; t > i; t--) p[t] = p[t - 1]; p[i] = t;
   }
   void add(T t)
   {

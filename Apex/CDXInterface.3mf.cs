@@ -15,7 +15,7 @@ namespace Apex
 {
   public static unsafe partial class CDX
   {
-    public static XElement Export3MF(this IScene scene, string path, COM.IStream prev, float3? dragpt, INode camera)
+    public static XElement Export3MF(this IScene scene, string path, COM.IStream prev, float3? dragpt, INode actcam)
     {
       var ns = (XNamespace)"http://schemas.microsoft.com/3dmanufacturing/core/2015/02";
       var ms = (XNamespace)"http://schemas.microsoft.com/3dmanufacturing/material/2015/02";
@@ -27,13 +27,18 @@ namespace Apex
       var unit = scene.Unit; doc.SetAttributeValue("unit", (unit != 0 ? unit : Unit.meter).ToString());
       //doc.Add(new XElement(ns + "metadata", new XAttribute("name", "Title"), "Hello World"));
       if (dragpt.HasValue) doc.SetAttributeValue(ax + "dragpt", (string)dragpt.Value);
-      if (camera != null && camera.Scene == null) doc.SetAttributeValue(ax + "cam", (string)camera.Transform);
+      if (actcam != null)
+      {
+        var defcam = scene.Camera;
+        doc.SetAttributeValue(ax + "ct", (string)defcam.Transform);
+        doc.SetAttributeValue(ax + "ca", Convert.ToBase64String(defcam.GetBytes(BUFFER.CAMERA)));
+      }
       var resources = new XElement(ns + "resources"); doc.Add(resources);
       var build = new XElement(ns + "build"); doc.Add(build);
       var uid = 1; var textures = new List<(IBuffer str, int id, XElement e)>();
       var basematerials = new XElement(ns + "basematerials"); resources.Add(basematerials);
       var bmid = uid++; basematerials.SetAttributeValue("id", bmid);
-      foreach (var group in scene.Nodes()) { if (camera != null || group.IsSelect) add(group, build); }
+      foreach (var group in scene.Nodes()) { if (actcam != null || group.IsSelect) add(group, build); }
       void add(INode group, XElement dest)
       {
         var obj = new XElement(ns + "object"); obj.SetAttributeValue("id", 0);
@@ -118,12 +123,12 @@ namespace Apex
         item.SetAttributeValue("objectid", objectid);
         item.SetAttributeValue("transform", (string)group.Transform);
         dest.Add(item);
-        if (group.IsStatic) obj.SetAttributeValue("static", true);
+        if (group.IsStatic) obj.SetAttributeValue(ax + "fl", 1);
         var bb = group.GetBytes(BUFFER.CAMERA);
         if (bb != null)
         {
           obj.SetAttributeValue(ax + "ca", Convert.ToBase64String(bb));
-          if (group == camera) obj.SetAttributeValue(ax + "cam", string.Empty);
+          if (group == actcam) obj.SetAttributeValue(ax + "ct", string.Empty);
         }
         if ((bb = group.GetBytes(BUFFER.LIGHT)) != null) obj.SetAttributeValue(ax + "li", Convert.ToBase64String(bb));
         if ((bb = group.GetBytes(BUFFER.SCRIPT)) != null)
@@ -190,7 +195,12 @@ namespace Apex
         //var apex = model.GetPrefixOfNamespace(ax); if (apex == null) ax = string.Empty;
         var scene = Factory.CreateScene();
         var pt = model.Attribute(ax + "dragpt"); dragpt = pt != null ? (float3)pt.Value : float.NaN;
-        if ((pt = model.Attribute(ax + "cam")) != null) { var pc = Factory.CreateNode(); pc.Name = "(default)"; pc.Transform = (float4x3)pt.Value; scene.Tag = pc; }
+        if ((pt = model.Attribute(ax + "ct")) != null)
+        {
+          var defcam = Factory.CreateNode(); defcam.Name = "(default)"; defcam.Transform = (float4x3)pt.Value; 
+          if ((pt = model.Attribute(ax + "ca")) != null) defcam.SetBytes(BUFFER.CAMERA, Convert.FromBase64String(pt.Value));
+          scene.Camera = defcam;
+        }
         switch ((string)model.Attribute("unit"))
         {
           default: scene.Unit = CDX.Unit.meter; break; //1
@@ -208,7 +218,7 @@ namespace Apex
           var oid = (string)e.Attribute("objectid");
           var obj = res.Elements(ns + "object").First(p => (string)p.Attribute("id") == oid);
           var mesh = obj.Element(ns + "mesh"); obj.AddAnnotation(node);
-          node.Name = (string)obj.Attribute("name"); var st = obj.Attribute("static"); if (st != null) { node.IsStatic = (bool)st; }
+          node.Name = (string)obj.Attribute("name"); var st = obj.Attribute(ax + "fl"); if (st != null) { node.IsStatic = ((int)st & 1) != 0; }
           var tra = (string)e.Attribute("transform");
           if (tra != null) node.Transform = (float4x3)tra;
           if (mesh != null)
@@ -329,7 +339,7 @@ namespace Apex
           if ((bb = (string)obj.Attribute(ax + "ca")) != null)
           {
             node.SetBytes(BUFFER.CAMERA, Convert.FromBase64String(bb));
-            if (obj.Attribute(ax + "cam") != null) scene.Tag = node;
+            if (obj.Attribute(ax + "ct") != null) scene.Tag = node;
           }
           if ((bb = (string)obj.Attribute(ax + "li")) != null) node.SetBytes(BUFFER.LIGHT, Convert.FromBase64String(bb));
           var cmp = obj.Element(ns + "components");

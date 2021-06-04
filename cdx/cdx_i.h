@@ -710,6 +710,12 @@ EXTERN_C const IID IID_ICDXScene;
     ICDXScene : public ICDXRoot
     {
     public:
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Camera( 
+            /* [retval][out] */ ICDXNode **p) = 0;
+        
+        virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_Camera( 
+            /* [in] */ ICDXNode *p) = 0;
+        
         virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Tag( 
             /* [retval][out] */ IUnknown **p) = 0;
         
@@ -780,6 +786,14 @@ EXTERN_C const IID IID_ICDXScene;
         HRESULT ( STDMETHODCALLTYPE *RemoveAt )( 
             ICDXScene * This,
             /* [in] */ UINT i);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Camera )( 
+            ICDXScene * This,
+            /* [retval][out] */ ICDXNode **p);
+        
+        /* [propput] */ HRESULT ( STDMETHODCALLTYPE *put_Camera )( 
+            ICDXScene * This,
+            /* [in] */ ICDXNode *p);
         
         /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Tag )( 
             ICDXScene * This,
@@ -856,6 +870,12 @@ EXTERN_C const IID IID_ICDXScene;
 #define ICDXScene_RemoveAt(This,i)	\
     ( (This)->lpVtbl -> RemoveAt(This,i) ) 
 
+
+#define ICDXScene_get_Camera(This,p)	\
+    ( (This)->lpVtbl -> get_Camera(This,p) ) 
+
+#define ICDXScene_put_Camera(This,p)	\
+    ( (This)->lpVtbl -> put_Camera(This,p) ) 
 
 #define ICDXScene_get_Tag(This,p)	\
     ( (This)->lpVtbl -> get_Tag(This,p) ) 

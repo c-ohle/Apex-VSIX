@@ -76,7 +76,7 @@ namespace Apex
 
     internal CDXWindowPane pane;
     IScene scene; IView view; static long drvsettings = 0x400000000;
-    INode defcam; int flags = 1 | 4; // | 2; //1:Checkboard 2:Collisions 4:Tooltips
+    int flags = 1 | 4; // | 2; //1:Checkboard 2:Collisions 4:Tooltips
 
     static CDXView()
     {
@@ -94,7 +94,7 @@ namespace Apex
       }
       else
       {
-        scene = Import3MF(path, out var _);
+        scene = Import3MF(path, out _);
       }
 
       foreach (var node in scene.SelectNodes(BUFFER.SCRIPTDATA))
@@ -150,33 +150,24 @@ namespace Apex
     {
       view = Factory.CreateView(Handle, this, (uint)(drvsettings >> 32));
       view.BkColor = 0xffcccccc;
-      view.Render = (Render)Application.UserAppDataRegistry.GetValue("fl",
-        (int)(Render.BoundingBox | Render.Coordinates | Render.Wireframe | Render.Shadows))
-        | Render.ZPlaneShadows;
-      view.Scene = scene;
-      if (scene.Tag is INode p)
-      {
-        if (p.Scene == null) defcam = p;
-        view.Camera = p; scene.Tag = null;
-        if (!p.HasBuffer(BUFFER.CAMERA))
-        {
-          var c1 = new float4(0.0002f, 1f, 10000, -1); //fov, near, far, minz
-          p.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(float4));
-          var c2 = new float4(0, 0, 0, 0);
-          view.Command(Cmd.Center, &c2);
-          //todo: check zrange 
-        }
-      }
-      else
+      view.Render = (RenderFlags)Application.UserAppDataRegistry.GetValue("fl",
+        (int)(RenderFlags.BoundingBox | RenderFlags.Coordinates | RenderFlags.Wireframe | RenderFlags.Shadows))
+        | RenderFlags.ZPlaneShadows;
+      view.Scene = scene; var defcam = scene.Camera;
+      if (defcam == null)
       {
         defcam = Factory.CreateNode(); defcam.Name = "(default)";
         defcam.Transform = !LookAtLH(new float3(-3, -6, 3), default, new float3(0, 0, 1));
-        var cam = new float4(0.0002f, 1f, 10000, -1); //fov,near,far,minz
-        defcam.SetBufferPtr(BUFFER.CAMERA, &cam, sizeof(float4));
-        view.Camera = defcam;
-        var data = new float4(100, 1, 1, 0);
-        view.Command(Cmd.Center, &data);
+        var c1 = new BUFFERCAMERA { fov = 50, near = 1, far = 10000, minz = -1 };
+        defcam.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(BUFFERCAMERA));
+        view.Camera = defcam; scene.Camera = defcam;
+        var c2 = new BUFFERCAMERA { fov = 100, near = 1 };
+        view.Command(Cmd.Center, &c2);
         //todo: check zrange 
+      }
+      else
+      {
+        view.Camera = scene.Tag as INode ?? defcam; scene.Tag = null;
       }
       inval |= Inval.Tree | Inval.Select; //-> PropertyGrid
     }
@@ -205,8 +196,7 @@ namespace Apex
       var sc = scene.SelectionCount;
       //if (sc == 0) { apUnkObjects[0] = new CExchange(); return 0; }
       //if (sc == 0) { apUnkObjects[0] = Node.From(this, view.Camera); return 0; }
-      if (sc == 0) { apUnkObjects[0] = tempscene ?? (tempscene = new Scene { view = this }); return 0; }
-      else tempscene = null;
+      if (sc == 0) { apUnkObjects[0] = scene.Tag ?? (scene.Tag = new Scene { view = this }); return 0; }
       for (int i = 0, n = Math.Min(apUnkObjects.Length, sc); i < n; i++)
         apUnkObjects[i] = Node.From(this, scene.GetSelection(i));
       return 0;
@@ -292,7 +282,7 @@ namespace Apex
     Action undosel(bool sel, params INode[] a)
     {
       if (a.Length == 0) a = scene.Selection().ToArray();
-      return () => { scene.Select(sel ? a : Array.Empty<INode>()); sel = !sel; };
+      return () => { scene.Select(sel ? a : Array.Empty<INode>()); sel = !sel; Invalidate(Inval.Tree); };
     }
     Action undodel(INode p, object root = null, int i = 0)
     {
@@ -365,31 +355,75 @@ namespace Apex
     }
 
     string[] samples; static string[] driver;
-     
-    Scene tempscene;
+
+
+    struct WeakRef<T> where T : class
+    {
+      WeakReference p;
+      public T Value
+      {
+        get { if (p != null && p.Target is T v) return v; return null; }
+        set { if (value == null) p = null; else if (p == null) p = new WeakReference(value); else p.Target = value; }
+      }
+    }
+
     class Scene : NodeBase, ICustomTypeDescriptor
     {
-      protected override void Exchange(IExchange ex)
+      internal Scene() { }
+
+      class CamConv : TypeConverter
       {
-        if (ex.Category("General"))
+        INode[] pp; string[] ss;
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => true;
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-          var t1 = view.scene.Unit; if (ex.Exchange("Unit", ref t1)) view.scene.Unit = t1;
-          var t2 = System.Drawing.Color.FromArgb((int)view.view.BkColor);
-          if (ex.Exchange("BkColor", ref t2)) view.view.BkColor = (uint)t2.ToArgb();
+          if (value is INode p)
+          {
+            if (pp != null) { var i = Array.IndexOf(pp, p); if (i != -1 && p.Name == ss[i]) return ss[i]; }
+            return p.Name;
+          }
+          return "(default)";
         }
-        if (ex.Category("Camera"))
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+          if (value is string s)
+          {
+            for (int i = 0; i < ss.Length; i++) if (ReferenceEquals(ss[i], s)) return pp[i];
+            for (int i = 0; i < ss.Length; i++) if (ss[i] == s) return pp[i];
+          }
+          return null;
+        }
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context) => true;
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        {
+          var view = ((Scene)context.Instance).view;
+          pp = Enumerable.Repeat(view.scene.Camera, 1). //tp != null && tp.Scene == null ? tp : null, 1).
+            Concat(view.scene.SelectNodes(BUFFER.CAMERA)).ToArray();
+          ss = pp.Select(p => p.Name).ToArray();
+          return new StandardValuesCollection(pp);
+        }
+      }
+
+      protected override void Exchange(IExchange e)
+      {
+        if (e.Category("General"))
+        {
+          var t1 = view.scene.Unit; if (e.Exchange("Unit", ref t1)) view.scene.Unit = t1;
+          var t2 = System.Drawing.Color.FromArgb((int)view.view.BkColor);
+          if (e.Exchange("BkColor", ref t2)) view.view.BkColor = (uint)t2.ToArgb();
+        }
+        if (e.Category("Camera"))
         {
           var p = view.view.Camera;
-          float4* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); float4 cd = *t;
-          var fov = cd.x;// (float)(cd.x * (180 / Math.PI));
-          if (ex.Exchange("Fov", ref fov)) 
-          {
-            cd.x = fov;// (float)(fov * (Math.PI / 180) );
-            p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(float4));
-          }
-          if (ex.Exchange("NearPlane", ref cd.y) ||
-              ex.Exchange("FarPlane", ref cd.z)) 
-            p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(float4));
+          e.TypeConverter(typeof(CamConv));
+          if (e.Exchange("Camera", ref p)) { view.view.Camera = p; }
+          BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
+          if (e.Exchange("Fov", ref cd.fov) ||
+              e.Exchange("NearPlane", ref cd.near) ||
+              e.Exchange("FarPlane", ref cd.far))
+            p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
         }
       }
 
@@ -397,9 +431,10 @@ namespace Apex
       string ICustomTypeDescriptor.GetComponentName() => "3MF";
       PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
       {
-        if (pdc == null) GetProps(pdc = new PropertyDescriptorCollection(null)); return pdc;
+        var pdc = wr.Value; if (pdc == null) GetProps(wr.Value = pdc = new PropertyDescriptorCollection(null));
+        return pdc;
       }
-      PropertyDescriptorCollection pdc;
+      WeakRef<PropertyDescriptorCollection> wr;
     }
 
     /*

@@ -1,6 +1,6 @@
 #pragma once
 
-struct cameradata { float vscale, znear, zfar, minwz; };
+struct cameradata { float fov, znear, zfar, minwz; };
 
 struct CView : ICDXView
 {
@@ -95,14 +95,6 @@ struct CView : ICDXView
   }
   HRESULT __stdcall get_BkColor(UINT* p);
   HRESULT __stdcall put_BkColor(UINT p);
-  //HRESULT __stdcall get_Projection(FLOAT* p)
-  //{
-  //  *p = vscale; return 0;
-  //}
-  //HRESULT __stdcall put_Projection(FLOAT p)
-  //{
-  //  vscale = p; return 0;
-  //}
   HRESULT __stdcall get_Render(CDX_RENDER* p)
   {
     *p = flags; return 0;

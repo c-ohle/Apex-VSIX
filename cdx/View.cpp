@@ -202,7 +202,8 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
     setproject();
     auto cwm = camera.p->getmatrix(); // gettrans(camera.p->parent ? scene.p : 0);
     auto icw = XMMatrixInverse(0, cwm);
-    auto ab = XMVectorSet((rcclient.right - rand) * camdat.vscale, (rcclient.bottom - rand) * camdat.vscale, 0, 0);
+    auto f = camdat.fov * (0.00025f / 45);
+    auto ab = XMVectorSet((rcclient.right - rand) * f, (rcclient.bottom - rand) * f, 0, 0);
     XMVECTOR box[4]; box[1] = box[3] = -(box[0] = box[2] = g_XMFltMax);
  
     for (auto node = scene->child(); node; node = node->nextsibling(0))
@@ -237,7 +238,7 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
         fm) * cwm);
     }
     auto& cd = *(cameradata*)data;
-    cd.vscale = camdat.vscale;
+    cd.fov = camdat.fov;
     cd.znear = box[2].m128_f32[2] - fm;
     cd.zfar  = box[3].m128_f32[2] - fm;
     cd.minwz = box[0].m128_f32[2];

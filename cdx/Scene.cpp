@@ -93,9 +93,11 @@ HRESULT CScene::InsertAt(UINT i, ICDXNode* p) { return ::InsertAt(this, lastchil
 HRESULT CScene::Clear()
 {
   if (lastchild.p) { lastchild.p->nextnode.Release(); lastchild.Release(); }
-  selection.clear();
+  selection.clear(); camera.Release();
   return 0;
 }
+HRESULT CScene::get_Camera(ICDXNode** p) { if (*p = camera.p) camera.p->AddRef(); return 0; }
+HRESULT CScene::put_Camera(ICDXNode* p) { auto pc = static_cast<CNode*>(p); camera = pc; return 0; }
 
 void CNode::save(Archive& ar)
 {
@@ -133,8 +135,6 @@ CNode* CNode::load(Archive& ar)
   ar.Read(&p->color);
   ar.Read(&p->matrix);
   UINT n = ar.ReadCount(); p->buffer.setsize(n);
-  //if (n != 0 && !p->buffer.m_nAllocSize)
-  //  p->buffer.m_aT = (CComPtr<CBuffer>*)calloc(p->buffer.m_nAllocSize = n, sizeof(CComPtr<CBuffer>));
   for (UINT i = 0; i < n; i++)
   {
     UINT x = ar.ReadCount();
@@ -170,28 +170,26 @@ CNode* CNode::load(Archive& ar)
 HRESULT CScene::SaveToStream(IStream* str, ICDXNode* cam)
 {
   auto pc = static_cast<CNode*>(cam);
-  UINT fl = !pc ? 0 : pc->parent ? 1 : 2;
-  //if (fl & 1) return E_NOTIMPL;
-  bool selonly = (fl & 3) == 0;
+  UINT fl = (pc && camera.p ? 1 : 0) | (pc && pc->parent ? 2 : 0);
   Archive ar(str, true);
   ar.WriteCount(ar.version = 1);
   ar.WriteCount(fl);
   ar.WriteCount(unit);
-  if (selonly)
+  if (!pc)
     for (UINT i = 0; i < selection.n; i++)
       selection.p[i]->save(ar);
   else
     for (auto p = child(); p; p = p->next())
       p->save(ar);
   ar.WriteCount(0);
-  if (fl & 1) ar.WriteCount(pc->getscount());
-  else if (fl & 2) pc->save(ar);
+  if (fl & 1) camera.p->save(ar);
+  if (fl & 2) ar.WriteCount(static_cast<CNode*>(cam)->getscount());
   return ar.hr;
 }
 HRESULT CScene::LoadFromStream(IStream* str)
 {
   Archive ar(str, false);
-  if ((ar.version = ar.ReadCount()) > 1) return E_FAIL; Clear();
+  if ((ar.version = ar.ReadCount()) != 1) return E_FAIL; Clear();
   UINT fl = ar.ReadCount();
   unit = (CDX_UNIT)ar.ReadCount();
   for (UINT i = 0;;)
@@ -199,8 +197,8 @@ HRESULT CScene::LoadFromStream(IStream* str)
     auto t = CNode::load(ar); if (!t) break;
     InsertAt(i++, t);
   }
-  if (fl & 1) tag = findscount(ar.ReadCount());
-  else if (fl & 2) { auto cam = CNode::load(ar); tag.Release(); tag.p = cam; }
+  if (fl & 1) camera = CNode::load(ar);
+  if (fl & 2) tag = findscount(ar.ReadCount());
   return 0;
 }
 
