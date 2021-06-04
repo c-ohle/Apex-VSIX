@@ -170,7 +170,7 @@ CNode* CNode::load(Archive& ar)
 HRESULT CScene::SaveToStream(IStream* str, ICDXNode* cam)
 {
   auto pc = static_cast<CNode*>(cam);
-  UINT fl = (pc && camera.p ? 1 : 0) | (pc && pc->parent ? 2 : 0);
+  UINT fl = (pc && camera.p ? 1 : 0) | (pc && pc->getscene() ? 2 : 0);
   Archive ar(str, true);
   ar.WriteCount(ar.version = 1);
   ar.WriteCount(fl);

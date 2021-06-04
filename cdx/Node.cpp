@@ -10,7 +10,7 @@ extern CComPtr<ID3D11DeviceContext> context;
 
 CNode* CNode::getparent()
 {
-  return parent && *(void**)this == *(void**)parent ? (CNode*)parent : 0;
+  return parent && *(void**)this == *(void**)parent ? static_cast<CNode*>(parent) : 0;
 }
 CScene* CNode::getscene()
 {
@@ -45,7 +45,7 @@ CNode* CNode::nextsibling(CNode* root)
 HRESULT CNode::get_Parent(ICDXRoot** p)
 {
   if (!parent) return 0;
-  if(*(void**)this == *(void**)parent) (*p=static_cast<CNode*>(parent))->AddRef();
+  if (*(void**)this == *(void**)parent) (*p = static_cast<CNode*>(parent))->AddRef();
   else (*p = static_cast<CScene*>(parent))->AddRef();
   return 0;
 }
@@ -278,8 +278,8 @@ void CNode::update(XMFLOAT3* pp, UINT np, USHORT* ii, UINT ni, float smooth, voi
       if (c4.m128_f32[0] == 0 || isnan(c4.m128_f32[0]))
       {
         c2 = c2;
-  }
-}
+      }
+    }
 #endif
   }
 }
@@ -525,7 +525,7 @@ void CNode::setbuffer(CDX_BUFFER id, CBuffer* p)
   {
     if (buffer.p[x] == p) return; inval(id);
     buffer.p[x]->Release();
-    if (p) (buffer.p[x]= p)->AddRef();
+    if (p) (buffer.p[x] = p)->AddRef();
     else { buffer.removeat(x); bmask &= ~m; }
     return;
   }

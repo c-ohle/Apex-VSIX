@@ -98,12 +98,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="cdx32.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="csg32.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="Resources\Images_32bit.bmp" />
     <None Include="Resources\typicons.bmp" />
     <Content Include="ToolboxItemData.pkgdef">
@@ -155,7 +149,20 @@
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\cde\cde.csproj">
+      <Project>{f1c95b14-95a1-4a0f-86cd-7147ebfd2345}</Project>
+      <Name>cde</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\cdx\cdx.vcxproj">
+      <Project>{74be92fa-0ef3-4fb7-a522-acafe1d385cc}</Project>
+      <Name>cdx</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\csg\csg.vcxproj">
+      <Project>{edeebd18-521a-4cdb-bdb5-d2143d00ceff}</Project>
+      <Name>csg</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

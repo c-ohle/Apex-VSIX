@@ -46,7 +46,8 @@ namespace Apex
 
         for (int i = 0, n = scene.SelectionCount; i < n; i++)
         {
-          var f = Node.From(this, scene.GetSelection(i)).GetMethod<Action<DC>>();
+          var p = scene.GetSelection(i); if (p == view.Camera) continue;
+          var f = Node.From(this, p).GetMethod<Action<DC>>();
           if (f != null) try { f(dc); } catch (Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
         }
         return;

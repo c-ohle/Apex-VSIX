@@ -14,14 +14,7 @@ using static Apex.CDX;
 namespace Apex
 {
   [Flags]
-  enum Inval
-  {
-    Render = 1,
-    Select = 2,
-    Tree = 4,
-    PropertySet = 8,
-    Properties = 16,
-  }
+  enum Inval { Render = 1, Select = 2, Tree = 4, PropertySet = 8, Properties = 16, }
 
   unsafe partial class CDXView : UserControl, ISink, System.IServiceProvider, ISelectionContainer
   {
@@ -411,19 +404,22 @@ namespace Apex
         if (e.Category("General"))
         {
           var t1 = view.scene.Unit; if (e.Exchange("Unit", ref t1)) view.scene.Unit = t1;
+        }
+        if (e.Category("View"))
+        {
           var t2 = System.Drawing.Color.FromArgb((int)view.view.BkColor);
           if (e.Exchange("BkColor", ref t2)) view.view.BkColor = (uint)t2.ToArgb();
-        }
-        if (e.Category("Camera"))
-        {
           var p = view.view.Camera;
           e.TypeConverter(typeof(CamConv));
           if (e.Exchange("Camera", ref p)) { view.view.Camera = p; }
-          BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
-          if (e.Exchange("Fov", ref cd.fov) ||
-              e.Exchange("NearPlane", ref cd.near) ||
-              e.Exchange("FarPlane", ref cd.far))
-            p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
+          Node.eccam(e, p);
+          //BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
+          //e.Description("Field Of View in Degree");
+          //e.DisplayName("Field Of View"); var d = false;
+          //d |= e.Exchange("Fov", ref cd.fov);
+          //e.Description("Depth Near- and Farplane");
+          //d |= e.Exchange("Range", ref *(float2*)&cd.near);// e.Exchange("ZFar", ref cd.far))
+          //if(d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
         }
       }
 

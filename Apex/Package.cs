@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
-//todo: camera delete
+//todo: mesh flat angel
 //todo: F1
 //todo: multisel undo 
 //todo: tool rot vert um obj
@@ -19,7 +19,6 @@ using System.Runtime.InteropServices;
 //todo: search box in script
 //todo: script foreach
 //todo: script typexplorer namespaces
-//todo: near,far, minz autoupdate 
 //todo: script stop debug on window hide
 //todo: AAPThreshold Computer\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\PrecisionTouchPad
 //todo: wheel slow device (no ani)

@@ -45,7 +45,7 @@ namespace Apex
         Cursors.Default;
       //Debug.WriteLine(view.MouseOverNode + " " + view.MouseOverPoint);
       tipmove(e);
-    } 
+    }
     protected override void OnMouseUp(MouseEventArgs e)
     {
       tip.hide(); if (tool == null) return;
@@ -65,7 +65,7 @@ namespace Apex
     protected override void OnKeyPress(KeyPressEventArgs e) { }
     protected override void OnKeyDown(KeyEventArgs e)
     {
-      if (tipkey(e)) return; 
+      if (tipkey(e)) return;
       if (tool != null || view == null || view.Camera == null) return;
       var main = mainover();
       var k = e.KeyCode | e.Modifiers;
@@ -699,6 +699,35 @@ namespace Apex
       if (wm[c].z < 0) { me[0] = -me[0]; me[1] = -me[1]; me[2] = -me[2]; }
     }
 
+    static IScene Import(object data, out float3 wp)
+    {
+      var node = cde.Node.Import((string)data); wp = default;
+      var scene = Factory.CreateScene();
+      recu((IRoot)scene, node);
+      return scene;
+    }
+    static void recu(IRoot scene, cde.Node pp)
+    {
+      for (int i = 0; i < pp.Count; i++)
+      {
+        var p = pp[i]; var node = scene.AddNode(p.Name);
+        var ma = p.Transform; var mb = new float4x3();
+        for (int t = 0; t < 12; t++) (&mb._11)[t] = (float)(&ma._11)[t];
+        node.Transform = mb;
+        if (p.Points != null)
+        {
+          node.Color = p.Color;
+          var vv = p.Points.Select(t => new float3((float)t.x, (float)t.y, (float)t.z)).ToArray();
+          fixed (void* pv = vv) node.SetBufferPtr(BUFFER.POINTBUFFER, pv, vv.Length * sizeof(float3));
+          fixed (void* pv = p.Indices) node.SetBufferPtr(BUFFER.INDEXBUFFER, pv, p.Indices.Length * sizeof(ushort));
+          if (p.Texcoords != null) fixed (void* pv = p.Texcoords) node.SetBufferPtr(BUFFER.TEXCOORDS, pv, p.Texcoords.Length * sizeof(float2));
+          if (p.Texture != null) fixed (void* pv = p.Texture) node.SetBufferPtr(BUFFER.TEXTURE, pv, p.Texture.Length);
+          if (p.IndexCount != 0) { }
+        }
+        if (p.Count != 0) recu((IRoot)node, p);
+      }
+    }
+
     Action<int> obj_drag(INode main)
     {
       var ws = main.IsSelect; if (!ws) { main.IsSelect = true; Invalidate(Inval.Select); }
@@ -727,11 +756,20 @@ namespace Apex
     }
     protected override void OnDragEnter(DragEventArgs e)
     {
-      var files = e.Data.GetData(DataFormats.FileDrop) as string[]; object data;
-      if (files != null && files.Length == 1) { var s = files[0]; if (!s.EndsWith(".3mf", true, null)) return; data = s; }
-      else { var t = e.Data.GetData(typeof(ToolboxItem)) as ToolboxItem; if (t == null) return; data = new MemoryStream(t.data); }
+      var files = e.Data.GetData(DataFormats.FileDrop) as string[]; object data; var typ = 0;
+      if (files != null && files.Length == 1)
+      {
+        var s = files[0]; typ =
+          s.EndsWith(".3mf", true, null) ? 1 :
+          s.EndsWith(".obj", true, null) ? 2 :
+          s.EndsWith(".3ds", true, null) ? 3 : 0;
+        if (typ == 0) return;
+        data = s;
+      }
+      else { var t = e.Data.GetData(typeof(ToolboxItem)) as ToolboxItem; if (t == null) return; data = new MemoryStream(t.data); typ = 1; }
       IScene drop; float3 wp;
-      try { drop = Import3MF(data, out wp); } catch { return; }
+      try { drop = typ == 1 ? Import3MF(data, out wp) : Import(data, out wp); } catch { return; }
+      if (drop == null) return;
       var scene = view.Scene;
       //if (scene.Unit != drop.Unit)
       //{

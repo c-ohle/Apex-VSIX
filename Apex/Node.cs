@@ -385,6 +385,17 @@ namespace Apex
       var a = getfuncs(); for (int i = 1; i < a.Length; i++) if (a[i] is T t) return t; return null;
     }
 
+    internal static void eccam(IExchange e,INode p)
+    {
+      BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
+      e.Description("Field Of View in Degree");
+      e.DisplayName("Field Of View"); var d = false;
+      d |= e.Exchange("Fov", ref cd.fov);
+      e.Description("Depth Near- and Farplane");
+      d |= e.Exchange("Range", ref *(float2*)&cd.near);// e.Exchange("ZFar", ref cd.far))
+      if (d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
+    }
+
     override protected void Exchange(IExchange e)
     {
       GetMethod<Action<IExchange>>()?.Invoke(e);
@@ -408,11 +419,12 @@ namespace Apex
       }
       if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera"))
       {
-        BUFFERCAMERA* t; node.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
-        if (e.Exchange("Fov", ref cd.fov) ||
-            e.Exchange("NearPlane", ref cd.near) ||
-            e.Exchange("FarPlane", ref cd.far))
-          node.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
+        eccam(e, node);
+        //BUFFERCAMERA* t; node.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
+        //if (e.Exchange("Fov", ref cd.fov) ||
+        //    e.Exchange("NearPlane", ref cd.near) ||
+        //    e.Exchange("FarPlane", ref cd.far))
+        //  node.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
       }
       if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
       {
