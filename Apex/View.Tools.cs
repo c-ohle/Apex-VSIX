@@ -82,8 +82,17 @@ namespace Apex
     {
       if (tool == null) return;
       if ((MouseButtons & (MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle)) != 0) return;
-      OnMouseUp(null);
+      var x = undoi; OnMouseUp(null);
+      if (x == undoi || aapchecked) return;
+      aapchecked = true;
+      var val = Registry.GetValue("HKEY_CURRENT_USER" + '\\' + "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad", "AAPThreshold", null);
+      if (!(val is int i) || i == 0) return;
+      System.Windows.Forms.MessageBox.Show(this,
+        $"{"AAPThreshold"} = {i}\nThe mouse hangs for a time on keystrokes!\nNice for pensioners but possible to change in Touchpad System Settings.",
+        "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+      //...
     }
+    static bool aapchecked;
 
     void OnScroll(int xdelta, int ydelta)
     {

@@ -455,13 +455,14 @@ namespace Apex
     }
     object ICustomTypeDescriptor.GetEditor(Type editorBaseType)
     {
-      if (editorBaseType == typeof(System.ComponentModel.ComponentEditor) && view.OnInfo(this) != 0)
+      if (editorBaseType == typeof(System.ComponentModel.ComponentEditor) && view.OnCommand(2305, this) != 0)
         return new ComponentEditor();
       return TypeDescriptor.GetEditor(GetType(), editorBaseType);
     }
     class ComponentEditor : System.ComponentModel.ComponentEditor
     {
-      public override bool EditComponent(ITypeDescriptorContext context, object component) { ((Node)component).view.OnInfo(null); return false; }
+      public override bool EditComponent(ITypeDescriptorContext context, object component) { 
+        ((Node)component).view.OnCommand(2305, null); return false; }
     }
     PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
     {

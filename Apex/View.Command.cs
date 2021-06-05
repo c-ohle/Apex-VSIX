@@ -343,7 +343,7 @@ namespace Apex
       }
       return 1;
     }
-    internal int OnInfo(object test)
+    int OnInfo(object test)
     {
       if (scene.SelectionCount != 1) return 0;
       if (test != null) return 1; Cursor = Cursors.WaitCursor;

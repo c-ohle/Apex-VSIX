@@ -130,13 +130,15 @@ namespace Apex
     //static extern bool IsWindowVisible(IntPtr hWnd);
     protected override void OnSizeChanged(EventArgs e)
     {
+      //if (view != null) System.Diagnostics.Debug.WriteLine("OnSizeChanged with view " + Size);
+      if (view == null) initview();
       //if (view != null) return;
       //if (!IsWindowVisible(Handle)) return;
       //initview(); 
     }
     protected override void OnPaint(PaintEventArgs e)
     {
-      initview(); Invalidate();
+      //if (view == null) initview(); Invalidate();
       //base.OnPaint(e);
     }
     private void initview()
@@ -328,7 +330,6 @@ namespace Apex
     }
 
     string[] samples; static string[] driver;
-
 
     struct WeakRef<T> where T : class
     {
