@@ -73,42 +73,10 @@ namespace Apex
         case 2757: //combo samples
         case 2758: return comboSamples(id, test);
       }
-      //if (id >= 2751 && id <= 2754) //driver
+      //if (id >= 6200 && id <= 6250)
       //{
-      //  if (test is IntPtr p)
-      //  {
-      //    var ii = (int*)p.ToPointer(); var s = driver[2 + ((id - 2751) << 1)]; ii[0] = 1;
-      //    fixed (char* ps = s) Native.memcpy(ii + 3, ps, (void*)((ii[1] = Math.Min(s.Length, ii[2] - 1) + 1) << 1)); return 1;
-      //  }
-      //  if (driver == null) driver = Factory.Devices.Split('\n');
-      //  if (((driver.Length - 1) >> 1) <= id - 2751) return -1;
-      //  if (test != null) return 0x80 | ((int.Parse(driver[0]) == int.Parse(driver[1 + ((id - 2751) << 1)])) ? 3 : 1);
-      //  var di = uint.Parse(driver[1 + ((id - 2751) << 1)]); Factory.SetDevice(di); driver = null; samples = null;
-      //  drvsettings = (drvsettings >> 32 << 32) | di;
-      //  Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
       //  return 1;
       //}
-      //if (id >= 2701 && id <= 2716) //samples
-      //{
-      //  if (samples == null) samples = view.Samples.Split('\n'); id -= 2700;
-      //  int i = 1; for (; i < samples.Length && int.Parse(samples[i]) != id; i++) ;
-      //  if (i == samples.Length) return -1;
-      //  if (test != null) return int.Parse(samples[0]) == id ? 3 : 1;
-      //  view.Samples = id.ToString(); samples = null;
-      //  drvsettings = (drvsettings & 0xffffffff) | ((long)id << 32);
-      //  Application.UserAppDataRegistry.SetValue("drv", drvsettings, Microsoft.Win32.RegistryValueKind.QWord);
-      //  return 1;
-      //}
-      //if (id >= 2401 && id <= 2409) //tools
-      //{
-      //  if (toolid == id - 2401) return 3;
-      //  if (test != null) return 1;
-      //  toolid = id - 2401; return 1;
-      //}
-      if (id >= 6200 && id <= 6250)
-      {
-        return 1;
-      }
       return -1;
     }
 

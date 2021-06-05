@@ -188,9 +188,10 @@ HRESULT CView::Thumbnail(UINT dx, UINT dy, UINT samples, UINT bkcolor, IStream* 
     this->viewport.Width = f;
     this->viewport.Height = f;
   }
+  auto t8 = sink.p; sink.p = 0;
   setproject(); RenderScene();
   flags = t1; camera.p = t2; pb->data.p = t3; //znear = t3; zfar = t4; minwz = t5; 
-  this->viewport = t6; rcclient = t7;
+  this->viewport = t6; rcclient = t7; sink.p = t8;
 
   dsv.Release(); ds.Release(); rtv.Release();
   context->OMSetRenderTargets(1, &rtv.p, dsv.p);

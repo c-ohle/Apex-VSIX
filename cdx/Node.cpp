@@ -585,7 +585,7 @@ HRESULT CNode::SetBuffer(ICDXBuffer* p)
 }
 HRESULT CNode::GetBufferPtr(CDX_BUFFER id, const BYTE** p, UINT* n)
 {
-  auto t = getbuffer(id); if (!t) return 1;
+  auto t = getbuffer(id); if (!t) return 1; 
   *p = t->data.p; *n = t->data.n; return 0;
 }
 HRESULT CNode::SetBufferPtr(CDX_BUFFER id, const BYTE* p, UINT n)

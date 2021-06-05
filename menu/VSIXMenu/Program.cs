@@ -190,8 +190,17 @@ namespace VSIXMenu
       Application.SetHighDpiMode(HighDpiMode.SystemAware);
       Application.EnableVisualStyles();
       Application.SetCompatibleTextRenderingDefault(false);
-      //Application.Run(new Form1());
       Convert();
+      //Application.Run(new MyForm { AllowDrop = true });
+    }
+
+    class MyForm : Form
+    {
+      protected override void OnDragEnter(DragEventArgs drgevent)
+      {
+        var dat = drgevent.Data;
+        var a = dat.GetData("csg3mf");
+      }
     }
   }
 }

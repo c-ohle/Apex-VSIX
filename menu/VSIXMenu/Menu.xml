@@ -94,25 +94,27 @@
     <MenuItem text="Difference" id="2303" keys="Control|E|D" fl="DefaultInvisible|DynamicVisibility"/>
     <MenuItem text="PlaneCut" id="2304" keys="Control|E|P" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>
+    <MenuItem text="Normalize" id="2038" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/>
+    <Seperator/>
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />
     <MenuItem id="cmdidPaste" />
     <Seperator/>
     <MenuItem text="Center" id="2300" keys="Control|W|C" />
     <Seperator/>
-    <SubMenu text="Display">
-      <MenuItem text="Shadows" id="2220" />
-      <MenuItem text="Checkboard" id="2320" />
-      <Seperator/>
-      <Combo text="Graphics" idlist="2755" id="2756" width="150" type="IndexCombo"/>
-      <Combo text="MultiSamples" idlist="2757" id="2758" width="30" type="DynamicCombo" />
-    </SubMenu>
     <SubMenu text="Select Style">
       <MenuItem text="Box" id="2210" />
       <MenuItem text="Pivot" id="2211" />
       <MenuItem text="Normals" id="2212" />
       <MenuItem text="Wireframe" id="2213" />
       <MenuItem text="Outline" id="2214" />
+    </SubMenu>
+    <SubMenu text="Display">
+      <MenuItem text="Shadows" id="2220" />
+      <MenuItem text="Checkboard" id="2320" />
+      <Seperator/>
+      <Combo text="Graphics" idlist="2755" id="2756" width="150" type="IndexCombo"/>
+      <Combo text="MultiSamples" idlist="2757" id="2758" width="30" type="DynamicCombo" />
     </SubMenu>
     <Seperator/>
     <!--<MenuItem id="cmdidF1Help" />-->

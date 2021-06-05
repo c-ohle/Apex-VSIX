@@ -15,7 +15,7 @@ struct __declspec(novtable) CScene : ICDXScene
     Clear();
   }
   __forceinline CNode* child() { return lastchild.p ? lastchild.p->nextnode.p : 0; }
-  CNode* findscount(UINT i) 
+  CNode* findscount(UINT i)
   {
     for (auto p = child(); p; p = p->nextsibling(0)) if (!--i) return p;
     return 0;
@@ -36,7 +36,6 @@ struct __declspec(novtable) CScene : ICDXScene
     return 0;
   }
   HRESULT __stdcall get_Count(UINT* pc);
-  //HRESULT __stdcall GetNode(UINT i, ICDXNode** p);
   HRESULT __stdcall AddNode(BSTR name, ICDXNode** p);
   HRESULT __stdcall RemoveAt(UINT i);
   HRESULT __stdcall InsertAt(UINT i, ICDXNode* p);
@@ -108,6 +107,21 @@ struct Archive
   {
     if (storing) { WriteCount(p.n); Write(p.p, p.n); }
     else { p.setsize2(ReadCount()); Read(p.p, p.n); }
+  }
+  void Serialize(CComBSTR& s)
+  {
+    if (storing)
+    {
+      UINT n = SysStringLen(s.m_str); //SysStringByteLen(s.m_str);
+      WriteCount(s.m_str ? n + 1 : 0);
+      for (UINT i = 0; i < n; i++) WriteCount(s.m_str[i]);
+    }
+    else
+    {
+      UINT n = ReadCount(); if (n-- == 0) return; XMASSERT(!s.m_str);
+      s.m_str = SysAllocStringLen(0, n);
+      for (UINT i = 0; i < n; i++) s.m_str[i] = (OLECHAR)ReadCount();
+    }
   }
   sarray<void*> map; UINT mapcount = 0;
   UINT getmap(void* p) { for (UINT i = 0; i < mapcount; i++) if (map.p[i] == p) return i + 1; return 0; }

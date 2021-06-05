@@ -97,13 +97,13 @@ HRESULT CScene::Clear()
   return 0;
 }
 HRESULT CScene::get_Camera(ICDXNode** p) { if (*p = camera.p) camera.p->AddRef(); return 0; }
-HRESULT CScene::put_Camera(ICDXNode* p) { auto pc = static_cast<CNode*>(p); camera = pc; return 0; }
+HRESULT CScene::put_Camera(ICDXNode* p) { camera = static_cast<CNode*>(p); return 0; }
 
 void CNode::save(Archive& ar)
 {
-  UINT fl = 2 | (name.Length() ? 1 : 0) | (subn ? 8 : 0) | (this->flags & (NODE_FL_STATIC));
+  UINT fl = 2 | (subn ? 8 : 0) | (this->flags & (NODE_FL_STATIC));
   ar.WriteCount(fl);
-  if (fl & 1) name.WriteToStream(ar.str);
+  ar.Serialize(name);
   ar.Write(&color);
   ar.Write(&matrix);
   ar.WriteCount(buffer.n);
@@ -117,7 +117,7 @@ void CNode::save(Archive& ar)
       ar.WriteCount(pb->id); ar.WriteCount(pb->data.n);
       ar.Write(pb->data.p, pb->data.n);
       if (pb->id == CDX_BUFFER_TEXTURE)
-        static_cast<CTexture*>(pb)->name.WriteToStream(ar.str);
+        ar.Serialize(static_cast<CTexture*>(pb)->name);
     }
   }
   if (fl & 8) { ar.WriteCount(subi >> 1); ar.WriteCount(subn >> 1); }
@@ -131,7 +131,7 @@ CNode* CNode::load(Archive& ar)
   UINT fl = ar.ReadCount(); if (fl == 0) return 0;
   auto* p = static_cast<CNode*>(new CComClass<CNode>());
   p->flags = fl & (NODE_FL_STATIC);
-  if (fl & 1) p->name.ReadFromStream(ar.str); //name.setsize(ar.ReadCount()); ar.Read(name.p, name.n); }
+  ar.Serialize(p->name);
   ar.Read(&p->color);
   ar.Read(&p->matrix);
   UINT n = ar.ReadCount(); p->buffer.setsize(n);
@@ -145,7 +145,7 @@ CNode* CNode::load(Archive& ar)
       Critical crit; auto t = CCacheBuffer::getbuffer(id, (const BYTE*)stackptr, size);
       if (id == CDX_BUFFER_TEXTURE)
       {
-        CComBSTR s; s.ReadFromStream(ar.str);
+        CComBSTR s; ar.Serialize(s);
         auto pt = static_cast<CTexture*>(t);
         if (!pt->name.m_str)
           pt->name.m_str = s.Detach();

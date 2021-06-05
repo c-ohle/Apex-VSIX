@@ -43,7 +43,6 @@ namespace Apex
           dc.Mapping = 0.1f; dc.FillRect(-10000, -10000, 20000, 20000); dc.Texture = t1;
         }
         tool?.Invoke(4);
-
         for (int i = 0, n = scene.SelectionCount; i < n; i++)
         {
           var p = scene.GetSelection(i); if (p == view.Camera) continue;

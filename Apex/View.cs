@@ -234,6 +234,7 @@ namespace Apex
     {
       if (p == null) return;
       if (undos == null) undos = new List<Action>();
+      //for (int i = undoi; i < undos.Count; i++) undos[i] = null;
       undos.RemoveRange(undoi, undos.Count - undoi);
       undos.Add(p); undoi = undos.Count;
     }
@@ -323,7 +324,6 @@ namespace Apex
       if (scene.SelectionCount != 1) return 0;
       if (test != null) return 1;
       var node = scene.GetSelection(0);
-
       var box = GetBox(scene.Selection(), node.Parent);
       var ss = $"Size: {box.max - box.min} {node.Scene.Unit}";
       if (node.HasBuffer(BUFFER.POINTBUFFER))
@@ -334,6 +334,17 @@ namespace Apex
         if (check == 0) ss += ' ' + $"Planes: {mesh.PlaneCount}";
         ss += '\n'; ss += $"Status: {(check != 0 ? check.ToString() : "ok")}";
         var x = Marshal.ReleaseComObject(mesh);
+      }
+      else
+      {
+        int nc = 0, np = 0, ni = 0;
+        foreach (var p in node.Descendants(true))
+        {
+          nc++;  void* t;
+          np += p.GetBufferPtr(BUFFER.POINTBUFFER, &t) / sizeof(float3);
+          ni += p.GetBufferPtr(BUFFER.INDEXBUFFER, &t) / sizeof(ushort);
+        }
+        ss += '\n'; ss += $"{np} Vertices {ni/3} Polygones in {nc} Objects.";
       }
       VsShellUtilities.ShowMessageBox(pane, ss, "Properties",
         OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
@@ -412,7 +423,7 @@ namespace Apex
           var p = view.view.Camera;
           e.TypeConverter(typeof(CamConv));
           if (e.Exchange("Camera", ref p)) { view.view.Camera = p; }
-          Node.eccam(e, p);
+          Node.excam(e, p);
           //BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
           //e.Description("Field Of View in Degree");
           //e.DisplayName("Field Of View"); var d = false;

@@ -216,7 +216,10 @@ void CView::RenderScene()
       }
     }
   }
-  if (sink.p) sink.p->Render(0);
+  
+  if (sink.p)
+    sink.p->Render(0);
+
   if (transp)
   {
     SetColor(VV_AMBIENT, 0x00404040);

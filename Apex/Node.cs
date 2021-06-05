@@ -385,14 +385,13 @@ namespace Apex
       var a = getfuncs(); for (int i = 1; i < a.Length; i++) if (a[i] is T t) return t; return null;
     }
 
-    internal static void eccam(IExchange e,INode p)
+    internal static void excam(IExchange e,INode p)
     {
-      BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
-      e.Description("Field Of View in Degree");
-      e.DisplayName("Field Of View"); var d = false;
-      d |= e.Exchange("Fov", ref cd.fov);
-      e.Description("Depth Near- and Farplane");
-      d |= e.Exchange("Range", ref *(float2*)&cd.near);// e.Exchange("ZFar", ref cd.far))
+      BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t; var d = false;
+      e.DisplayName("Fov"); e.Description("Field Of View in Degree");
+      d |= e.Exchange(".fo", ref cd.fov);
+      e.DisplayName("Range"); e.Description("Depth Near- and Farplane");
+      d |= e.Exchange(".ra", ref *(float2*)&cd.near);
       if (d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
     }
 
@@ -402,8 +401,8 @@ namespace Apex
       var node = this.node;
       if (e.Category("General"))
       {
-        var s = node.Name; e.DisplayName("Name"); if (e.Exchange(".N", ref s)) { node.Name = s != string.Empty ? s : null; Invalidate(Inval.Tree); }
-        var b = node.IsStatic; e.DisplayName("Static"); if (e.Exchange(".S", ref b)) node.IsStatic = b;
+        var s = node.Name; e.DisplayName("Name"); if (e.Exchange(".n", ref s)) { node.Name = s != string.Empty ? s : null; Invalidate(Inval.Tree); }
+        var b = node.IsStatic; e.DisplayName("Static"); if (e.Exchange(".f", ref b)) node.IsStatic = b;
       }
       if (node.HasBuffer(BUFFER.POINTBUFFER) && e.Category("Material"))
       {
@@ -419,12 +418,7 @@ namespace Apex
       }
       if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera"))
       {
-        eccam(e, node);
-        //BUFFERCAMERA* t; node.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
-        //if (e.Exchange("Fov", ref cd.fov) ||
-        //    e.Exchange("NearPlane", ref cd.near) ||
-        //    e.Exchange("FarPlane", ref cd.far))
-        //  node.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
+        excam(e, node);
       }
       if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
       {
@@ -440,14 +434,6 @@ namespace Apex
         e.DisplayName("Rotation"); if (e.Exchange(".a", ref a)) { *(float3*)&m._21 = a * (Math.PI / 180); d = true; }
         e.DisplayName("Scaling"); //e.Format(".s"); 
         d |= e.Exchange(".s", ref *(float3*)&m._11);
-
-        //e.DisplayName("x"); d |= e.Exchange(".x", ref m._41);
-        //e.DisplayName("y"); d |= e.Exchange(".y", ref m._42);
-        //e.DisplayName("z"); d |= e.Exchange(".z", ref m._43);
-        //e.DisplayName("α"); e.Format("{0:0.##} °"); if (e.Exchange(".α", ref u.x)) { m._21 = u.x * (float)(Math.PI / 180); d = true; }
-        //e.DisplayName("β"); e.Format("{0:0.##} °"); if (e.Exchange(".β", ref u.y)) { m._22 = u.y * (float)(Math.PI / 180); d = true; }
-        //e.DisplayName("γ"); e.Format("{0:0.##} °"); if (e.Exchange(".γ", ref u.z)) { m._23 = u.z * (float)(Math.PI / 180); d = true; }
-        //e.DisplayName("δ"); e.Format(".s"); d |= e.Exchange(".s", ref *(float3*)&m._11);
         if (d)
         {
           var t1 = node.GetTypeTransform(0); node.SetTypeTransform(0, m);
