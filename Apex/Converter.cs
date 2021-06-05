@@ -135,7 +135,7 @@ namespace Apex
 
   unsafe class TexturConverter : TypeConverter
   {
-    int hash; StandardValuesCollection collection;
+    int hash; StandardValuesCollection svc;
     public override bool IsValid(ITypeDescriptorContext context, object value)
     {
       return base.IsValid(context, value);
@@ -181,13 +181,13 @@ namespace Apex
     {
       var node = ((Node)context.Instance).node;
       var hash = (node.GetBuffer(BUFFER.TEXTURE)?.GetHashCode()).GetHashCode();
-      if (this.hash != hash) { this.hash = hash; collection = null; }
-      if (collection != null) return collection;
+      if (this.hash != hash) { this.hash = hash; svc = null; }
+      if (svc != null) return svc;
       var list = new List<object> { null };
       foreach (var t in node.Scene.Descendants().Select(p => p.GetBuffer(BUFFER.TEXTURE)).OfType<object>().Distinct()) list.Add(t);
       list.Add((Func<object, object>)Import);
       if (node.GetBuffer(BUFFER.TEXTURE) != null) list.Add((Func<object, object>)Export);
-      return collection = new StandardValuesCollection(list);
+      return svc = new StandardValuesCollection(list);
     }
     object Import(object context)
     {
@@ -215,7 +215,7 @@ namespace Apex
 
       IBuffer tex; fixed (byte* p = a) tex = Factory.GetBuffer(BUFFER.TEXTURE, p, a.Length);
       tex.Name = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName);
-      collection = null; return tex;
+      svc = null; return tex;
     }
     object Export(object context)
     {
@@ -229,7 +229,5 @@ namespace Apex
       //tex.Name = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName);
       return null;
     }
-
   }
-
 }

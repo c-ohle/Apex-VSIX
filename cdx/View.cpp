@@ -242,13 +242,6 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
     cd.znear = box[2].m128_f32[2] - fm;
     cd.zfar  = box[3].m128_f32[2] - fm;
     cd.minwz = box[0].m128_f32[2];
-    //auto z1 = box[2].m128_f32[2] - fm;
-    //auto z2 = box[3].m128_f32[2] - fm;
-    //z1 = max(1, min(1000, z1));
-    //z2 = max(1, min(1000, z2));
-    //z1 = powf(10, roundf(log10f(z1)) + fnea); // - 1);
-    //z2 = powf(10, roundf(log10f(z2)) + ffar); // + 1);
-    //znear = z1; zfar = z2; minwz = min(box[0].m128_f32[2], -1);
     return 0;
   }
   case CDX_CMD_GETBOX:

@@ -319,37 +319,6 @@ namespace Apex
       ctxon = Environment.TickCount;
     }
 
-    internal int OnInfo(object test)
-    {
-      if (scene.SelectionCount != 1) return 0;
-      if (test != null) return 1;
-      var node = scene.GetSelection(0);
-      var box = GetBox(scene.Selection(), node.Parent);
-      var ss = $"Size: {box.max - box.min} {node.Scene.Unit}";
-      if (node.HasBuffer(BUFFER.POINTBUFFER))
-      {
-        var mesh = CSG.Factory.CreateMesh(); node.CopyTo(mesh);
-        var check = mesh.Check(); if (check == 0) mesh.InitPlanes();
-        ss += '\n'; ss += $"Vertices: {mesh.VertexCount} Indices: {mesh.IndexCount}";
-        if (check == 0) ss += ' ' + $"Planes: {mesh.PlaneCount}";
-        ss += '\n'; ss += $"Status: {(check != 0 ? check.ToString() : "ok")}";
-        var x = Marshal.ReleaseComObject(mesh);
-      }
-      else
-      {
-        int nc = 0, np = 0, ni = 0;
-        foreach (var p in node.Descendants(true))
-        {
-          nc++;  void* t;
-          np += p.GetBufferPtr(BUFFER.POINTBUFFER, &t) / sizeof(float3);
-          ni += p.GetBufferPtr(BUFFER.INDEXBUFFER, &t) / sizeof(ushort);
-        }
-        ss += '\n'; ss += $"{np} Vertices {ni/3} Polygones in {nc} Objects.";
-      }
-      VsShellUtilities.ShowMessageBox(pane, ss, "Properties",
-        OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-      return 1;
-    }
     internal void MessageBox(string message) =>
       VsShellUtilities.ShowMessageBox(pane, message, "Error", OLEMSGICON.OLEMSGICON_WARNING, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
 
@@ -443,97 +412,6 @@ namespace Apex
       }
       WeakRef<PropertyDescriptorCollection> wr;
     }
-
-    /*
-    class Scene2 : SimpleTypeDescriptor, ICustomTypeDescriptor
-    {
-      //public Scene() { }
-      internal CDXView view;
-      public Unit Unit
-      {
-        get => view.scene.Unit;
-        set { view.Execute(() => { var t = view.scene.Unit; view.scene.Unit = value; value = t; }); }
-      }
-      public System.Drawing.Color BkColor
-      {
-        get => System.Drawing.Color.FromArgb((int)view.view.BkColor);
-        set
-        {
-          var c = (uint)value.ToArgb();
-          view.Execute(() => { var t = view.view.BkColor; view.view.BkColor = c; c = t; view.Invalidate(Inval.Render); });
-        }
-      }
-      [TypeConverter(typeof(CamConv))]
-      public INode Camera
-      {
-        get { return view.view.Camera; }
-        set
-        {
-          if (value == null)
-          {
-            var p = Factory.CreateNode(); p.Name = "(default)"; p.Transform = view.view.Camera.Transform;
-            value = view.defcam = p;
-          }
-          view.Execute(() => { var t = view.view.Camera; view.view.Camera = value; value = t; });
-        }
-      }
-
-      public float Fov
-      {
-        get { float4* p; Camera.GetBufferPtr(BUFFER.CAMERA,(void**)&p); return p->x; }
-        set { }
-      }
-      public float NearPlane
-      {
-        get { float4* p; Camera.GetBufferPtr(BUFFER.CAMERA, (void**)&p); return p->y; }
-        set { }
-      }
-      public float FarPlane
-      {
-        get { float4* p; Camera.GetBufferPtr(BUFFER.CAMERA, (void**)&p); return p->z; }
-        set { }
-      }
-
-      class CamConv : TypeConverter
-      {
-        INode[] pp; string[] ss;
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => true;
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-          if (value is INode p)
-          {
-            if (pp != null) { var i = Array.IndexOf(pp, p); if (i != -1 && p.Name == ss[i]) return ss[i]; }
-            return p.Name;
-          }
-          return "(default)";
-        }
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-          if (value is string s)
-          {
-            for (int i = 0; i < ss.Length; i++) if (ReferenceEquals(ss[i], s)) return pp[i];
-            for (int i = 0; i < ss.Length; i++) if (ss[i] == s) return pp[i];
-          }
-          return null;
-        }
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context) => true;
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
-        {
-          var scene = (Scene)context.Instance;
-          pp = Enumerable.Repeat(scene.view.defcam, 1). //tp != null && tp.Scene == null ? tp : null, 1).
-            Concat(scene.view.scene.SelectNodes(BUFFER.CAMERA)).ToArray();
-          ss = pp.Select(p => p != null ? p.Name : "(default)").ToArray();
-          return new StandardValuesCollection(pp);
-        }
-      }
-
-      string ICustomTypeDescriptor.GetClassName() => GetType().Name;
-      string ICustomTypeDescriptor.GetComponentName() => "3MF";
-    }
-    */
   }
-
 }
 

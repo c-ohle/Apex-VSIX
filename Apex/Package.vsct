@@ -10,13 +10,13 @@
           <ButtonText />
         </Strings>
       </Menu>
-      <Menu guid="g2" id="_1000007" type="Menu" priority="21">
+      <Menu guid="g2" id="_1000007" type="Menu" priority="22">
         <Parent guid="g2" id="_1000006" />
         <Strings>
           <ButtonText>Select Style</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="g2" id="_1000009" type="Menu" priority="22">
+      <Menu guid="g2" id="_1000009" type="Menu" priority="23">
         <Parent guid="g2" id="_1000006" />
         <Strings>
           <ButtonText>Display</ButtonText>
@@ -57,13 +57,13 @@
       <Group guid="g2" id="_1000003" priority="12">
         <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="g2" id="_1000004" priority="14">
+      <Group guid="g2" id="_1000004" priority="15">
         <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="g2" id="_1000005" priority="18">
+      <Group guid="g2" id="_1000005" priority="19">
         <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="g2" id="_1000006" priority="20">
+      <Group guid="g2" id="_1000006" priority="21">
         <Parent guid="g2" id="_0x2100" />
       </Group>
       <Group guid="g2" id="_1000008" priority="1">
@@ -75,7 +75,7 @@
       <Group guid="g2" id="_1000011" priority="4">
         <Parent guid="g2" id="_1000009" />
       </Group>
-      <Group guid="g2" id="_1000012" priority="23">
+      <Group guid="g2" id="_1000012" priority="24">
         <Parent guid="g2" id="_0x2100" />
       </Group>
       <Group guid="g2" id="_1000013" priority="1">
@@ -184,7 +184,15 @@
           <ButtonText>PlaneCut</ButtonText>
         </Strings>
       </Button>
-      <Button guid="g2" id="_2038" type="Button" priority="13">
+      <Button guid="g2" id="_2305" type="Button" priority="13">
+        <Parent guid="g2" id="_1000003" />
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Analyze...</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2038" type="Button" priority="14">
         <Parent guid="g2" id="_1000003" />
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -192,7 +200,7 @@
           <ButtonText>Normalize</ButtonText>
         </Strings>
       </Button>
-      <Button guid="g2" id="_2300" type="Button" priority="19">
+      <Button guid="g2" id="_2300" type="Button" priority="20">
         <Parent guid="g2" id="_1000005" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -248,7 +256,7 @@
           <ButtonText>Checkboard</ButtonText>
         </Strings>
       </Button>
-      <Button guid="g2" id="_2037" type="Button" priority="24">
+      <Button guid="g2" id="_2037" type="Button" priority="25">
         <Parent guid="g2" id="_1000012" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -443,22 +451,22 @@
     </Bitmaps>
   </Commands>
   <CommandPlacements>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="15">
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="16">
       <Parent guid="g2" id="_1000004" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="16">
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="17">
       <Parent guid="g2" id="_1000004" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="17">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="18">
       <Parent guid="g2" id="_1000004" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidToolbox" priority="25">
+    <CommandPlacement guid="guidVSStd97" id="cmdidToolbox" priority="26">
       <Parent guid="g2" id="_1000012" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidDocOutlineWindow" priority="26">
+    <CommandPlacement guid="guidVSStd97" id="cmdidDocOutlineWindow" priority="27">
       <Parent guid="g2" id="_1000012" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="27">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="28">
       <Parent guid="g2" id="_1000012" />
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="2">
@@ -520,14 +528,17 @@
     </CommandPlacement>
   </CommandPlacements>
   <KeyBindings>
+    <KeyBinding guid="g2" id="_2221" editor="guidVSStd97" key1="VK_RETURN" />
     <KeyBinding guid="g2" id="_2035" editor="guidVSStd97" key1="W" key2="G" mod1="Control" mod2="Control" />
     <KeyBinding guid="g2" id="_2036" editor="guidVSStd97" key1="W" key2="U" mod1="Control" mod2="Control" />
     <KeyBinding guid="g2" id="_2301" editor="guidVSStd97" key1="E" key2="U" mod1="Control" mod2="Control" />
     <KeyBinding guid="g2" id="_2302" editor="guidVSStd97" key1="E" key2="I" mod1="Control" mod2="Control" />
     <KeyBinding guid="g2" id="_2303" editor="guidVSStd97" key1="E" key2="D" mod1="Control" mod2="Control" />
     <KeyBinding guid="g2" id="_2304" editor="guidVSStd97" key1="E" key2="P" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2305" editor="guidVSStd97" key1="W" key2="U" mod1="Control" mod2="Control" />
     <KeyBinding guid="g2" id="_2038" editor="guidVSStd97" key1="W" key2="U" mod1="Control" mod2="Control" />
     <KeyBinding guid="g2" id="_2300" editor="guidVSStd97" key1="W" key2="C" mod1="Control" mod2="Control" />
+    <KeyBinding guid="g2" id="_2037" editor="guidVSStd97" key1="VK_F12" />
   </KeyBindings>
   <Symbols>
     <GuidSymbol name="g1" value="{785bd27f-9b97-45c5-b877-b701378798ac}" />
@@ -545,6 +556,7 @@
       <IDSymbol name="_2303" value="2303" />
       <IDSymbol name="_2304" value="2304" />
       <IDSymbol name="_1000003" value="1000003" />
+      <IDSymbol name="_2305" value="2305" />
       <IDSymbol name="_2038" value="2038" />
       <IDSymbol name="_1000004" value="1000004" />
       <IDSymbol name="_1000005" value="1000005" />

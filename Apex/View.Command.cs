@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -39,6 +41,7 @@ namespace Apex
         case 2037: return OnScript(test);
         case 2038: return OnNormalize(test);
         case 2300: return OnCenter(test);
+        case 2305: return OnInfo(test);
         case 2210: //Select Box
         case 2211: //Select Pivot
         case 2212: //Select Normals
@@ -338,6 +341,32 @@ namespace Apex
         act += undo(node, m);
         foreach (var p in node.Nodes()) trans(p, Scaling(sc));
       }
+      return 1;
+    }
+    internal int OnInfo(object test)
+    {
+      if (scene.SelectionCount != 1) return 0;
+      if (test != null) return 1; Cursor = Cursors.WaitCursor;
+      var node = scene.GetSelection(0);
+      var box = GetBox(scene.Selection(), node.Parent);
+      var ss = $"Size: {box.max - box.min} {node.Scene.Unit}";
+      int nc = 0, np = 0, ni = 0, pl = 0, eg = 0; CSG.MeshCheck checks = 0;
+      foreach (var p in node.Descendants(true))
+      {
+        nc++; void* t;
+        if (!p.HasBuffer(BUFFER.POINTBUFFER)) { if (p.Child == null) eg++; continue; }
+        np += p.GetBufferPtr(BUFFER.POINTBUFFER, &t) / sizeof(float3);
+        ni += p.GetBufferPtr(BUFFER.INDEXBUFFER, &t) / sizeof(ushort);
+
+        var mesh = CSG.Factory.CreateMesh(); p.CopyTo(mesh);
+        var check = mesh.Check(); if (check == 0) { mesh.InitPlanes(); pl += mesh.PlaneCount; }
+        checks |= check; Marshal.ReleaseComObject(mesh);
+      }
+      ss += '\n'; ss += $"{np} Vertices {ni / 3} Polygones Planes {np} in {nc} Objects.";
+      if (checks != 0) { ss += '\n'; ss += $"Errors: {checks}"; }
+      if (eg != 0) { { ss += '\n'; ss += $"Errors: {eg} Empty Groups"; } }
+      VsShellUtilities.ShowMessageBox(pane, ss, "Properties",
+        OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
       return 1;
     }
 

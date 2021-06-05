@@ -70,7 +70,7 @@ namespace Apex
     public enum JoinOp { Union = 0, Difference = 1, Intersection = 2 }
 
     [Flags]
-    public enum MeshCheck { DupPoints = 1, BadIndex = 2, UnusedPoint = 4, Openings = 8, Planes = 16, DupPlanes = 32 }
+    public enum MeshCheck { DupPoints = 1, BadIndex = 2, UnusedPoint = 4, Openings = 8, Planes = 16, DupPlanes = 32, VoidPolys = 64 }
 
     [Flags]
     public enum MeshState { Modified = 0x4000 }

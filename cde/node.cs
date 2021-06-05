@@ -21,6 +21,57 @@ namespace cde
     public int IndexCount, StartIndex;
     public object Tag;
 
+    public void MeshCompact()
+    {
+      var dict = new Dictionary<double3, ushort>(4096);
+      ushort[] ii = null, ff = null; double3[] vv = null;
+      recurs(this);
+      void recurs(Node node)
+      {
+        for (int i = 0; i < node.Count; i++)
+        {
+          recurs(node[i]);
+          if (node[i].Points == null && node[i].Count == 0) node.RemoveAt(i--);
+        }
+        if (node.Points == null) return;
+        dict.Clear(); var ni = node.Indices.Length;
+        if (ii == null || ii.Length < ni) ii = new ushort[((ni >> 12) + 1) << 12];
+        for (int i = 0; i < ni; i++)
+        {
+          var pt = node.Points[node.Indices[i]]; pt = (float3)pt;
+          if (dict.TryGetValue(pt, out var x)) ii[i] = x;
+          else dict[pt] = ii[i] = (ushort)dict.Count;
+        }
+        var nii = 0;
+        for (int i = 0; i < ni; i += 3)
+        {
+          if (ii[i] == ii[i + 1] || ii[i + 1] == ii[i + 2] || ii[i + 2] == ii[i]) continue;
+          if (nii != i) { ii[nii] = ii[i]; ii[nii + 1] = ii[i + 1]; ii[nii + 2] = ii[i + 2]; }
+          nii += 3;
+        }
+        if (nii == 0) { node.Points = null; node.Indices = null; return; }
+        var nvv = dict.Keys.Count;
+        if (node.Indices.Length == nii && node.Points.Length == nvv) return;
+        if (nii != ni)
+        {
+          if (ff == null || ff.Length < nii) ff = new ushort[((nii >> 12) + 1) << 12]; else Array.Clear(ff,0, nvv);
+          if (vv == null || vv.Length < nvv) vv = new double3[((nvv >> 10) + 1) << 10];
+          dict.Keys.CopyTo(vv, 0);
+          for (int i = 0; i < nii; i++) ff[ii[i]] = 1; var t = 0;
+          for (int i = 0; i < nvv; i++) if (ff[i] != 0) { if (i != t) vv[t] = vv[i]; ff[i] = (ushort)t++; }
+          if (nvv != t) { for (int i = 0; i < nii; i++) ii[i] = ff[ii[i]]; nvv = t; }
+          Array.Copy(vv, 0, node.Points = new double3[nvv], 0, nvv);
+        }
+        else 
+        {
+          dict.Keys.CopyTo(node.Points = new double3[nvv], 0);
+        }
+        Array.Copy(ii, 0, node.Indices = new ushort[nii], 0, nii);
+        if (node.Texcoords != null) { }
+      }
+    }
+
+
     //public void Optimize()
     //{
     //  if (Points == null) return;

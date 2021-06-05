@@ -237,18 +237,18 @@ HRESULT CMesh::Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p)
         *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_PLANES);
     }
   } 
-  //if (check & CSG_MESH_CHECK_VOIDPOLYS && !(*p & CSG_MESH_CHECK_DUP_POINTS))
-  //{
-  //  for (UINT i = 0; i < ii.n; i += 3)
-  //  {
-  //    if (
-  //      ii.p[i + 0] != ii.p[i + 1] &&
-  //      ii.p[i + 1] != ii.p[i + 2] &&
-  //      ii.p[i + 2] != ii.p[i + 0]) continue;
-  //    *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_VOIDPOLYS);
-  //    break;
-  //  }
-  //}
+  if (check & CSG_MESH_CHECK_VOIDPOLYS && !(*p & CSG_MESH_CHECK_DUP_POINTS))
+  {
+    for (UINT i = 0; i < ii.n; i += 3)
+    {
+      if (
+        ii.p[i + 0] != ii.p[i + 1] &&
+        ii.p[i + 1] != ii.p[i + 2] &&
+        ii.p[i + 2] != ii.p[i + 0]) continue;
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_VOIDPOLYS);
+      break;
+    }
+  }
   return 0;
 }
 

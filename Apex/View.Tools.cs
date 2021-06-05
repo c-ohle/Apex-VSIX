@@ -659,20 +659,6 @@ namespace Apex
           dc.DrawPoints(&pp.Item1, 3);
           dc.DrawCirc(default, l); dc.Color &= 0x0fffffff;
           dc.FillCirc(default, l);
-          //if (false)
-          //{
-          //  var tm = main.Transform;
-          //  var aw = ((tm.mp + tm[xyz == 0 ? 1 : xyz == 1 ? 0 : 0]) * !me).xy.Angel;
-          //  dc.SetOrtographic();
-          //  dc.Transform = new float2(32, 32);
-          //  dc.Color = 0xff000000;
-          //  dc.DrawText(0, 0, $"{rw * (180 / Math.PI):0.##} °");
-          //
-          //  dc.DrawText(0, 30, $"a0: {a0 * (180 / Math.PI)} °");
-          //  dc.DrawText(0, 50, $"rw: {rw * (180 / Math.PI)} °");
-          //  dc.DrawText(0, 70, $"aw: {aw * (180 / Math.PI)} °");
-          //  dc.DrawText(0, 90, $"euler: {double3.Euler(tm) * (180 / Math.PI)} °");
-          //}
         }
       };
     }
@@ -702,7 +688,7 @@ namespace Apex
     static IScene Import(object data, out float3 wp)
     {
       var path = (string)data; wp = default;
-      var node = cde.Node.Import(path);
+      var node = cde.Node.Import(path); node.MeshCompact();
       var box = node.GetBox(); if (box.max.x < box.min.x) return null;
       if (box.min.z != 0)
       {
@@ -711,30 +697,19 @@ namespace Apex
       }
       if (node.Name == null) node.Name = Path.GetFileNameWithoutExtension(path);
       var scene = Factory.CreateScene();
-      var dict = new System.Collections.Generic.Dictionary<float3, ushort>(1024);
       recu((IRoot)scene, node);
       void recu(IRoot par, cde.Node ni)
       {
         var no = par.AddNode(ni.Name);
         var ma = ni.Transform; var mb = new float4x3();
         for (int t = 0; t < 12; t++) (&mb._11)[t] = (float)(&ma._11)[t];
-        no.Transform = mb; //ni.Optimize();
+        no.Transform = mb;
         if (ni.Points != null)
         {
-          dict.Clear();
-          for (int i = 0, n = ni.Indices.Length; i < n; i++)
-          {
-            ref var pd = ref ni.Points[ni.Indices[i]];
-            var pt = new float3((float)pd.x, (float)pd.y, (float)pd.z);
-            if (dict.TryGetValue(pt, out var x)) ni.Indices[i] = x;
-            else dict[pt] = ni.Indices[i] = (ushort)dict.Count;
-          }
-          var vv = dict.Keys.ToArray();
-
-          no.Color = ni.Texture != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color;
-          //var vv = p.Points.Select(t => new float3((float)t.x, (float)t.y, (float)t.z)).ToArray();
+          no.Color = ni.Texture != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color; var ii = ni.Indices;
+          var vv = ni.Points.Select(t => new float3((float)t.x, (float)t.y, (float)t.z)).ToArray();
           fixed (void* pv = vv) no.SetBufferPtr(BUFFER.POINTBUFFER, pv, vv.Length * sizeof(float3));
-          fixed (void* pv = ni.Indices) no.SetBufferPtr(BUFFER.INDEXBUFFER, pv, ni.Indices.Length * sizeof(ushort));
+          fixed (void* pv = ii) no.SetBufferPtr(BUFFER.INDEXBUFFER, pv, ii.Length * sizeof(ushort));
           if (ni.Texcoords != null) fixed (void* pv = ni.Texcoords) no.SetBufferPtr(BUFFER.TEXCOORDS, pv, ni.Texcoords.Length * sizeof(float2));
           if (ni.Texture != null) fixed (void* pv = ni.Texture) no.SetBufferPtr(BUFFER.TEXTURE, pv, ni.Texture.Length);
           if (ni.IndexCount != 0) { }
@@ -750,7 +725,6 @@ namespace Apex
       public override object GetData(string format, bool autoConvert)
         => getdata(format) ?? base.GetData(format, autoConvert);
     }
-
     Action<int> obj_drag(INode main)
     {
       var ws = main.IsSelect; if (!ws) { main.IsSelect = true; Invalidate(Inval.Select); }
@@ -760,21 +734,17 @@ namespace Apex
         if (id == 0)
         {
           var p2 = (float2)Cursor.Position; if ((p2 - p1).LengthSq < 10 /* * DpiScale*/) return;
-          //if (!ws) { main.Select(); selchange(); } ws = false; 
           if (!AllowDrop) return;
-          string path = null;// Path.Combine(Path.GetTempPath(), string.Join("_", (main.Name ?? main.GetClassName()).Trim().Split(Path.GetInvalidFileNameChars())) + ".3mf");
+          string path = null;
           try
           {
-            //Cursor = Cursors.WaitCursor; 
             var data = new MyDataObject(); object bin = null; string[] ss = null;
             data.getdata = fmt =>
             {
-              Debug.WriteLine("getdata: " + fmt);
               if (fmt == "ApexWp")
               {
                 if (bin == null)
                 {
-                  Debug.WriteLine("build bin");
                   foreach (var p in scene.Selection().SelectMany(p => p.Descendants(true))) p.FetchBuffer();
                   var str = COM.SHCreateMemStream(); scene.SaveToStream(str, null);
                   var t = wp; str.Write(&t, sizeof(float3)); bin = COM.Stream(str); Marshal.ReleaseComObject(str);
@@ -785,13 +755,10 @@ namespace Apex
               {
                 if (path == null)
                 {
-                  Debug.WriteLine("build 3mf");
                   path = Path.Combine(Path.GetTempPath(), string.Join("_", (main.Name ?? main.GetClassName()).Trim().Split(Path.GetInvalidFileNameChars())) + ".3mf");
-                  //Cursor = Cursors.WaitCursor; //thread
                   var str = COM.SHCreateMemStream();
                   view.Thumbnail(256, 256, 4, 0x00fffffe, str);
                   scene.Export3MF(path, str, wp, null); Marshal.ReleaseComObject(str);
-                  Debug.WriteLine("done");
                 }
                 return ss ?? (ss = new string[] { path });
               }
@@ -802,7 +769,12 @@ namespace Apex
             DoDragDrop(data, DragDropEffects.Copy);
           }
           catch (Exception e) { Debug.WriteLine(e.Message); }
-          finally { if (path != null) try { File.Delete(path); } catch (Exception t) { Debug.WriteLine(t.Message); } }
+          finally
+          {
+            if (path != null)
+              try { File.Delete(path); }
+              catch (Exception t) { Debug.WriteLine(t.Message); }
+          }
         }
         if (id == 1 && ws) main.SetSelect(false);
       };

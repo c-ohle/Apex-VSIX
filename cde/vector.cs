@@ -176,6 +176,10 @@ namespace cde
     {
       double3 t; t.x = p.x; t.y = p.y; t.z = p.z; return t;
     }
+    public static explicit operator float3(double3 p)
+    {
+      float3 t; t.x = (float)p.x; t.y = (float)p.y; t.z = (float)p.z; return t;
+    }
     public static double3 Normalize(in double3 p) => p / p.Length;
   }
 

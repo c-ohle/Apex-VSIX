@@ -83,7 +83,8 @@
       <MenuItem text="Collisions" id="2330" img="9" tip="Switch collision mode on/off."/>
       <MenuItem text="Tools..." id="2340" />
     </SubMenu>-->
-    <MenuItem text="Tool Assistent" id="2221" />
+    <!-- <KeyBinding guid="g2" id="_2221" editor="g2" key1="VK_RETURN" /> -->
+    <MenuItem text="Tool Assistent" id="2221" keys="VK_RETURN"/>
     <MenuItem text="Collisions" id="2330"/>
     <Seperator/>
     <MenuItem text="Group" id="2035" keys="Control|W|G" fl="DefaultInvisible|DynamicVisibility"/>
@@ -94,6 +95,7 @@
     <MenuItem text="Difference" id="2303" keys="Control|E|D" fl="DefaultInvisible|DynamicVisibility"/>
     <MenuItem text="PlaneCut" id="2304" keys="Control|E|P" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>
+    <MenuItem text="Analyze..." id="2305" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/> 
     <MenuItem text="Normalize" id="2038" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>
     <MenuItem id="cmdidCut" />
@@ -118,7 +120,7 @@
     </SubMenu>
     <Seperator/>
     <!--<MenuItem id="cmdidF1Help" />-->
-    <MenuItem text="Script" id="2037" />
+    <MenuItem text="Script" id="2037" keys="VK_F12"/>
     <MenuItem id="cmdidToolbox" />
     <MenuItem id="cmdidDocOutlineWindow" />
     <MenuItem id="cmdidPropertiesWindow" />
