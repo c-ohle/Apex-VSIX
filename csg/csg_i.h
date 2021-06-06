@@ -243,6 +243,10 @@ EXTERN_C const IID IID_ICSGTesselator;
         virtual HRESULT STDMETHODCALLTYPE ConvexHull( 
             /* [in] */ ICSGMesh *a) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE Round( 
+            /* [in] */ ICSGMesh *a,
+            CSG_TYPE t) = 0;
+        
     };
     
     
@@ -356,6 +360,11 @@ EXTERN_C const IID IID_ICSGTesselator;
             ICSGTesselator * This,
             /* [in] */ ICSGMesh *a);
         
+        HRESULT ( STDMETHODCALLTYPE *Round )( 
+            ICSGTesselator * This,
+            /* [in] */ ICSGMesh *a,
+            CSG_TYPE t);
+        
         END_INTERFACE
     } ICSGTesselatorVtbl;
 
@@ -441,6 +450,9 @@ EXTERN_C const IID IID_ICSGTesselator;
 
 #define ICSGTesselator_ConvexHull(This,a)	\
     ( (This)->lpVtbl -> ConvexHull(This,a) ) 
+
+#define ICSGTesselator_Round(This,a,t)	\
+    ( (This)->lpVtbl -> Round(This,a,t) ) 
 
 #endif /* COBJMACROS */
 

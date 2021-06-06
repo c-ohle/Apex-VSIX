@@ -65,6 +65,7 @@ namespace Apex
       void Stretch(IMesh a, Variant v);
       void Skeleton(IMesh a, Variant v);
       void ConvexHull(IMesh a);
+      void Round(IMesh a, VarType t);
     }
 
     public enum JoinOp { Union = 0, Difference = 1, Intersection = 2 }
@@ -554,8 +555,8 @@ namespace Apex
       long n; str.Seek(0, 2, &n); str.Seek(0); var nn = (int)n;
       var a = new byte[nn]; fixed (byte* p = a) str.Read(p, nn); return a;
     }
-
     //public static long Position(this IStream str) { long v; str.Seek(0, 1, &v); return v; }
+
 #if (!DEBUG)
     internal const bool DEBUG = false;
 #else

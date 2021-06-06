@@ -140,6 +140,8 @@ struct Vector3R
   Vector3R Normalize() const
   {
     int i = LongAxis(); Rational l = i == 0 ? x : i == 1 ? y : z, s = l.sign(); if (s < 0) l = -l;
+    if (l.sign() == 0)
+      return Vector3R();
     return Vector3R(i == 0 ? s : x / l, i == 1 ? s : y / l, i == 2 ? s : z / l);
   }
   static Vector3R Ccw(const Vector3R& a, const Vector3R& b, const Vector3R& c) { return (b - a) ^ (c - a); }

@@ -64,7 +64,7 @@ namespace Apex
         case 2221: //Tooltips
           if (test != null) return (flags & 4) != 0 ? 3 : 1;
           flags ^= 4; return 1;
-        case 2340: return OnTools(test);
+        //case 2340: return OnTools(test);
         case 5100: //BringForward:
         case 5101: //SendBackward:
         case 5103: //SendToBack:  
@@ -83,15 +83,6 @@ namespace Apex
       return -1;
     }
 
-    int OnTools(object test)
-    {
-      return 0;
-      //if (test != null) return 1;
-      //var p = CDXPackage.Package.FindToolWindow(typeof(ToolsToolWindowPane), 0, true);
-      //if (p.Frame is Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame f) f.Show();
-      //return 1;
-    }
-    
     int comboDriver(int id, object test)
     {
       if (!(test is object[] a)) return 1;
@@ -133,14 +124,23 @@ namespace Apex
       var n2 = scene.GetSelection(1); if (!n2.HasBuffer(BUFFER.POINTBUFFER)) return 0;
       if (test != null) return 1;
       Cursor = Cursors.WaitCursor;
-      var rm1 = CSG.Factory.CreateMesh(); n1.CopyTo(rm1); //var rmo = rm1.Clone();
-      var rm2 = CSG.Factory.CreateMesh(); n2.CopyTo(rm2);
+      var r1 = CSG.Factory.CreateMesh(); n1.CopyTo(r1); //var rmo = rm1.Clone();
+      var r2 = CSG.Factory.CreateMesh(); n2.CopyTo(r2);
+
+      //var f1 = r1.Check();
+      //var f2 = r2.Check();
+
       var rm = n2.GetTransform() * !n1.GetTransform();
-      var vm = (CSG.Rational.Matrix)rm; rm2.Transform(vm);
-      CSG.Tesselator.Join(rm1, rm2, id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference);
-      rm1.CopyTo(out var pb, out var ib);
-      Marshal.ReleaseComObject(rm1);
-      Marshal.ReleaseComObject(rm2);
+      var vm = (CSG.Rational.Matrix)rm; r2.Transform(vm);
+      CSG.Tesselator.Join(r1, r2, id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference);
+      
+      //var f3 = r1.Check();
+      CSG.Tesselator.Round(r1, CSG.VarType.Float);
+      //var f4 = r1.Check();
+
+      r1.CopyTo(out var pb, out var ib);
+      Marshal.ReleaseComObject(r1);
+      Marshal.ReleaseComObject(r2);
       var tb = n1.CopyCoords(pb, ib);
       Execute(undo(
         undosel(false, n1, n2),
@@ -148,6 +148,8 @@ namespace Apex
         undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
         undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()),
         undodel(n2), undosel(true, n1)));
+      //rm1 = CSG.Factory.CreateMesh(); n1.CopyTo(rm1);
+      //var f2 = rm1.Check(); if (f2 != 0) { }
       return 1;
     }
     int OnPlaneCut(object test)
@@ -159,9 +161,10 @@ namespace Apex
       var n2 = scene.GetSelection(1);
       var rm = n2.GetTransform() * !n1.GetTransform();
       var e = CSG.Rational.Plane.FromPointNormal(rm.mp, rm.mz);
-      var rm1 = CSG.Factory.CreateMesh(); n1.CopyTo(rm1);
-      CSG.Tesselator.Cut(rm1, e);
-      rm1.CopyTo(out var pb, out var ib); Marshal.ReleaseComObject(rm1);
+      var r1 = CSG.Factory.CreateMesh(); n1.CopyTo(r1);
+      CSG.Tesselator.Cut(r1, e);
+      CSG.Tesselator.Round(r1, CSG.VarType.Float);
+      r1.CopyTo(out var pb, out var ib); Marshal.ReleaseComObject(r1);
       var tb = n1.CopyCoords(pb, ib);
       Execute(
         undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()) +
@@ -239,16 +242,9 @@ namespace Apex
       }
       return 1;
     }
-    //void paste(IScene drop)
-    //{
-    //  var pp = drop.Nodes().ToArray(); while (drop.Child != null) drop.RemoveAt(0);
-    //  Execute(undo(undo(
-    //    pp.Select((p, x) => undodel(p, scene, scene.Count + x)).ToArray()),
-    //    undosel(true, pp)));
-    //}
     void paste(IScene drop, IRoot root)
     {
-      var pp = drop.Nodes().ToArray(); while (drop.Child != null) drop.RemoveAt(0);
+      var pp = drop.Nodes().ToArray(); drop.Clear();
       Execute(undo(undo(
         pp.Select((p, x) => undodel(p, root, root.Count + x)).ToArray()),
         undosel(true, pp)));

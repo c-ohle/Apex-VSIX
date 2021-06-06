@@ -340,8 +340,10 @@ HRESULT CTesselatorRat::Stretch(ICSGMesh* mesh, CSGVAR v)
     ii = (UINT*)ss.getptr(ni + 6);
     ii[ni + 0] = ff[this->ii[i].a];
     ii[ni + 2] = ii[ni + 5] = ff[this->ii[i].b];
-    if ((ii[ni + 1] = ii[ni + 3] = ff[m.pp.n + this->ii[i].a]) == -1) return 0x8C066001;
-    if ((ii[ni + 4] = ff[m.pp.n + this->ii[i].b]) == -1) return 0x8C066001;
+    if ((ii[ni + 1] = ii[ni + 3] = ff[m.pp.n + this->ii[i].a]) == -1) 
+      return 0x8C066001;
+    if ((ii[ni + 4] = ff[m.pp.n + this->ii[i].b]) == -1) 
+      return 0x8C066001;
     ni += 6;
   }
   m.pp.copy(csg.pp.p, csg.np);

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using static Apex.CDX;
 
 namespace Apex
@@ -10,16 +12,7 @@ namespace Apex
     IFont font = GetFont(System.Drawing.SystemFonts.MenuFont);
     IBuffer checkboard;
     List<string> debuginfo;
-    //internal System.Action<int> animations;
-    //void animate()
-    //{
-    //  if (animations != null)
-    //  {
-    //    try { animations(System.Environment.TickCount); }
-    //    catch (System.Exception e) { animations = null; System.Diagnostics.Debug.WriteLine(e.Message); }
-    //  }
-    //}
-
+    
     void ISink.Render(int fl)
     {
       var dc = new DC(view); dc.Font = font;
@@ -63,8 +56,8 @@ namespace Apex
           dc.Color = 0xff000000;
           float y = 10 + font.Ascent, dy = font.Height, x = ClientSize.Width - 10f;
           if (debuginfo != null) for (int i = 0; i < debuginfo.Count; i++) dc.DrawText(10, y + i * dy, debuginfo[i]);
-          var s = (Factory.Version & 0x100) != 0 ? "Debug" : "Release";
-          dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+          var s = (Factory.Version & 0x100) != 0 ? "Debug" : "Release"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+          s = $"Dpi: {view.Dpi}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
           s = $"Buffer {Factory.GetInfo(2)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
           s = $"Vertexbuffer {Factory.GetInfo(0)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
           s = $"Indexbuffer {Factory.GetInfo(1)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
@@ -125,6 +118,37 @@ namespace Apex
       }
 #endif
     }
+    
+    void ISink.Animate(INode p, uint t)
+    {
+      var node = p.Tag as Node ?? Node.From(this, p);
+      try { node.GetMethod<Action<uint>>()?.Invoke(t); }
+      catch (Exception e) { Debug.WriteLine(e.Message); }
+    }
+    void ISink.Reslove(object p, COM.IStream s)
+    {
+      long t1; s.Seek(-4, 2, &t1); int t2; s.Read(&t2, 4);
+      if (((t2 >> 16) & 0xffff) != 0xC066) return;
+      if ((t2 &= 0xffff) > t1) return;
+      var a = new byte[(int)t1 - t2];
+      s.Seek(t2, 0); fixed (byte* t = a) s.Read(t, a.Length);
+      var uri = System.Text.Encoding.UTF8.GetString(a);
 
+      var wcl = new System.Net.WebClient();
+      wcl.DownloadDataCompleted += (x, e) =>
+      {
+        if (e.Error != null) { System.Diagnostics.Debug.WriteLine(e.Error.Message); return; }
+        var tex = (IBuffer)e.UserState; var data = e.Result;
+        fixed (byte* t = data) tex.Update(t, data.Length); Invalidate();
+      };
+      wcl.DownloadDataAsync(new Uri(uri), p);
+      //try 
+      //{
+      //  var wcl = new System.Net.WebClient();
+      //  var data = wcl.DownloadData(uri);
+      //  s.Seek(0, 0); fixed (byte* pp = data) s.Write(pp, data.Length); s.Seek(0, 0);
+      //  //var data2 = wcl.DownloadData(uri+".png");
+      //} catch(Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
+    }
   }
 }

@@ -19,38 +19,6 @@ namespace Apex
 
   unsafe partial class CDXView : UserControl, ISink, System.IServiceProvider, ISelectionContainer
   {
-    void ISink.Animate(INode p, uint t)
-    {
-      var node = p.Tag as Node ?? Node.From(this, p);
-      try { node.GetMethod<Action<uint>>()?.Invoke(t); }
-      catch (Exception e) { Debug.WriteLine(e.Message); }
-    }
-    void ISink.Reslove(object p, COM.IStream s)
-    {
-      long t1; s.Seek(-4, 2, &t1); int t2; s.Read(&t2, 4);
-      if (((t2 >> 16) & 0xffff) != 0xC066) return;
-      if ((t2 &= 0xffff) > t1) return;
-      var a = new byte[(int)t1 - t2];
-      s.Seek(t2, 0); fixed (byte* t = a) s.Read(t, a.Length);
-      var uri = System.Text.Encoding.UTF8.GetString(a);
-
-      var wcl = new System.Net.WebClient();
-      wcl.DownloadDataCompleted += (x, e) =>
-      {
-        if (e.Error != null) { System.Diagnostics.Debug.WriteLine(e.Error.Message); return; }
-        var tex = (IBuffer)e.UserState; var data = e.Result;
-        fixed (byte* t = data) tex.Update(t, data.Length); Invalidate();
-      };
-      wcl.DownloadDataAsync(new Uri(uri), p);
-      //try 
-      //{
-      //  var wcl = new System.Net.WebClient();
-      //  var data = wcl.DownloadData(uri);
-      //  s.Seek(0, 0); fixed (byte* pp = data) s.Write(pp, data.Length); s.Seek(0, 0);
-      //  //var data2 = wcl.DownloadData(uri+".png");
-      //} catch(Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
-    }
-
     //~CDXView() { Debug.WriteLine("~CDXView"); }
 
     //protected override void Dispose(bool disposing)
@@ -63,17 +31,6 @@ namespace Apex
     //  
     //}
 
-    protected override void OnHandleCreated(EventArgs e)
-    {
-      base.OnHandleCreated(e);
-    }
-    protected override void OnHandleDestroyed(EventArgs e)
-    {
-      if (view != null) { Marshal.ReleaseComObject(view); view = null; }
-      scene = null; undos = null; tip.dispose();
-      base.OnHandleDestroyed(e);
-    }
-
     internal CDXWindowPane pane;
     IScene scene; IView view; static long drvsettings = 0x400000000;
     int flags = 1 | 4; // | 2; //1:Checkboard 2:Collisions 4:Tooltips
@@ -85,6 +42,7 @@ namespace Apex
       Factory.SetDevice((uint)drvsettings);
       Debug.Listeners.Add(new Listner());
     }
+
     class Listner : TraceListener
     {
       public override void WriteLine(string s) => Write(s + '\n');
@@ -133,14 +91,6 @@ namespace Apex
       //    Node.From(this, node).GetMethod<Action>();
       //}
     }
-
-    //static int find(byte* p, int n, string s)
-    //{
-    //  int i = 0, l = s.Length, m = n - l;
-    //  for (; i < m; i++) { int k = 0; for (; k < l && p[i + k] == s[k]; k++) ; if (k == l) return i; }
-    //  return -1;
-    //}
-
     internal void Save(string path)
     {
       var str = COM.SHCreateMemStream();
@@ -155,9 +105,16 @@ namespace Apex
       scene.Export3MF(path, str, null, view.Camera);
     }
 
-    //[DllImport("user32.dll")]
-    //[return: MarshalAs(UnmanagedType.Bool)]
-    //static extern bool IsWindowVisible(IntPtr hWnd);
+    protected override void OnHandleCreated(EventArgs e)
+    {
+      base.OnHandleCreated(e);
+    }
+    protected override void OnHandleDestroyed(EventArgs e)
+    {
+      if (view != null) { Marshal.ReleaseComObject(view); view = null; }
+      scene = null; undos = null; tip.dispose();
+      base.OnHandleDestroyed(e);
+    }
     protected override void OnSizeChanged(EventArgs e)
     {
       //if (view != null) System.Diagnostics.Debug.WriteLine("OnSizeChanged with view " + Size);
@@ -363,7 +320,37 @@ namespace Apex
 
     class Scene : NodeBase, ICustomTypeDescriptor
     {
-      internal Scene() { }
+      protected override void Exchange(IExchange e)
+      {
+        if (e.Category("General"))
+        {
+          var t1 = view.scene.Unit; if (e.Exchange("Unit", ref t1)) view.scene.Unit = t1;
+        }
+        if (e.Category("View"))
+        {
+          var t2 = System.Drawing.Color.FromArgb((int)view.view.BkColor);
+          if (e.Exchange("BkColor", ref t2)) view.view.BkColor = (uint)t2.ToArgb();
+          var p = view.view.Camera;
+          e.TypeConverter(typeof(CamConv));
+          if (e.Exchange("Camera", ref p)) { view.view.Camera = p; }
+          Node.excam(e, p);
+          //BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
+          //e.Description("Field Of View in Degree");
+          //e.DisplayName("Field Of View"); var d = false;
+          //d |= e.Exchange("Fov", ref cd.fov);
+          //e.Description("Depth Near- and Farplane");
+          //d |= e.Exchange("Range", ref *(float2*)&cd.near);// e.Exchange("ZFar", ref cd.far))
+          //if(d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
+        }
+      }
+      string ICustomTypeDescriptor.GetClassName() => GetType().Name;
+      string ICustomTypeDescriptor.GetComponentName() => "3MF";
+      PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
+      {
+        var pdc = wpdc.Value; if (pdc == null) GetProps(wpdc.Value = pdc = new PropertyDescriptorCollection(null));
+        return pdc;
+      }
+      WeakRef<PropertyDescriptorCollection> wpdc;
 
       class CamConv : TypeConverter
       {
@@ -400,38 +387,6 @@ namespace Apex
         }
       }
 
-      protected override void Exchange(IExchange e)
-      {
-        if (e.Category("General"))
-        {
-          var t1 = view.scene.Unit; if (e.Exchange("Unit", ref t1)) view.scene.Unit = t1;
-        }
-        if (e.Category("View"))
-        {
-          var t2 = System.Drawing.Color.FromArgb((int)view.view.BkColor);
-          if (e.Exchange("BkColor", ref t2)) view.view.BkColor = (uint)t2.ToArgb();
-          var p = view.view.Camera;
-          e.TypeConverter(typeof(CamConv));
-          if (e.Exchange("Camera", ref p)) { view.view.Camera = p; }
-          Node.excam(e, p);
-          //BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
-          //e.Description("Field Of View in Degree");
-          //e.DisplayName("Field Of View"); var d = false;
-          //d |= e.Exchange("Fov", ref cd.fov);
-          //e.Description("Depth Near- and Farplane");
-          //d |= e.Exchange("Range", ref *(float2*)&cd.near);// e.Exchange("ZFar", ref cd.far))
-          //if(d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
-        }
-      }
-
-      string ICustomTypeDescriptor.GetClassName() => GetType().Name;
-      string ICustomTypeDescriptor.GetComponentName() => "3MF";
-      PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
-      {
-        var pdc = wr.Value; if (pdc == null) GetProps(wr.Value = pdc = new PropertyDescriptorCollection(null));
-        return pdc;
-      }
-      WeakRef<PropertyDescriptorCollection> wr;
     }
 
   }

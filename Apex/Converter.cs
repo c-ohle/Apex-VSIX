@@ -58,7 +58,6 @@ namespace Apex
       t2.PropertyValueChanged += h;
     }
   }
-  
   class FieldPD : PropertyDescriptor
   {
     FieldInfo fi;
@@ -74,7 +73,6 @@ namespace Apex
     public static PropertyDescriptorCollection GetProperties(object value) => 
       new PropertyDescriptorCollection(value.GetType().GetFields().Select(fi => new FieldPD(fi)).ToArray());
   }
-
   class FormatConverter : TypeConverter
   {
     string[] tab;
@@ -132,7 +130,6 @@ namespace Apex
       return int.Parse(s);
     }
   }
-
   unsafe class TexturConverter : TypeConverter
   {
     int hash; StandardValuesCollection svc;

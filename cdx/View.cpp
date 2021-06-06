@@ -64,6 +64,9 @@ LRESULT CALLBACK CView::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
     view->hwnd = 0; view->sink.Release(); view->relres();
     SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)view->proc);
     break;
+  case WM_DPICHANGED:
+    view->dpiscale = 0;
+    break;
     //case WM_KEYDOWN:
     //case WM_KEYUP:
     //case WM_CHAR:

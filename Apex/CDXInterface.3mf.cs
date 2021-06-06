@@ -26,7 +26,7 @@ namespace Apex
       doc.Add(new XAttribute(XNamespace.Xmlns + "x", ax.NamespaceName));
       var unit = scene.Unit; doc.SetAttributeValue("unit", (unit != 0 ? unit : Unit.meter).ToString());
       //doc.Add(new XElement(ns + "metadata", new XAttribute("name", "Title"), "Hello World"));
-      if (dragpt.HasValue) doc.SetAttributeValue(ax + "dragpt", (string)dragpt.Value);
+      if (dragpt.HasValue) doc.SetAttributeValue(ax + "pt", (string)dragpt.Value);
       if (actcam != null)
       {
         var defcam = scene.Camera;
@@ -194,7 +194,8 @@ namespace Apex
         var model = doc.Root; var ns = model.Name.Namespace;
         //var apex = model.GetPrefixOfNamespace(ax); if (apex == null) ax = string.Empty;
         var scene = Factory.CreateScene();
-        var pt = model.Attribute(ax + "dragpt"); dragpt = pt != null ? (float3)pt.Value : float.NaN;
+        var pt = model.Attribute(ax + "pt") ?? model.Attribute(ax + "dragpt") ; 
+        dragpt = pt != null ? (float3)pt.Value : float.NaN;
         if ((pt = model.Attribute(ax + "ct")) != null)
         {
           var defcam = Factory.CreateNode(); defcam.Name = "(default)"; defcam.Transform = (float4x3)pt.Value;

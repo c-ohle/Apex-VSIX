@@ -819,7 +819,7 @@ namespace Apex
       //  var f = (float)(scaling(drop.Unit) / scaling(scene.Unit));
       //  Scale(drop, f); if (!float.IsNaN(wp.x)) wp *= f;
       //}
-      var pp = drop.Nodes().ToArray(); while (drop.Child != null) drop.RemoveAt(0);
+      var pp = drop.Nodes().ToArray(); drop.Clear();
       if (float.IsNaN(wp.x))
       {
         var box = GetBox(pp); if (box.IsEmpty) return;

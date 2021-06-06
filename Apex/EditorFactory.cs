@@ -310,7 +310,9 @@ namespace Apex
         view.OnCommand(id, a);
         if (pvaOut != IntPtr.Zero && a[1] != null) Marshal.GetNativeVariantForObject(a[1], pvaOut);
       }
-      catch (Exception e) { view.MessageBox(e.Message); }
+      catch (Exception e) { view.MessageBox(
+        (uint)e.HResult == 0x8c066001 ? "Degenerated Mesh Object!" : 
+        e.Message); }
       return 0;
     }
     internal CDXView.TreeView treeview; static object[] exa2;

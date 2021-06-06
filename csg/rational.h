@@ -207,7 +207,9 @@ struct Rational
   Rational operator /(const Rational& b) const
   {
     const Rational& a = *this;
-    auto sb = b.sign(); if (!sb) sb = 1 / sb; //EXCEPTION_INT_DIVIDE_BY_ZERO
+    auto sb = b.sign(); 
+    if (!sb) 
+      sb = 1 / sb; //EXCEPTION_INT_DIVIDE_BY_ZERO
     auto sa = a.sign(); if (sa == 0) return a;
     auto ct = buffer + 2; UINT tt[8];
     const UINT* s = a.push(tt), * t = b.push(tt + 4); UINT* r = ct + ct[-1] + 2;

@@ -334,6 +334,7 @@ public:
   HRESULT __stdcall Stretch(ICSGMesh* a, CSGVAR dir);
   HRESULT __stdcall Skeleton(ICSGMesh* a, CSGVAR data);
   HRESULT __stdcall ConvexHull(ICSGMesh* a);
+  HRESULT __stdcall Round(ICSGMesh* a, CSG_TYPE t);
 private:
   //CSG extension
   struct _csg

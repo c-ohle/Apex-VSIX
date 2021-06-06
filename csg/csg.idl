@@ -73,6 +73,7 @@ interface ICSGTesselator : IUnknown
   HRESULT Stretch([in] ICSGMesh* a, [in] CSGVAR dir);
   HRESULT Skeleton([in] ICSGMesh* a, [in] CSGVAR data);
   HRESULT ConvexHull([in] ICSGMesh* a);
+  HRESULT Round([in] ICSGMesh* a, CSG_TYPE t);
 };
 
 typedef enum CSG_OP1

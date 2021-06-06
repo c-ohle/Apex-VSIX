@@ -111,10 +111,6 @@ struct __declspec(novtable) CBuffer : ICDXBuffer
   }
 };
 
-//struct __declspec(novtable) CTransBuffer : CBuffer
-//{
-//};
-
 struct __declspec(novtable) CCacheBuffer : CBuffer
 {
   static CCacheBuffer* first; CCacheBuffer* next;

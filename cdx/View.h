@@ -22,7 +22,8 @@ struct CView : ICDXView
   UINT                              iover = 0, pickprim = 0, anitime = 0;
   CDX_RENDER                        flags = (CDX_RENDER)0;
   cameradata                        camdat;
-  //float                             vscale = 0.0002f, znear = 0.1f, zfar = 1000, minwz = -1;
+  float                             dpiscale = 0;
+  //float                           vscale = 0.0002f, znear = 0.1f, zfar = 1000, minwz = -1;
 
   struct MBOX { CNode* p; XMFLOAT4X3 m; XMFLOAT3 b[2]; };
   sarray<MBOX> boxes;
@@ -116,6 +117,10 @@ struct CView : ICDXView
   HRESULT __stdcall get_OverPoint(XMFLOAT3* p)
   {
     XMStoreFloat3(p, vv[VV_OVERPOS]); return 0;
+  }
+  HRESULT __stdcall get_Dpi(UINT* p) 
+  { 
+    *p = (UINT)(120 / dpiscale); return 0;
   }
   HRESULT __stdcall Draw(CDX_DRAW id, UINT* data);
   HRESULT __stdcall Command(CDX_CMD  cmd, UINT* data);

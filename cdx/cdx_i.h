@@ -263,6 +263,9 @@ EXTERN_C const IID IID_ICDXView;
         virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_OverPoint( 
             /* [retval][out] */ XMFLOAT3 *p) = 0;
         
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Dpi( 
+            /* [retval][out] */ UINT *p) = 0;
+        
         virtual HRESULT STDMETHODCALLTYPE Draw( 
             /* [in] */ CDX_DRAW idc,
             /* [in] */ UINT *data) = 0;
@@ -351,6 +354,10 @@ EXTERN_C const IID IID_ICDXView;
             ICDXView * This,
             /* [retval][out] */ XMFLOAT3 *p);
         
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Dpi )( 
+            ICDXView * This,
+            /* [retval][out] */ UINT *p);
+        
         HRESULT ( STDMETHODCALLTYPE *Draw )( 
             ICDXView * This,
             /* [in] */ CDX_DRAW idc,
@@ -430,6 +437,9 @@ EXTERN_C const IID IID_ICDXView;
 
 #define ICDXView_get_OverPoint(This,p)	\
     ( (This)->lpVtbl -> get_OverPoint(This,p) ) 
+
+#define ICDXView_get_Dpi(This,p)	\
+    ( (This)->lpVtbl -> get_Dpi(This,p) ) 
 
 #define ICDXView_Draw(This,idc,data)	\
     ( (This)->lpVtbl -> Draw(This,idc,data) ) 

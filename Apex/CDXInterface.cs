@@ -122,6 +122,7 @@ namespace Apex
       INode MouseOverNode { get; }
       int MouseOverId { get; }
       float3 MouseOverPoint { get; }
+      int Dpi { get; }
       void Draw(Draw draw, void* data);
       void Command(Cmd cmd, void* data);
       void Thumbnail(int dx, int dy, int samples, uint bkcolor, COM.IStream str);
@@ -168,7 +169,7 @@ namespace Apex
     }
 
     [ComImport, Guid("2BB87169-81D3-405E-9C16-E4C22177BBAA"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]
-    public interface INode 
+    public interface INode
     {
       INode Child { get; }
       int Count { get; }
@@ -267,6 +268,13 @@ namespace Apex
       //var s = Node.GetData(xn.GetMethod<Action<IExchange>>()); if (s == null) return;
       //p.SetBytes(BUFFER.SCRIPTDATA, System.Text.Encoding.UTF8.GetBytes(s));
     }
+    //public static (byte[] pp, byte[] ii) GetFloatBuffer(this CSG.IMesh a)
+    //{
+    //  var nv = a.VertexCount; var ni = a.IndexCount;
+    //  var pp = new byte[nv * sizeof(float3)]; fixed (void* p = pp) a.CopyBuffer(0, 0, new CSG.Variant((float* )p, 3, nv));
+    //  var ii = new byte[ni * sizeof(ushort)]; fixed (void* p = ii) a.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, ni));
+    //  return (pp, pp);
+    //}
     public static void CopyTo(this CSG.IMesh a, INode b, float2[] tt = null)
     {
       var nv = a.VertexCount; var ni = a.IndexCount;
@@ -288,9 +296,9 @@ namespace Apex
       try
       {
         var vp = (float3*)pp.ToPointer(); a.CopyBuffer(0, 0, new CSG.Variant(&vp->x, 3, nv));
-        pb = Factory.GetBuffer(CDX.BUFFER.POINTBUFFER, vp, nv * sizeof(float3));
+        pb = Factory.GetBuffer(BUFFER.POINTBUFFER, vp, nv * sizeof(float3));
         var ip = (ushort*)pp.ToPointer(); a.CopyBuffer(1, 0, new CSG.Variant(ip, 1, ni));
-        ib = Factory.GetBuffer(CDX.BUFFER.INDEXBUFFER, ip, ni * sizeof(ushort));
+        ib = Factory.GetBuffer(BUFFER.INDEXBUFFER, ip, ni * sizeof(ushort));
       }
       finally { Marshal.FreeCoTaskMem(pp); }
     }

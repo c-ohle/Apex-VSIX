@@ -1286,10 +1286,6 @@ namespace Apex
       base.OnMouseLeave(e); if (ClientRectangle.Contains(PointToClient(Cursor.Position))) return;
       EndToolTip(); EndFlyer();
     }
-    protected override void OnGotFocus(EventArgs e)
-    {
-      base.OnGotFocus(e);
-    }
     protected override void OnLostFocus(EventArgs e)
     {
       EndToolTip(); EndFlyer();

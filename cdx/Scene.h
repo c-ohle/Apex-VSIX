@@ -12,7 +12,7 @@ struct __declspec(novtable) CScene : ICDXScene
   ~CScene()
   {
     //TRACE(L"~CScene\n");
-    Clear();
+    if (lastchild.p) { lastchild.p->nextnode.Release(); lastchild.Release(); }
   }
   __forceinline CNode* child() { return lastchild.p ? lastchild.p->nextnode.p : 0; }
   CNode* findscount(UINT i)

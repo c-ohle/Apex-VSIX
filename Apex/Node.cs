@@ -222,16 +222,6 @@ namespace Apex
     {
       view.AddUndo(p);
     }
-      
-    //internal void oninsert()
-    //{
-    //  //if (animation != null) view.animations += animation;
-    //}
-    //internal void onremove()
-    //{
-    //  //if (animation != null) view.animations -= animation;
-    //  RemoveAnnotations(typeof(PropertyDescriptorCollection));
-    //}
 #if(false)
     object annotations;
     internal void AddAnnotation(object p)
@@ -355,16 +345,6 @@ namespace Apex
       var a = getfuncs(); for (int i = 1; i < a.Length; i++) if (a[i] is T t) return t; return null;
     }
 
-    internal static void excam(IExchange e,INode p)
-    {
-      BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t; var d = false;
-      e.DisplayName("Fov"); e.Description("Field Of View in Degree");
-      d |= e.Exchange(".fo", ref cd.fov);
-      e.DisplayName("Range"); e.Description("Depth Near- and Farplane");
-      d |= e.Exchange(".ra", ref *(float2*)&cd.near);
-      if (d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
-    }
-
     override protected void Exchange(IExchange e)
     {
       GetMethod<Action<IExchange>>()?.Invoke(e);
@@ -415,6 +395,16 @@ namespace Apex
       }
     }
 
+    internal static void excam(IExchange e, INode p)
+    {
+      BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t; var d = false;
+      e.DisplayName("Fov"); e.Description("Field Of View in Degree");
+      d |= e.Exchange(".fo", ref cd.fov);
+      e.DisplayName("Range"); e.Description("Depth Near- and Farplane");
+      d |= e.Exchange(".ra", ref *(float2*)&cd.near);
+      if (d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
+    }
+
     string ICustomTypeDescriptor.GetClassName()
     {
       return node.GetClassName();// GetType().Name;
@@ -434,20 +424,12 @@ namespace Apex
       public override bool EditComponent(ITypeDescriptorContext context, object component) { 
         ((Node)component).view.OnCommand(2305, null); return false; }
     }
-    //PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
-    //{
-    //  var pdc = Annotation<PropertyDescriptorCollection>();
-    //  if (pdc != null) return pdc;
-    //  pdc = new PropertyDescriptorCollection(null);
-    //  GetProps(pdc); AddAnnotation(pdc); return pdc;
-    //}
     PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
     {
       var pdc = wpdc.Value; if (pdc == null) GetProps(wpdc.Value = pdc = new PropertyDescriptorCollection(null));
       return pdc;
     }
     WeakRef<PropertyDescriptorCollection> wpdc;
-
 
     ISite IComponent.Site { get => this; set { } }
     object IServiceProvider.GetService(Type t)

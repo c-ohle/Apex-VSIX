@@ -64,7 +64,7 @@ static HRESULT RemoveAt(CComPtr<CNode>& lastchild, UINT i)
 
 static HRESULT InsertAt(IUnknown* unk, CComPtr<CNode>& lastchild, UINT i, ICDXNode* p)
 {
-  auto node = static_cast<CNode*>(p);
+  auto node = static_cast<CNode*>(p); if (node->parent) return E_INVALIDARG;
   if (!lastchild.p)
   {
     if (i != 0) return E_INVALIDARG;
@@ -92,8 +92,9 @@ HRESULT CScene::InsertAt(UINT i, ICDXNode* p) { return ::InsertAt(this, lastchil
 
 HRESULT CScene::Clear()
 {
-  if (lastchild.p) { lastchild.p->nextnode.Release(); lastchild.Release(); }
-  selection.clear(); camera.Release();
+  while(lastchild.p) ::RemoveAt(lastchild, 0); selection.clear(); 
+  //camera.Release(); 
+  //if (lastchild.p) { lastchild.p->nextnode.Release(); lastchild.Release(); }
   return 0;
 }
 HRESULT CScene::get_Camera(ICDXNode** p) { if (*p = camera.p) camera.p->AddRef(); return 0; }

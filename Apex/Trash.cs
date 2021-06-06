@@ -17,10 +17,14 @@ using static Apex.CDX;
 
 namespace Apex
 {
-
-  
-
 #if (false)
+
+    //static int find(byte* p, int n, string s)
+    //{
+    //  int i = 0, l = s.Length, m = n - l;
+    //  for (; i < m; i++) { int k = 0; for (; k < l && p[i + k] == s[k]; k++) ; if (k == l) return i; }
+    //  return -1;
+    //}
 
             //ushort* iia; var nia = nodes[ia].GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&iia) / sizeof(ushort);
             //float3* ppa; var npa = nodes[ia].GetBufferPtr(BUFFER.POINTBUFFER, (void**)&ppa) / sizeof(float3);

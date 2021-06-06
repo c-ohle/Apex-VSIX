@@ -488,3 +488,38 @@ HRESULT CTesselatorRat::ConvexHull(ICSGMesh* mesh)
   m.ii.copy((UINT*)ii, ni); m.flags |= MESH_FL_MODIFIED;
   return 0;
 }
+
+
+HRESULT CTesselatorRat::Round(ICSGMesh* mesh, CSG_TYPE t)
+{
+  if (!(t == CSG_TYPE_FLOAT || t == CSG_TYPE_DOUBLE || t == CSG_TYPE_DECIMAL)) return E_INVALIDARG;
+  auto& m = *static_cast<CMesh*>(mesh); m.resetee(); m.flags |= MESH_FL_MODIFIED;
+  for (UINT i = 0, n = m.pp.n * 3; i < n; i++)
+  {
+    auto& v = (&m.pp.p->x)[i]; 
+    switch(t)
+    {
+    case CSG_TYPE_FLOAT: v = (float)(double)v; continue;
+    case CSG_TYPE_DOUBLE: v = (double)v; continue;
+    case CSG_TYPE_DECIMAL: v = (DECIMAL)v; continue;
+    }
+  }
+  auto tt = csg.tt.getptr(m.pp.n); csg.dictpp(m.pp.n);
+  for (UINT i = 0; i < m.pp.n; i++) tt[i] = csg.addpp(m.pp.p[i]);
+  if (csg.np == m.pp.n)
+    return 0;
+  m.pp.copy(csg.pp.p, csg.np);
+  for (UINT i = 0; i < m.ii.n; i++) m.ii.p[i] = tt[m.ii.p[i]];
+  UINT ni = 0; auto ii = csg.ii.getptr(m.ii.n);
+  for (UINT i = 0; i < m.ii.n; i += 3)
+  {
+    if (m.ii.p[i + 0] == m.ii.p[i + 1] || m.ii.p[i + 1] == m.ii.p[i + 2] || m.ii.p[i + 2] == m.ii.p[i + 0]) continue;
+    ii[ni + 0] = m.ii.p[i + 0]; ii[ni + 1] = m.ii.p[i + 1]; ii[ni + 2] = m.ii.p[i + 2]; ni += 3;
+  }
+  if (ni == m.ii.n)
+    return 0;
+  m.pp.setsize(csg.trim(m.pp.p, m.pp.n, ni));
+  m.ii.copy((UINT*)ii, ni); 
+  return 0;
+}
+
