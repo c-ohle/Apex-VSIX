@@ -12,12 +12,29 @@ static void wheelpick(CView* view, LPARAM lParam)
   view->Pick(pp);
 }
 
+UINT CView::getanitime()
+{
+  auto t = GetTickCount();
+  return t ? t : 1;
+}
+void CView::ontimer()
+{
+  if (anitime)
+  {
+    anitime = 0;
+    for (auto node = scene.p->child(); node; node = node->nextsibling(0))
+      if (node->flags & NODE_FL_ACTIVE)
+        sink.p->Animate(node, anitime ? anitime : (anitime = getanitime()));
+  }
+  sink.p->Timer();
+}
+
 LRESULT CALLBACK CView::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   auto view = (CView*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
   switch (message)
   {
-  case WM_TIMER: view->sink.p->Timer(); return 0;
+  case WM_TIMER: view->ontimer(); return 0;
   case WM_ERASEBKGND:
     return 1;
   case WM_PAINT:
@@ -205,7 +222,7 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
     auto f = camdat.fov * (0.00025f / 45);
     auto ab = XMVectorSet((rcclient.right - rand) * f, (rcclient.bottom - rand) * f, 0, 0);
     XMVECTOR box[4]; box[1] = box[3] = -(box[0] = box[2] = g_XMFltMax);
- 
+
     for (auto node = scene->child(); node; node = node->nextsibling(0))
     {
       if (cmd == CDX_CMD_CENTERSEL && !(node->flags & NODE_FL_INSEL)) continue;
@@ -221,9 +238,9 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
         box[1] = XMVectorMax(box[1], wp); //not in use
         wp = XMVector3Transform(op, tm); auto z = XMVectorSplatZ(wp) * ab;
         box[2] = XMVectorMin(box[2], wp + z);
-        box[3] = XMVectorMax(box[3], wp - z); 
+        box[3] = XMVectorMax(box[3], wp - z);
       }
-    } 
+    }
     if (box[0].m128_f32[0] > box[1].m128_f32[0]) return 0;
     float fm = 0;
     if (((float*)data)[1] != 0)
@@ -240,31 +257,31 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
     auto& cd = *(cameradata*)data;
     cd.fov = camdat.fov;
     cd.znear = box[2].m128_f32[2] - fm;
-    cd.zfar  = box[3].m128_f32[2] - fm;
+    cd.zfar = box[3].m128_f32[2] - fm;
     cd.minwz = box[0].m128_f32[2];
     return 0;
   }
   case CDX_CMD_GETBOX:
   case CDX_CMD_GETBOXSEL:
     return E_NOTIMPL;
-  //case CDX_CMD_GETBOX:
-  //case CDX_CMD_GETBOXSEL:
-  //{
-  //  auto ma = XMLoadFloat4x3((XMFLOAT4X3*)data);
-  //  auto& nodes = scene.p->nodes;
-  //  XMVECTOR box[2]; box[1] = -(box[0] = g_XMFltMax);
-  //  for (UINT i = 0; i < scene.p->count; i++)
-  //  {
-  //    auto node = nodes.p[i]; //if (!node->mesh.p) continue;
-  //    if (cmd == CDX_CMD_GETBOXSEL && !(node->flags & NODE_FL_INSEL)) continue;
-  //    auto pb = node->getbuffer(CDX_BUFFER_POINTBUFFER); if (!pb) continue;
-  //    auto wm = node->gettrans(scene.p) * ma;
-  //    node->getbox(box, &wm, pb);
-  //  }
-  //  XMStoreFloat4(((XMFLOAT4*)data) + 0, box[0]);
-  //  XMStoreFloat4(((XMFLOAT4*)data) + 1, box[1]);
-  //  return 0;
-  //}
+    //case CDX_CMD_GETBOX:
+    //case CDX_CMD_GETBOXSEL:
+    //{
+    //  auto ma = XMLoadFloat4x3((XMFLOAT4X3*)data);
+    //  auto& nodes = scene.p->nodes;
+    //  XMVECTOR box[2]; box[1] = -(box[0] = g_XMFltMax);
+    //  for (UINT i = 0; i < scene.p->count; i++)
+    //  {
+    //    auto node = nodes.p[i]; //if (!node->mesh.p) continue;
+    //    if (cmd == CDX_CMD_GETBOXSEL && !(node->flags & NODE_FL_INSEL)) continue;
+    //    auto pb = node->getbuffer(CDX_BUFFER_POINTBUFFER); if (!pb) continue;
+    //    auto wm = node->gettrans(scene.p) * ma;
+    //    node->getbox(box, &wm, pb);
+    //  }
+    //  XMStoreFloat4(((XMFLOAT4*)data) + 0, box[0]);
+    //  XMStoreFloat4(((XMFLOAT4*)data) + 1, box[1]);
+    //  return 0;
+    //}
   case CDX_CMD_SETPLANE:
   {
     if (!data) { setproject(); mm[MM_PLANE] = mm[MM_VIEWPROJ]; return 0; }
@@ -304,7 +321,7 @@ HRESULT __stdcall CView::Command(CDX_CMD cmd, UINT* data)
     auto nc = last->getscount();
 
     auto pp = (CNode**)stackptr; UINT na = 0, nb = 0;
-    for (auto node = scene.p->child(); node; node=node->nextsibling(0))
+    for (auto node = scene.p->child(); node; node = node->nextsibling(0))
     {
       if (!node->vb.p) continue;
       if (node->flags & (NODE_FL_SELECT | NODE_FL_INSEL)) pp[na++] = node; else pp[nc - ++nb] = node;

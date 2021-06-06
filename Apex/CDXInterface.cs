@@ -132,7 +132,8 @@ namespace Apex
     {
       [PreserveSig] void Render(int fl);
       [PreserveSig] void Timer();
-      void Reslove([MarshalAs(UnmanagedType.IUnknown)] object p, COM.IStream s);
+      [PreserveSig] void Animate(INode p, uint t);
+      [PreserveSig] void Reslove([MarshalAs(UnmanagedType.IUnknown)] object p, COM.IStream s);
     }
 
     public enum Unit { meter = 1, centimeter = 2, millimeter = 3, micron = 4, foot = 5, inch = 6, }
@@ -181,6 +182,7 @@ namespace Apex
       int Index { get; set; }
       bool IsSelect { get; set; }
       bool IsStatic { get; set; }
+      bool IsActive { get; set; }
       float4x3 Transform { get; set; }
       uint Color { get; set; }
       IBuffer Texture { get; set; }
@@ -367,7 +369,7 @@ namespace Apex
       if (node.IsSelect == select) return;
       node.IsSelect = select; if (!(node.Tag is Node n)) return;
       n.view.Invalidate(Inval.Select);
-      if (!select) n.RemoveAnnotations(typeof(PropertyDescriptorCollection));
+      //if (!select) n.RemoveAnnotations(typeof(PropertyDescriptorCollection));
     }
     public static void SetPlane(this IView view, float4x3 p)
     {

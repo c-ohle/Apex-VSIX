@@ -230,4 +230,15 @@ namespace Apex
       return null;
     }
   }
+
+  struct WeakRef<T> where T : class
+  {
+    WeakReference p;
+    public T Value
+    {
+      get { if (p != null && p.Target is T v) return v; return null; }
+      set { if (value == null) p = null; else if (p == null) p = new WeakReference(value); else p.Target = value; }
+    }
+  }
+
 }

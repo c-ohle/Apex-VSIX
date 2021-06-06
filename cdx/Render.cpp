@@ -38,10 +38,10 @@ void CView::renderekbox(CNode* main)
   XMVECTOR box[2]; box[1] = XMVectorNegate(box[0] = g_XMFltMax);
   for (CNode* p = main; p; p = main->child() ? p->nextsibling(main) : 0)
   {
-    if (!p->vb.p) continue; XMMATRIX wm; 
+    if (!p->vb.p) continue; XMMATRIX wm;
     if (p != main) wm = p->gettrans(main);
     p->getbox(box, p != main ? &wm : 0);
-  } 
+  }
   auto cc = main->flags & NODE_FL_STATIC ? 0x80808080 : 0xffffffff;
   if (XMVector3Greater(box[0], box[1])) box[0] = box[1] = XMVectorZero();
   else if (flags & CDX_RENDER_BOUNDINGBOX)
@@ -58,7 +58,7 @@ void CView::renderekbox(CNode* main)
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskX), m) - pc),
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskY), m) - pc),
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskZ), m) - pc));
-    
+
     auto ma = box[1] + sc * XMVectorReplicate(0.03f);
     auto va = sc * XMVectorReplicate(0.01f);
     auto vr = sc * XMVectorReplicate(0.002f);
@@ -72,7 +72,7 @@ void CView::renderekbox(CNode* main)
     DrawArrow(pc, XMVectorAndInt(va, g_XMMaskY), XMVectorGetY(vr));
 
     SetColor(VV_DIFFUSE, 0xff0000ff & cc);
-    DrawLine(g_XMZero, pc = XMVectorAndInt(ma, g_XMMaskZ)); 
+    DrawLine(g_XMZero, pc = XMVectorAndInt(ma, g_XMMaskZ));
     DrawArrow(pc, XMVectorAndInt(va, g_XMMaskZ), XMVectorGetZ(vr));
   }
 
@@ -123,44 +123,38 @@ __declspec(align(16)) struct REC
 void CView::RenderScene()
 {
   UINT nrecs = 0; REC* recs = (REC*)stackptr;
-  UINT nflags = 0, transp = 0; CNode* plight = 0;
-
+  UINT nflags = 0, transp = 0; CNode* plight = 0; anitime = 0;
   for (auto node = scene.p->child(); node; node = node->nextsibling(0))
   {
     if (flags & CDX_RENDER_SELONLY && !(node->flags & NODE_FL_INSEL)) continue;
+    if (node->flags & NODE_FL_ACTIVE && sink.p)
+      sink.p->Animate(node, anitime ? anitime : (anitime = getanitime()));
     if (!(node->flags & NODE_FL_MASHOK) || (node->ib.p && !node->ib.p->p)) //drv reset
     {
       node->flags |= NODE_FL_MASHOK;
-      stackptr = recs + nrecs;
       node->update(scene, -1);
     }
     if (node->bmask & (1 << CDX_BUFFER_LIGHT))
     {
       if (!plight) plight = node;
     }
-    //auto m = node->getmatrix();
     if (node->ib.p)
     {
-      auto& rec = recs[nrecs++];
+      auto& rec = recs[nrecs++]; stackptr = recs + nrecs;
       rec.node = node; nflags |= node->flags;
       rec.wm = node->gettrans(scene);
       rec.tex = static_cast<CTexture*>(node->getbuffer(CDX_BUFFER_TEXTURE));
       if (rec.tex && !rec.tex->srv.p)
-      {
-        stackptr = recs + nrecs;
         rec.tex->init(this);
-      }
       if ((node->color >> 24) != 0xff) recs[transp++].itrans = nrecs - 1;
     }
   }
-
-  stackptr = recs + nrecs;
 
   SetColor(VV_AMBIENT, 0x00404040);
   XMVECTOR light;
   if (plight) light = plight->gettrans(scene.p).r[2];
   else light = XMVector3Normalize(XMVectorSet(1, -1, 2, 0));
-  XMVECTOR lightdir = flags & CDX_RENDER_SHADOWS ? 
+  XMVECTOR lightdir = flags & CDX_RENDER_SHADOWS ?
     XMVectorSetW(XMVectorMultiply(light, XMVectorSet(0.3f, 0.3f, 0.3f, 0)), camdat.minwz) : light;
   SetVector(VV_LIGHTDIR, lightdir);
   for (UINT i = 0; i < nrecs; i++)
@@ -216,7 +210,7 @@ void CView::RenderScene()
       }
     }
   }
-  
+
   if (sink.p)
     sink.p->Render(0);
 

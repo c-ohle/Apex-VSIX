@@ -355,7 +355,7 @@ namespace Apex
     }
   }
 
- 
+
   [Guid("381f778f-1111-4f04-88dd-241de0ad3e71")]
   public class ScriptToolWindowPane : ToolWindowPane, IVsSelectionEvents, IOleCommandTarget//IVsFindTarget
   {
@@ -426,17 +426,17 @@ namespace Apex
           (edit.getlineflags() & 2) != 0 ||
           edit.EditText != edit.node.getcode())
         {
-          if (edit.node.Annotation<ScriptEditor>() == null) edit.node.AddAnnotation(edit);
+          edit.node.editor = edit;
         }
         else
         {
-          edit.node.RemoveAnnotations(edit.GetType());
+          edit.node.editor = null;
           edit.Dispose();
         }
         host.Controls.Remove(edit);
       }
       if (node == null) { edit = null; return; }
-      edit = node.Annotation<ScriptEditor>();
+      edit = node.editor;
       if (edit != null) host.Controls.Add(edit);
       else
       {

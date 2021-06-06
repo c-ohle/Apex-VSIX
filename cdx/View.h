@@ -19,7 +19,7 @@ struct CView : ICDXView
   CComPtr<CScene>                   scene;
   CComPtr<CNode>                    camera; CNode* mainlight = 0;
   CComPtr<CNode>                    overnode; 
-  UINT                              iover = 0, pickprim = 0;
+  UINT                              iover = 0, pickprim = 0, anitime = 0;
   CDX_RENDER                        flags = (CDX_RENDER)0;
   cameradata                        camdat;
   //float                             vscale = 0.0002f, znear = 0.1f, zfar = 1000, minwz = -1;
@@ -46,6 +46,7 @@ struct CView : ICDXView
   void XM_CALLCONV SetVector(UINT i, const XMVECTOR& p);
   void XM_CALLCONV SetMatrix(UINT i, const XMMATRIX& p);
   void setproject();
+  void ontimer(); UINT getanitime();
   void Render();
   void RenderScene();
   void Pick(const short* pt);

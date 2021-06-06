@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -18,6 +19,12 @@ namespace Apex
 
   unsafe partial class CDXView : UserControl, ISink, System.IServiceProvider, ISelectionContainer
   {
+    void ISink.Animate(INode p, uint t)
+    {
+      var node = p.Tag as Node ?? Node.From(this, p);
+      try { node.GetMethod<Action<uint>>()?.Invoke(t); }
+      catch (Exception e) { Debug.WriteLine(e.Message); }
+    }
     void ISink.Reslove(object p, COM.IStream s)
     {
       long t1; s.Seek(-4, 2, &t1); int t2; s.Read(&t2, 4);
@@ -76,7 +83,30 @@ namespace Apex
       var reg = Application.UserAppDataRegistry;
       var drv = reg.GetValue("drv"); if (drv is long v) drvsettings = v;
       Factory.SetDevice((uint)drvsettings);
+      Debug.Listeners.Add(new Listner());
     }
+    class Listner : TraceListener
+    {
+      public override void WriteLine(string s) => Write(s + '\n');
+      public override void Write(string s)
+      {
+        //var dte = (EnvDTE.DTE)this.pane.GetVsService(typeof(EnvDTE.DTE));
+        //var window = dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+        //window.Activate();
+        //var pane = ((EnvDTE.OutputWindow)window.Object).OutputWindowPanes.Cast<EnvDTE.OutputWindowPane>().FirstOrDefault(p =>
+        //  new Guid(p.Guid) == Microsoft.VisualStudio.VSConstants.GUID_OutWindowDebugPane);
+        //if (pane != null) { pane.Activate(); pane.OutputString(s); }
+
+        var wnd = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+        // GUID_OutWindowGeneralPane
+        //if (wnd is IVsWindowPane sv) { }
+        var guid = Microsoft.VisualStudio.VSConstants.GUID_OutWindowDebugPane;
+        wnd.GetPane(ref guid, out var pane);
+        pane.Activate();
+        pane.OutputStringThreadSafe(s);
+      }
+    }
+
     internal void LoadDocData(string path)
     {
       if (path.EndsWith(".b3mf", true, null))
@@ -90,12 +120,12 @@ namespace Apex
         scene = Import3MF(path, out _);
       }
 
-      foreach (var node in scene.SelectNodes(BUFFER.SCRIPTDATA))
-      {
-        byte* p; int n = node.GetBufferPtr(BUFFER.SCRIPTDATA, (void**)&p);
-        if (find(p, n, "startup=\"1\"") != -1)
-          Node.From(this, node).GetMethod<Action>();
-      }
+      //foreach (var node in scene.SelectNodes(BUFFER.SCRIPTDATA))
+      //{
+      //  byte* p; int n = node.GetBufferPtr(BUFFER.SCRIPTDATA, (void**)&p);
+      //  if (find(p, n, "startup=\"1\"") != -1)
+      //    Node.From(this, node).GetMethod<Action>();
+      //}
       //foreach (var node in scene.SelectNodes(BUFFER.SCRIPTDATA))
       //{
       //  var ss = System.Text.Encoding.UTF8.GetString(node.GetBytes(BUFFER.SCRIPTDATA));
@@ -104,12 +134,12 @@ namespace Apex
       //}
     }
 
-    static int find(byte* p, int n, string s)
-    {
-      int i = 0, l = s.Length, m = n - l;
-      for (; i < m; i++) { int k = 0; for (; k < l && p[i + k] == s[k]; k++) ; if (k == l) return i; }
-      return -1;
-    }
+    //static int find(byte* p, int n, string s)
+    //{
+    //  int i = 0, l = s.Length, m = n - l;
+    //  for (; i < m; i++) { int k = 0; for (; k < l && p[i + k] == s[k]; k++) ; if (k == l) return i; }
+    //  return -1;
+    //}
 
     internal void Save(string path)
     {
@@ -215,7 +245,7 @@ namespace Apex
     void ISink.Timer()
     {
       tiptimer();
-      animate();
+      //animate();
       if (inval == 0) return;
       var f = inval; inval = 0;
       if ((f & (Inval.Tree | Inval.Select | Inval.PropertySet)) != 0)
@@ -287,13 +317,13 @@ namespace Apex
       {
         if (r == null)
         {
-          if (p.Tag is Node n) n.onremove();
+          //if (p.Tag is Node n) n.onremove();
           (r = p.Parent).RemoveAt(i = p.Index);
         }
         else
         {
           r.InsertAt(i, p); r = null;
-          if (p.Tag is Node n) n.oninsert();
+          //if (p.Tag is Node n) n.oninsert();
         }
       };
     }
@@ -330,16 +360,6 @@ namespace Apex
     }
 
     string[] samples; static string[] driver;
-
-    struct WeakRef<T> where T : class
-    {
-      WeakReference p;
-      public T Value
-      {
-        get { if (p != null && p.Target is T v) return v; return null; }
-        set { if (value == null) p = null; else if (p == null) p = new WeakReference(value); else p.Target = value; }
-      }
-    }
 
     class Scene : NodeBase, ICustomTypeDescriptor
     {
@@ -413,6 +433,8 @@ namespace Apex
       }
       WeakRef<PropertyDescriptorCollection> wr;
     }
+
   }
+
 }
 

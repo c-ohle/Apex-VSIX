@@ -175,6 +175,7 @@ struct CComClass2 : public T
 #define NODE_FL_STATIC    0x04
 #define NODE_FL_MASHOK    0x08
 #define NODE_FL_LAST      0x10
+#define NODE_FL_ACTIVE    0x20
 
 struct __declspec(novtable) CNode : ICDXNode
 {
@@ -259,6 +260,14 @@ struct __declspec(novtable) CNode : ICDXNode
   HRESULT __stdcall put_IsStatic(BOOL p)
   {
     if (p) flags |= NODE_FL_STATIC; else flags &= ~NODE_FL_STATIC; return 0;
+  }
+  HRESULT __stdcall get_IsActive(BOOL* p)
+  {
+    *p = (flags & NODE_FL_ACTIVE) != 0; return 0;
+  }
+  HRESULT __stdcall put_IsActive(BOOL p)
+  {
+    if (p) flags |= NODE_FL_ACTIVE; else flags &= ~NODE_FL_ACTIVE; return 0;
   }
   HRESULT __stdcall get_Color(UINT* p)
   {

@@ -123,7 +123,7 @@ namespace Apex
         item.SetAttributeValue("objectid", objectid);
         item.SetAttributeValue("transform", (string)group.Transform);
         dest.Add(item);
-        if (group.IsStatic) obj.SetAttributeValue(ax + "fl", 1);
+        var fl = (group.IsStatic ? 1 : 0) | (group.IsActive ? 2 : 0); if (fl != 0) obj.SetAttributeValue(ax + "fl", fl);
         var bb = group.GetBytes(BUFFER.CAMERA);
         if (bb != null)
         {
@@ -197,7 +197,7 @@ namespace Apex
         var pt = model.Attribute(ax + "dragpt"); dragpt = pt != null ? (float3)pt.Value : float.NaN;
         if ((pt = model.Attribute(ax + "ct")) != null)
         {
-          var defcam = Factory.CreateNode(); defcam.Name = "(default)"; defcam.Transform = (float4x3)pt.Value; 
+          var defcam = Factory.CreateNode(); defcam.Name = "(default)"; defcam.Transform = (float4x3)pt.Value;
           if ((pt = model.Attribute(ax + "ca")) != null) defcam.SetBytes(BUFFER.CAMERA, Convert.FromBase64String(pt.Value));
           scene.Camera = defcam;
         }
@@ -218,7 +218,8 @@ namespace Apex
           var oid = (string)e.Attribute("objectid");
           var obj = res.Elements(ns + "object").First(p => (string)p.Attribute("id") == oid);
           var mesh = obj.Element(ns + "mesh"); obj.AddAnnotation(node);
-          node.Name = (string)obj.Attribute("name"); var st = obj.Attribute(ax + "fl"); if (st != null) { node.IsStatic = ((int)st & 1) != 0; }
+          node.Name = (string)obj.Attribute("name"); var st = obj.Attribute(ax + "fl");
+          if (st != null) { var fl = (int)st; if ((fl & 1) != 0) node.IsStatic = true; if ((fl & 2) != 0) node.IsActive = true; }
           var tra = (string)e.Attribute("transform");
           if (tra != null) node.Transform = (float4x3)tra;
           if (mesh != null)

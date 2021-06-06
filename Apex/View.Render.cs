@@ -10,15 +10,15 @@ namespace Apex
     IFont font = GetFont(System.Drawing.SystemFonts.MenuFont);
     IBuffer checkboard;
     List<string> debuginfo;
-    internal System.Action<int> animations;
-    void animate()
-    {
-      if (animations != null)
-      {
-        try { animations(System.Environment.TickCount); }
-        catch (System.Exception e) { animations = null; System.Diagnostics.Debug.WriteLine(e.Message); }
-      }
-    }
+    //internal System.Action<int> animations;
+    //void animate()
+    //{
+    //  if (animations != null)
+    //  {
+    //    try { animations(System.Environment.TickCount); }
+    //    catch (System.Exception e) { animations = null; System.Diagnostics.Debug.WriteLine(e.Message); }
+    //  }
+    //}
 
     void ISink.Render(int fl)
     {
@@ -74,7 +74,7 @@ namespace Apex
           //s = $"Over {view.MouseOverNode?.Name} id 0x{view.MouseOverId:x4} {view.MouseOverPoint}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
           //s = $"Capture {Capture}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
         }
-        animate();
+        //animate();
       }
 #if (false)
       var dc = new DC(view);

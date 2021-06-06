@@ -22,7 +22,6 @@ namespace Apex
     void Format(string text);
     void TypeConverter(Type t);
     bool Exchange<T>(string name, ref T value);
-    void Annotation<T>(string name, T value);
     bool Modified { get; }
   }
 
@@ -107,10 +106,6 @@ namespace Apex
           case 5: todo = 3; break;
         }
         return false;
-      }
-      void IExchange.Annotation<T>(string name, T value)
-      {
-        if (todo == 3) save(name, value, typeof(T));
       }
       bool IExchange.Modified { get => todo == -2; }
       void create(string name, Type t)
@@ -211,6 +206,7 @@ namespace Apex
     IntPtr ptr;
     internal INode node => (INode)Marshal.GetObjectForIUnknown(ptr);
     internal object[] funcs;
+    internal ScriptEditor editor;
 
     internal protected INode this[string name]
     {
@@ -219,50 +215,24 @@ namespace Apex
     internal protected void SetMesh(float3[] pp, int[] ii, float2[] tt = null) => node.SetMesh(pp, ii, tt);
     internal protected void Invalidate(Inval fl = Inval.Render)
     {
-      if ((fl & Inval.PropertySet) != 0) RemoveAnnotations(typeof(PropertyDescriptorCollection));
-      //if ((fl & Inval.Properties) != 0) node.RemoveBuffer(BUFFER.SCRIPTDATA);
+      if ((fl & Inval.PropertySet) != 0) wpdc.Value = null;//RemoveAnnotations(typeof(PropertyDescriptorCollection));
       view.Invalidate(fl);
-    }
-    internal protected void Animate(Action<int> act)
-    {
-      if (animation != null) view.animations -= animation;
-      animation = act;
-      if (animation != null) view.animations += animation;
     }
     internal protected void AddUndo(Action p)
     {
       view.AddUndo(p);
     }
-
-    internal protected void WriteLine(string s)
-    {
-      Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
-      var wnd = Microsoft.VisualStudio.Shell.Package.GetGlobalService(
-        typeof(Microsoft.VisualStudio.Shell.Interop.SVsOutputWindow)) as
-        Microsoft.VisualStudio.Shell.Interop.IVsOutputWindow;
-      // GUID_OutWindowGeneralPane
-      var guid = Microsoft.VisualStudio.VSConstants.GUID_OutWindowDebugPane;
-      wnd.GetPane(ref guid, out var pane);
-      pane.OutputString(s);
-      pane.OutputString("\n");
-      pane.Activate();
-    }
-
-    Action<int> animation
-    {
-      get => Annotation<Action<int>>();
-      set => SetAnnotation(value);
-    }
-    internal void oninsert()
-    {
-      if (animation != null) view.animations += animation;
-    }
-    internal void onremove()
-    {
-      if (animation != null) view.animations -= animation;
-      RemoveAnnotations(typeof(PropertyDescriptorCollection));
-    }
-
+      
+    //internal void oninsert()
+    //{
+    //  //if (animation != null) view.animations += animation;
+    //}
+    //internal void onremove()
+    //{
+    //  //if (animation != null) view.animations -= animation;
+    //  RemoveAnnotations(typeof(PropertyDescriptorCollection));
+    //}
+#if(false)
     object annotations;
     internal void AddAnnotation(object p)
     {
@@ -342,7 +312,7 @@ namespace Apex
         }
       }
     }
-
+#endif
     internal string getcode()
     {
       var bs = node.GetBuffer(CDX.BUFFER.SCRIPT);
@@ -464,13 +434,20 @@ namespace Apex
       public override bool EditComponent(ITypeDescriptorContext context, object component) { 
         ((Node)component).view.OnCommand(2305, null); return false; }
     }
+    //PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
+    //{
+    //  var pdc = Annotation<PropertyDescriptorCollection>();
+    //  if (pdc != null) return pdc;
+    //  pdc = new PropertyDescriptorCollection(null);
+    //  GetProps(pdc); AddAnnotation(pdc); return pdc;
+    //}
     PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
     {
-      var pdc = Annotation<PropertyDescriptorCollection>();
-      if (pdc != null) return pdc;
-      pdc = new PropertyDescriptorCollection(null);
-      GetProps(pdc); AddAnnotation(pdc); return pdc;
+      var pdc = wpdc.Value; if (pdc == null) GetProps(wpdc.Value = pdc = new PropertyDescriptorCollection(null));
+      return pdc;
     }
+    WeakRef<PropertyDescriptorCollection> wpdc;
+
 
     ISite IComponent.Site { get => this; set { } }
     object IServiceProvider.GetService(Type t)

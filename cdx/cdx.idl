@@ -99,6 +99,7 @@ interface ICDXSink : IUnknown
 {
   void Render(UINT fl);
   void Timer();
+  void Animate(ICDXNode* p, UINT t);
   void Resolve(IUnknown* p, IStream* s);
 };
 
@@ -165,6 +166,8 @@ interface ICDXNode : ICDXRoot
   [propput] HRESULT IsSelect([in] BOOL p);
   [propget] HRESULT IsStatic([out, retval] BOOL* p);
   [propput] HRESULT IsStatic([in] BOOL p);
+  [propget] HRESULT IsActive([out, retval] BOOL* p);
+  [propput] HRESULT IsActive([in] BOOL p);
   [propget] HRESULT Transform([out, retval] XMFLOAT4X3* p);
   [propput] HRESULT Transform([in] XMFLOAT4X3 p);
   [propget] HRESULT Color([out, retval] UINT* p);

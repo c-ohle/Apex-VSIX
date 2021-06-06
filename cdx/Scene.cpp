@@ -101,7 +101,7 @@ HRESULT CScene::put_Camera(ICDXNode* p) { camera = static_cast<CNode*>(p); retur
 
 void CNode::save(Archive& ar)
 {
-  UINT fl = 2 | (subn ? 8 : 0) | (this->flags & (NODE_FL_STATIC));
+  UINT fl = 2 | (subn ? 8 : 0) | (this->flags & (NODE_FL_STATIC | NODE_FL_ACTIVE));
   ar.WriteCount(fl);
   ar.Serialize(name);
   ar.Write(&color);
@@ -130,7 +130,7 @@ CNode* CNode::load(Archive& ar)
 {
   UINT fl = ar.ReadCount(); if (fl == 0) return 0;
   auto* p = static_cast<CNode*>(new CComClass<CNode>());
-  p->flags = fl & (NODE_FL_STATIC);
+  p->flags = fl & (NODE_FL_STATIC | NODE_FL_ACTIVE);
   ar.Serialize(p->name);
   ar.Read(&p->color);
   ar.Read(&p->matrix);

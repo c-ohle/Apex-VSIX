@@ -471,6 +471,10 @@ EXTERN_C const IID IID_ICDXSink;
         
         virtual void STDMETHODCALLTYPE Timer( void) = 0;
         
+        virtual void STDMETHODCALLTYPE Animate( 
+            ICDXNode *p,
+            UINT t) = 0;
+        
         virtual void STDMETHODCALLTYPE Resolve( 
             IUnknown *p,
             IStream *s) = 0;
@@ -502,6 +506,11 @@ EXTERN_C const IID IID_ICDXSink;
         
         void ( STDMETHODCALLTYPE *Timer )( 
             ICDXSink * This);
+        
+        void ( STDMETHODCALLTYPE *Animate )( 
+            ICDXSink * This,
+            ICDXNode *p,
+            UINT t);
         
         void ( STDMETHODCALLTYPE *Resolve )( 
             ICDXSink * This,
@@ -536,6 +545,9 @@ EXTERN_C const IID IID_ICDXSink;
 
 #define ICDXSink_Timer(This)	\
     ( (This)->lpVtbl -> Timer(This) ) 
+
+#define ICDXSink_Animate(This,p,t)	\
+    ( (This)->lpVtbl -> Animate(This,p,t) ) 
 
 #define ICDXSink_Resolve(This,p,s)	\
     ( (This)->lpVtbl -> Resolve(This,p,s) ) 
@@ -984,6 +996,12 @@ EXTERN_C const IID IID_ICDXNode;
         virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_IsStatic( 
             /* [in] */ BOOL p) = 0;
         
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_IsActive( 
+            /* [retval][out] */ BOOL *p) = 0;
+        
+        virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_IsActive( 
+            /* [in] */ BOOL p) = 0;
+        
         virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Transform( 
             /* [retval][out] */ XMFLOAT4X3 *p) = 0;
         
@@ -1145,6 +1163,14 @@ EXTERN_C const IID IID_ICDXNode;
             /* [retval][out] */ BOOL *p);
         
         /* [propput] */ HRESULT ( STDMETHODCALLTYPE *put_IsStatic )( 
+            ICDXNode * This,
+            /* [in] */ BOOL p);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_IsActive )( 
+            ICDXNode * This,
+            /* [retval][out] */ BOOL *p);
+        
+        /* [propput] */ HRESULT ( STDMETHODCALLTYPE *put_IsActive )( 
             ICDXNode * This,
             /* [in] */ BOOL p);
         
@@ -1317,6 +1343,12 @@ EXTERN_C const IID IID_ICDXNode;
 
 #define ICDXNode_put_IsStatic(This,p)	\
     ( (This)->lpVtbl -> put_IsStatic(This,p) ) 
+
+#define ICDXNode_get_IsActive(This,p)	\
+    ( (This)->lpVtbl -> get_IsActive(This,p) ) 
+
+#define ICDXNode_put_IsActive(This,p)	\
+    ( (This)->lpVtbl -> put_IsActive(This,p) ) 
 
 #define ICDXNode_get_Transform(This,p)	\
     ( (This)->lpVtbl -> get_Transform(This,p) ) 
