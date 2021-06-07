@@ -12,7 +12,7 @@ namespace Apex
     IFont font = GetFont(System.Drawing.SystemFonts.MenuFont);
     IBuffer checkboard;
     List<string> debuginfo;
-    
+
     void ISink.Render(int fl)
     {
       var dc = new DC(view); dc.Font = font;
@@ -41,6 +41,23 @@ namespace Apex
           var p = scene.GetSelection(i); if (p == view.Camera) continue;
           var f = Node.From(this, p).GetMethod<Action<DC>>();
           if (f != null) try { f(dc); } catch (Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
+
+          //if (p.Name == "test")
+          //{
+          //  float3* pp; var np = p.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&pp) / sizeof(float3);
+          //  ushort* ii; var ni = p.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
+          //  dc.Transform = p.GetTransform();
+          //  dc.Color = 0xffff0000;
+          //  dc.DrawLine(pp[ii[ni - 3]], pp[ii[ni - 2]]);
+          //  dc.DrawLine(pp[ii[ni - 2]], pp[ii[ni - 1]]);
+          //  dc.DrawLine(pp[ii[ni - 1]], pp[ii[ni - 3]]);
+          //  dc.DrawLine(pp[ii[ni - 3]], default);
+          //  dc.Color = 0xff00ff00;
+          //  dc.DrawLine(pp[ii[ni - 6]], pp[ii[ni - 5]]);
+          //  dc.DrawLine(pp[ii[ni - 5]], pp[ii[ni - 4]]);
+          //  dc.DrawLine(pp[ii[ni - 4]], pp[ii[ni - 6]]);
+          //  dc.DrawLine(pp[ii[ni - 6]], default);
+          //}
         }
         return;
       }
@@ -118,7 +135,7 @@ namespace Apex
       }
 #endif
     }
-    
+
     void ISink.Animate(INode p, uint t)
     {
       var node = p.Tag as Node ?? Node.From(this, p);

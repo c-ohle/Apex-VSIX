@@ -352,7 +352,7 @@ namespace Apex
         System.IO.File.WriteAllBytes("C:\\Users\\cohle\\Desktop\\Apex VSIX\\Apex\\toolbox.bin", ToolboxDataProvider.CopyItems(toolbox));
       }
 #endif
-      ////ToolboxDataProvider.RestoreItems(toolbox);
+      //ToolboxDataProvider.RestoreItems(toolbox);
       return 0;
     }
   }

@@ -97,6 +97,7 @@
     <Seperator/>
     <MenuItem text="Analyze..." id="2305" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/> 
     <MenuItem text="Normalize" id="2038" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/>
+    <MenuItem text="Retess" id="2039" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />

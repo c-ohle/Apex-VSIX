@@ -47,6 +47,7 @@ namespace Apex
       LIGHT = 8,
       SCRIPT = 20,
       SCRIPTDATA = 21,
+      CSGMESH = 22,
     }
 
     [ComImport, Guid("A21FB8D8-33B3-4F8E-8740-8EB4B1FD4153"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]

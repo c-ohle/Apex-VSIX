@@ -156,102 +156,6 @@ HRESULT CTesselatorDbl::Update(ICSGMesh* mesh, CSGVAR v, UINT flags)
   m.flags = !nn && m.ii.n ? MESH_FL_SHELL : 0; m.flags |= MESH_FL_MODIFIED; return 0;
 }
 
-HRESULT CMesh::Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p)
-{
-  sarray<UINT> tt; *p = (CSG_MESH_CHECK)0; if (!check) check = (CSG_MESH_CHECK)0xffff;
-
-  if (check & CSG_MESH_CHECK_DUP_POINTS)
-  {
-    UINT ts = max(pp.n, 32), * ht = tt.getptr(ts); memset(ht, 0, ts * sizeof(UINT));
-    for (UINT i = 0, k; i < pp.n; i++)
-    {
-      const auto& e = pp.p[i];
-      UINT& hc = ht[e.GetHashCode() % ts];
-      if (!hc) { hc = i + 1; continue; }
-      for (k = hc - 1; k < i && !e.Equals(pp[k]); k++);
-      if (k == i) continue;
-      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_DUP_POINTS); break;
-    }
-  }
-  if (check & CSG_MESH_CHECK_DUP_PLANES)
-  {
-    UINT ts = max(ee.n, 32), * ht = tt.getptr(ts); memset(ht, 0, ts * sizeof(UINT));
-    for (UINT i = 0, k; i < ee.n; i++)
-    {
-      const auto& e = ee.p[i];
-      UINT& hc = ht[e.GetHashCode() % ts];
-      if (!hc) { hc = i + 1; continue; }
-      for (k = hc - 1; k < i && !e.Equals(ee.p[k]); k++);
-      if (k == i) continue;
-      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_DUP_PLANES); break;
-    }
-  }
-  if (check & (CSG_MESH_CHECK_BAD_INDEX | CSG_MESH_CHECK_UNUSED_POINT))
-  {
-    tt.getptr(pp.n); memset(tt.p, 0, pp.n * sizeof(UINT));
-    for (UINT i = 0; i < ii.n; i++)
-    {
-      if (ii[i] < pp.n) { tt[ii[i]] = 1; continue; }
-      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_BAD_INDEX); return 0;
-    }
-    for (UINT i = 0; i < pp.n; i++)
-    {
-      if (tt[i]) continue;
-      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_UNUSED_POINT); break;
-    }
-  }
-  if (check & CSG_MESH_CHECK_OPENINGS)
-  {
-    UINT nk = 0; UINT64* kk = 0;
-    for (UINT i = 0; i < ii.n; i += 3)
-    {
-      for (UINT k = 0, j, e; k < 3; k++)
-      {
-        UINT64 t = ii[i + k] | ((UINT64)ii[i + (k + 1) % 3] << 32);
-        for (j = 0, e = -1; j < nk && kk[j] != t; j++) if (e == -1 && !kk[j]) e = j;
-        if (j != nk) { kk[j] = 0; continue; }
-        t = (t >> 32) | (t << 32);
-        if (e != -1) { kk[e] = t; continue; }
-        (kk = (UINT64*)tt.getptr((nk + 1) << 1))[nk++] = t;
-      }
-    }
-    for (UINT i = 0; i < nk; i++)
-    {
-      if (!kk[i]) continue;
-      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_OPENINGS); break; //openings
-    }
-  }
-  if (check & CSG_MESH_CHECK_PLANES)
-  {
-    if (flags & MESH_FL_ENCODE && ee.n != 0)
-    {
-      UINT ne = -1;
-      for (UINT i = 0, j = -1, k = 0, l; i < ii.n; i += 3)
-      {
-        if (decode(ii.p + i)) ne++;
-        if (ne >= ee.n) break;
-        for (l = 0; l < 3 && (0 ^ ee.p[ne].DotCoord(pp.p[ii[i + l]])) == 0; l++);
-        if (l != 3) break;
-      }
-      if (ne + 1 != ee.n)
-        *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_PLANES);
-    }
-  } 
-  if (check & CSG_MESH_CHECK_VOIDPOLYS && !(*p & CSG_MESH_CHECK_DUP_POINTS))
-  {
-    for (UINT i = 0; i < ii.n; i += 3)
-    {
-      if (
-        ii.p[i + 0] != ii.p[i + 1] &&
-        ii.p[i + 1] != ii.p[i + 2] &&
-        ii.p[i + 2] != ii.p[i + 0]) continue;
-      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_VOIDPOLYS);
-      break;
-    }
-  }
-  return 0;
-}
-
 HRESULT CMesh::Transform(CSGVAR m)
 {
   if (ee.n) ee.setsize(0); flags |= MESH_FL_MODIFIED;
@@ -340,9 +244,9 @@ HRESULT CTesselatorRat::Stretch(ICSGMesh* mesh, CSGVAR v)
     ii = (UINT*)ss.getptr(ni + 6);
     ii[ni + 0] = ff[this->ii[i].a];
     ii[ni + 2] = ii[ni + 5] = ff[this->ii[i].b];
-    if ((ii[ni + 1] = ii[ni + 3] = ff[m.pp.n + this->ii[i].a]) == -1) 
+    if ((ii[ni + 1] = ii[ni + 3] = ff[m.pp.n + this->ii[i].a]) == -1)
       return 0x8C066001;
-    if ((ii[ni + 4] = ff[m.pp.n + this->ii[i].b]) == -1) 
+    if ((ii[ni + 4] = ff[m.pp.n + this->ii[i].b]) == -1)
       return 0x8C066001;
     ni += 6;
   }
@@ -351,3 +255,162 @@ HRESULT CTesselatorRat::Stretch(ICSGMesh* mesh, CSGVAR v)
   m.resetee(); m.flags &= ~MESH_FL_SHELL; m.flags |= MESH_FL_MODIFIED;
   return 0;
 }
+
+bool intersect_triangle(const Vector3R& P, const Vector3R& V, const Vector3R& A, const Vector3R& B, const Vector3R& C);
+
+HRESULT CMesh::Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p)
+{
+  sarray<UINT> tt; *p = (CSG_MESH_CHECK)0; if (!check) check = (CSG_MESH_CHECK)0xffff;
+
+  if (check & CSG_MESH_CHECK_DUP_POINTS)
+  {
+    UINT ts = max(pp.n, 32), * ht = tt.getptr(ts); memset(ht, 0, ts * sizeof(UINT));
+    for (UINT i = 0, k; i < pp.n; i++)
+    {
+      const auto& e = pp.p[i];
+      UINT& hc = ht[e.GetHashCode() % ts];
+      if (!hc) { hc = i + 1; continue; }
+      for (k = hc - 1; k < i && !e.Equals(pp[k]); k++);
+      if (k == i) continue;
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_DUP_POINTS); break;
+    }
+  }
+  if (check & CSG_MESH_CHECK_DUP_PLANES)
+  {
+    UINT ts = max(ee.n, 32), * ht = tt.getptr(ts); memset(ht, 0, ts * sizeof(UINT));
+    for (UINT i = 0, k; i < ee.n; i++)
+    {
+      const auto& e = ee.p[i];
+      UINT& hc = ht[e.GetHashCode() % ts];
+      if (!hc) { hc = i + 1; continue; }
+      for (k = hc - 1; k < i && !e.Equals(ee.p[k]); k++);
+      if (k == i) continue;
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_DUP_PLANES); break;
+    }
+  }
+  if (check & (CSG_MESH_CHECK_BAD_INDEX | CSG_MESH_CHECK_UNUSED_POINT))
+  {
+    tt.getptr(pp.n); memset(tt.p, 0, pp.n * sizeof(UINT));
+    for (UINT i = 0; i < ii.n; i++)
+    {
+      if (ii[i] < pp.n) { tt[ii[i]] = 1; continue; }
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_BAD_INDEX); return 0;
+    }
+    for (UINT i = 0; i < pp.n; i++)
+    {
+      if (tt[i]) continue;
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_UNUSED_POINT); break;
+    }
+  }
+  if (check & CSG_MESH_CHECK_OPENINGS)
+  {
+    UINT nk = 0; UINT64* kk = 0;
+    for (UINT i = 0; i < ii.n; i += 3)
+    {
+      for (UINT k = 0, j, e; k < 3; k++)
+      {
+        UINT64 t = ii[i + k] | ((UINT64)ii[i + (k + 1) % 3] << 32);
+        for (j = 0, e = -1; j < nk && kk[j] != t; j++) if (e == -1 && !kk[j]) e = j;
+        if (j != nk) { kk[j] = 0; continue; }
+        t = (t >> 32) | (t << 32);
+        if (e != -1) { kk[e] = t; continue; }
+        (kk = (UINT64*)tt.getptr((nk + 1) << 1))[nk++] = t;
+      }
+    }
+    for (UINT i = 0; i < nk; i++)
+    {
+      if (!kk[i]) continue;
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_OPENINGS); 
+      break; //openings
+    }
+  }
+  if (check & CSG_MESH_CHECK_PLANES)
+  {
+    if (flags & MESH_FL_ENCODE && ee.n != 0)
+    {
+      UINT ne = -1;
+      for (UINT i = 0, j = -1, k = 0, l; i < ii.n; i += 3)
+      {
+        if (decode(ii.p + i)) ne++;
+        if (ne >= ee.n) break;
+        for (l = 0; l < 3 && (0 ^ ee.p[ne].DotCoord(pp.p[ii[i + l]])) == 0; l++);
+        if (l != 3) break;
+      }
+      if (ne + 1 != ee.n)
+        *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_PLANES);
+    }
+  }
+  if (check & CSG_MESH_CHECK_VOIDPOLYS && !(*p & CSG_MESH_CHECK_DUP_POINTS))
+  {
+    for (UINT i = 0; i < ii.n; i += 3)
+    {
+      if (
+        ii.p[i + 0] != ii.p[i + 1] &&
+        ii.p[i + 1] != ii.p[i + 2] &&
+        ii.p[i + 2] != ii.p[i + 0]) continue;
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_VOIDPOLYS);
+      break;
+    }
+  }
+#if(0) //slow
+  if (check & CSG_MESH_CHECK_SELFINTERSECT)
+  {
+    for (UINT i = 0; i < ii.n; i += 3)
+    {
+      const auto& A = pp.p[ii.p[i + 0]];
+      const auto& B = pp.p[ii.p[i + 1]];
+      const auto& C = pp.p[ii.p[i + 2]]; //auto e = 0 | Vector4R::PlaneFromPoints(p1, p2, p3);
+      auto e1 = B - A;
+      auto e2 = C - A;
+      auto en = e1 ^ e2;
+      for (UINT k = 0; k < ii.n; k++)
+      {
+        auto i1 = ii.p[k];
+        auto i2 = ii.p[k % 3 != 2 ? k + 1 : k - 2]; if (i1 > i2) continue;
+        const auto& P = pp.p[i1]; auto V = pp.p[i2] - P;
+        auto de = V & en; if (de.sign() <= 0) continue;
+        auto t1 = P - A;
+        auto t2 = 0 | t1 ^ V;
+        de = Rational(-1) / de;
+        auto u = 0 | (e2 & t2) * de; if (u.sign() <= 0) continue;
+        auto v = 0 | -(e1 & t2) * de; if (v.sign() <= 0 || u + v >= 1) continue;
+        auto t = 0 | (t1 & en) * de; if (t.sign() <= 0 || t >= 1) continue;
+        *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_SELFINTERSECT); return 0;
+      }
+    }
+  }
+#endif 
+  return 0;
+}
+
+
+//bool intersect_triangle(const Vector3R& P, const Vector3R& V, const Vector3R& A, const Vector3R& B, const Vector3R& C)//,out float u out float v, out float3 N)
+//{
+//  auto e1 = B - A;
+//  auto e2 = C - A;
+//  auto en = e1 ^ e2;
+//  auto de = V & en; if (de.sign() <= 0) return false;
+//  auto t1 = P - A;
+//  auto t2 = t1 ^ V;
+//  de = Rational(-1) / de;
+//  auto u = (e2 & t2) * de; if (u.sign() <= 0) return false;
+//  auto v = -(e1 & t2) * de; if (v.sign() <= 0 || u + v >= 1) return false;
+//  auto t = (t1 & en) * de; if (t.sign() <= 0 || t >= 1) return false;
+//  return true;// det >= 1e-6f && t >= 0 && u >= 0 && v >= 0 && u + v <= 1;
+//}
+//  
+// auto u = 0 | e.x * a.x + e.y * a.y + e.z * a.z;
+// auto v = 0 | e.x * b.x + e.y * b.y + e.z * b.z;
+// if (u == v)
+// continue;
+// auto w = 0 | (u + e.w) / (u - v);
+// if (w < 0 || w > 1)
+// continue;
+// auto s = 0 | a + (b - a) * w;
+//
+//static float3 intersect(float4 e, float3 a, float3 b)
+//{
+//  var u = e.x * a.x + e.y * a.y + e.z * a.z;
+//  var v = e.x * b.x + e.y * b.y + e.z * b.z; var w = (u + e.w) / (u - v);
+//  return new float3(a.x + (b.x - a.x) * w, a.y + (b.y - a.y) * w, a.z + (b.z - a.z) * w);
+//}

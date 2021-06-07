@@ -35,7 +35,7 @@ HRESULT CTesselatorRat::Cut(ICSGMesh* mesh, CSGVAR vplane)
       {
         kk[nk++] = m.ii[i];
         if (ff[m.ii[i]] != 2) continue;
-        if (ff[m.ii[j = i - (i % 3) + (i + 1) % 3]] != 2) continue;
+        if (ff[m.ii[j = i % 3 == 2 ? i - 2 : i + 1]] != 2) continue;
         tt[nt++] = m.ii[j]; tt[nt++] = m.ii[i];
       }
       continue;
@@ -166,7 +166,7 @@ HRESULT CTesselatorRat::Join(ICSGMesh* pa, ICSGMesh* pb, CSG_JOIN op)
     if (mp != 1) { a.clear(); } return 0;
   }
   mode = (CSG_TESS)((mp == 0 ? CSG_TESS_POSITIVE : mp == 1 ? CSG_TESS_ABSGEQTWO : CSG_TESS_GEQTHREE) | CSG_TESS_FILL | CSG_TESS_NOTRIM);
-#if(1)
+#if(0)
   csg._pp_.copy(csg.pp.p, csg.np);
   concurrency::parallel_for(size_t(0), size_t(csg.ne), [&](size_t _i)
     {
@@ -424,21 +424,34 @@ int CTesselatorRat::join(int ni, int fl)
     auto ii = csg.ii.p; outline(ii, ni); if (nl == 0) break;
     for (int i = 0, n = nl, k, x; i < n; i = k)
     {
-      for (k = i + 1; k < n && (ll[k - 1] & 0x40000000) == 0; k++);
+      for (k = i + 1; k < n && (ll.p[k - 1] & 0x40000000) == 0; k++);
       for (int l = k - i, t = 0, t1, t2, t3, u; t < l; t++)
       {
         auto s = Vector3R::Inline(
-          csg.pp[t1 = ll[i + t] & 0x0fffffff],
-          csg.pp[t2 = ll[i + (t + 1) % l] & 0x0fffffff],
-          csg.pp[t3 = ll[i + (t + 2) % l] & 0x0fffffff], 2);
+          csg.pp.p[t1 = ll.p[i + t] & 0x0fffffff],
+          csg.pp.p[t2 = ll.p[i + (t + 1) % l] & 0x0fffffff],
+          csg.pp.p[t3 = ll.p[i + (t + 2) % l] & 0x0fffffff], 2);
         if (s == 2 && fl == 1) { if (k == n) return ni; swap++; break; }
-        if (s == 0 || s == 2) continue;
+        if (s == 0 || s == 2)
+        {
+          //if (t == 0 && s == 2 && k - i == 3)
+          //{
+          //  ii = csg.ii.getptr(ni + 3);
+          //  ii[ni + 0] = t1; 
+          //  ii[ni + 1] = t3; 
+          //  ii[ni + 2] = t2; 
+          //  ni += 3; swap++;
+          //  break;
+          //}
+          continue;
+        }
         if (s < 0) { s = t1; t1 = t2; t2 = t3; t3 = s; }
-        for (x = 0; x < ni && !(ii[x] == t1 && ii[x / 3 * 3 + (x + 1) % 3] == t2); x++);
+        for (x = 0; x < ni && !(ii[x] == t1 && ii[x % 3 == 2 ? x - 2 : x + 1] == t2); x++);
         ii = csg.ii.getptr(ni + 3); u = x / 3 * 3;
         memcpy(ii + (u + 3), ii + u, (ni - u) * sizeof(int)); ni += 3;
         auto c = decode((UINT*)ii + u); ii[x] = ii[u + 3 + (x + 1) % 3] = t3;
-        encode((UINT*)ii + u, c); encode((UINT*)ii + (u + 3), false); swap++; break;
+        encode((UINT*)ii + u, c); encode((UINT*)ii + (u + 3), false); swap++;
+        break;
       }
     }
     if (swap == 0)
@@ -489,15 +502,14 @@ HRESULT CTesselatorRat::ConvexHull(ICSGMesh* mesh)
   return 0;
 }
 
-
 HRESULT CTesselatorRat::Round(ICSGMesh* mesh, CSG_TYPE t)
 {
   if (!(t == CSG_TYPE_FLOAT || t == CSG_TYPE_DOUBLE || t == CSG_TYPE_DECIMAL)) return E_INVALIDARG;
   auto& m = *static_cast<CMesh*>(mesh); m.resetee(); m.flags |= MESH_FL_MODIFIED;
   for (UINT i = 0, n = m.pp.n * 3; i < n; i++)
   {
-    auto& v = (&m.pp.p->x)[i]; 
-    switch(t)
+    auto& v = (&m.pp.p->x)[i];
+    switch (t)
     {
     case CSG_TYPE_FLOAT: v = (float)(double)v; continue;
     case CSG_TYPE_DOUBLE: v = (double)v; continue;
@@ -519,7 +531,7 @@ HRESULT CTesselatorRat::Round(ICSGMesh* mesh, CSG_TYPE t)
   if (ni == m.ii.n)
     return 0;
   m.pp.setsize(csg.trim(m.pp.p, m.pp.n, ni));
-  m.ii.copy((UINT*)ii, ni); 
+  m.ii.copy((UINT*)ii, ni);
   return 0;
 }
 

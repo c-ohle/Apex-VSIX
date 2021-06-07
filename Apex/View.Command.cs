@@ -40,6 +40,7 @@ namespace Apex
         case 2036: return OnUngroup(test);
         case 2037: return OnScript(test);
         case 2038: return OnNormalize(test);
+        case 2039: return OnRetess(test);
         case 2300: return OnCenter(test);
         case 2305: return OnInfo(test);
         case 2210: //Select Box
@@ -117,27 +118,47 @@ namespace Apex
         undo(a.OrderBy(p => -p.Index).Select(p => undodel(p)).ToArray())));
       return 1;
     }
-    int OnJoin(object test, int id)
+#if(false)    
+    int OnJoinCS(object test, int id)
+    {
+      if (scene.SelectionCount != 2) return 0;
+      var n1 = scene.GetSelection(0); if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      var n2 = scene.GetSelection(1); if (!n2.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      if (test != null) return 1; //UseWaitCursor();
+      Cursor = Cursors.WaitCursor;
+      var r1 = Rational.Polyhedron.Create(n1);
+      var r2 = Rational.Polyhedron.Create(n2);
+      var rm = n2.GetTransform() * !n1.GetTransform();
+      var vm = (Rational.Matrix)rm; r2.Transform(vm);
+      if (id == 2301) r1 |= r2;
+      else if (id == 2302) r1 &= r2;
+      else r1 -= r2;
+      var pp = r1.Points.Select(p => (float3)p).ToArray();
+      var ii = r1.Indices.ToArray();
+      IBuffer pb; fixed (void* p = pp) pb = Factory.GetBuffer(BUFFER.POINTBUFFER, p, pp.Length * sizeof(float3));
+      IBuffer ib; fixed (void* p = ii) ib = Factory.GetBuffer(BUFFER.INDEXBUFFER, p, ii.Length * sizeof(ushort));
+      var tb = n1.CopyCoords(pb, ib);
+      Execute(undo(
+        undosel(false, n1, n2),
+        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
+        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
+        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()),
+        undodel(n2), undosel(true, n1)));
+      return 1;
+    }
+    int OnJoinFl(object test, int id)
     {
       if (scene.SelectionCount != 2) return 0;
       var n1 = scene.GetSelection(0); if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
       var n2 = scene.GetSelection(1); if (!n2.HasBuffer(BUFFER.POINTBUFFER)) return 0;
       if (test != null) return 1;
       Cursor = Cursors.WaitCursor;
-      var r1 = CSG.Factory.CreateMesh(); n1.CopyTo(r1); //var rmo = rm1.Clone();
+      var r1 = CSG.Factory.CreateMesh(); n1.CopyTo(r1);
       var r2 = CSG.Factory.CreateMesh(); n2.CopyTo(r2);
-
-      //var f1 = r1.Check();
-      //var f2 = r2.Check();
-
       var rm = n2.GetTransform() * !n1.GetTransform();
       var vm = (CSG.Rational.Matrix)rm; r2.Transform(vm);
       CSG.Tesselator.Join(r1, r2, id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference);
-      
-      //var f3 = r1.Check();
       CSG.Tesselator.Round(r1, CSG.VarType.Float);
-      //var f4 = r1.Check();
-
       r1.CopyTo(out var pb, out var ib);
       Marshal.ReleaseComObject(r1);
       Marshal.ReleaseComObject(r2);
@@ -148,8 +169,51 @@ namespace Apex
         undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
         undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()),
         undodel(n2), undosel(true, n1)));
-      //rm1 = CSG.Factory.CreateMesh(); n1.CopyTo(rm1);
-      //var f2 = rm1.Check(); if (f2 != 0) { }
+      return 1;
+    }
+#endif
+    //static CSG.IMesh BytesToMesh(byte[] a) { var m = CSG.Factory.CreateMesh(); m.ReadFromStream(COM.Stream(a)); return m; }
+    static CSG.IMesh MeshFromNode(INode node)
+    {
+      var mesh = CSG.Factory.CreateMesh();
+      void* s; var n = node.GetBufferPtr(BUFFER.CSGMESH, &s);
+      if (n == 0) node.CopyTo(mesh);
+      else { var str = COM.SHCreateMemStream(s, n); mesh.ReadFromStream(str); Marshal.ReleaseComObject(str); }
+      return mesh;
+    }
+    static byte[] MeshToBytes(CSG.IMesh mesh)
+    {
+      var str = COM.SHCreateMemStream(); mesh.WriteToStream(str); return COM.Stream(str);
+    }
+    int OnJoin(object test, int id)
+    {
+      if (scene.SelectionCount != 2) return 0;
+      var n1 = scene.GetSelection(0); if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      var n2 = scene.GetSelection(1); if (!n2.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      if (test != null) return 1;
+      Cursor = Cursors.WaitCursor;
+
+      var r1 = MeshFromNode(n1);
+      var r2 = MeshFromNode(n2);
+
+      var rm = n2.GetTransform() * !n1.GetTransform();
+      var vm = (CSG.Rational.Matrix)rm; r2.Transform(vm);
+      CSG.Tesselator.Join(r1, r2, id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference);
+
+      var ro = MeshToBytes(r1);
+      CSG.Tesselator.Round(r1, CSG.VarType.Float);
+
+      r1.CopyTo(out var pb, out var ib);
+      var tb = n1.CopyCoords(pb, ib);
+
+      Execute(undo(
+        undosel(false, n1, n2),
+        undo(n1, BUFFER.CSGMESH, ro),
+        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
+        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
+        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()),
+        undodel(n2), undosel(true, n1)));
+
       return 1;
     }
     int OnPlaneCut(object test)
@@ -161,15 +225,38 @@ namespace Apex
       var n2 = scene.GetSelection(1);
       var rm = n2.GetTransform() * !n1.GetTransform();
       var e = CSG.Rational.Plane.FromPointNormal(rm.mp, rm.mz);
-      var r1 = CSG.Factory.CreateMesh(); n1.CopyTo(r1);
+      var r1 = MeshFromNode(n1);// CSG.Factory.CreateMesh(); n1.CopyTo(r1);
       CSG.Tesselator.Cut(r1, e);
+      var ro = MeshToBytes(r1);
       CSG.Tesselator.Round(r1, CSG.VarType.Float);
       r1.CopyTo(out var pb, out var ib); Marshal.ReleaseComObject(r1);
       var tb = n1.CopyCoords(pb, ib);
-      Execute(
-        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()) +
-        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()) +
-        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()));
+      Execute(undo(
+        undo(n1, BUFFER.CSGMESH, ro),
+        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
+        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
+        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes())));
+      return 1;
+    }
+    int OnRetess(object test)
+    {
+      if (scene.SelectionCount != 1) return 0;
+      var n1 = scene.GetSelection(0); 
+      if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      if (n1.HasBuffer(BUFFER.CSGMESH)) return 0;
+      if (test != null) return 1;
+      Cursor = Cursors.WaitCursor;
+      var r1 = MeshFromNode(n1);
+      CSG.Tesselator.Join(r1, r1, 0);
+      var ro = MeshToBytes(r1);
+      CSG.Tesselator.Round(r1, CSG.VarType.Float);
+      r1.CopyTo(out var pb, out var ib);
+      var tb = n1.CopyCoords(pb, ib);
+      Execute(undo(
+        undo(n1, BUFFER.CSGMESH, ro),
+        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
+        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
+        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes())));
       return 1;
     }
     int OnCenter(object test)

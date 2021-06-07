@@ -10,13 +10,13 @@
           <ButtonText />
         </Strings>
       </Menu>
-      <Menu guid="g2" id="_1000007" type="Menu" priority="22">
+      <Menu guid="g2" id="_1000007" type="Menu" priority="23">
         <Parent guid="g2" id="_1000006" />
         <Strings>
           <ButtonText>Select Style</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="g2" id="_1000009" type="Menu" priority="23">
+      <Menu guid="g2" id="_1000009" type="Menu" priority="24">
         <Parent guid="g2" id="_1000006" />
         <Strings>
           <ButtonText>Display</ButtonText>
@@ -57,13 +57,13 @@
       <Group guid="g2" id="_1000003" priority="12">
         <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="g2" id="_1000004" priority="15">
+      <Group guid="g2" id="_1000004" priority="16">
         <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="g2" id="_1000005" priority="19">
+      <Group guid="g2" id="_1000005" priority="20">
         <Parent guid="g2" id="_0x2100" />
       </Group>
-      <Group guid="g2" id="_1000006" priority="21">
+      <Group guid="g2" id="_1000006" priority="22">
         <Parent guid="g2" id="_0x2100" />
       </Group>
       <Group guid="g2" id="_1000008" priority="1">
@@ -75,7 +75,7 @@
       <Group guid="g2" id="_1000011" priority="4">
         <Parent guid="g2" id="_1000009" />
       </Group>
-      <Group guid="g2" id="_1000012" priority="24">
+      <Group guid="g2" id="_1000012" priority="25">
         <Parent guid="g2" id="_0x2100" />
       </Group>
       <Group guid="g2" id="_1000013" priority="1">
@@ -200,7 +200,15 @@
           <ButtonText>Normalize</ButtonText>
         </Strings>
       </Button>
-      <Button guid="g2" id="_2300" type="Button" priority="20">
+      <Button guid="g2" id="_2039" type="Button" priority="15">
+        <Parent guid="g2" id="_1000003" />
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Retess</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2300" type="Button" priority="21">
         <Parent guid="g2" id="_1000005" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -256,7 +264,7 @@
           <ButtonText>Checkboard</ButtonText>
         </Strings>
       </Button>
-      <Button guid="g2" id="_2037" type="Button" priority="25">
+      <Button guid="g2" id="_2037" type="Button" priority="26">
         <Parent guid="g2" id="_1000012" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -451,22 +459,22 @@
     </Bitmaps>
   </Commands>
   <CommandPlacements>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="16">
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="17">
       <Parent guid="g2" id="_1000004" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="17">
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="18">
       <Parent guid="g2" id="_1000004" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="18">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="19">
       <Parent guid="g2" id="_1000004" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidToolbox" priority="26">
+    <CommandPlacement guid="guidVSStd97" id="cmdidToolbox" priority="27">
       <Parent guid="g2" id="_1000012" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidDocOutlineWindow" priority="27">
+    <CommandPlacement guid="guidVSStd97" id="cmdidDocOutlineWindow" priority="28">
       <Parent guid="g2" id="_1000012" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="28">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="29">
       <Parent guid="g2" id="_1000012" />
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="2">
@@ -558,6 +566,7 @@
       <IDSymbol name="_1000003" value="1000003" />
       <IDSymbol name="_2305" value="2305" />
       <IDSymbol name="_2038" value="2038" />
+      <IDSymbol name="_2039" value="2039" />
       <IDSymbol name="_1000004" value="1000004" />
       <IDSymbol name="_1000005" value="1000005" />
       <IDSymbol name="_2300" value="2300" />
