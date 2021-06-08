@@ -95,7 +95,7 @@
     <MenuItem text="Difference" id="2303" keys="Control|E|D" fl="DefaultInvisible|DynamicVisibility"/>
     <MenuItem text="PlaneCut" id="2304" keys="Control|E|P" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>
-    <MenuItem text="Analyze..." id="2305" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/> 
+    <MenuItem text="Check..." id="2305" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/> 
     <MenuItem text="Normalize" id="2038" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/>
     <MenuItem text="Retess" id="2039" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>

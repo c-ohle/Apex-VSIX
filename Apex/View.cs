@@ -248,9 +248,13 @@ namespace Apex
     {
       var t = n.GetBuffer(id); if (p != null) n.SetBuffer(p); else n.RemoveBuffer(id); p = t;
     };
-    internal static Action undo(INode node, BUFFER id, byte[] b)
+    //internal static Action undo(INode node, BUFFER id, byte[] b)
+    //{
+    //  return () => { var t = node.GetBytes(id); node.SetBytes(id, b); b = t; };
+    //}
+    internal static Action undo<T>(INode node, BUFFER id, T[] b) where T : unmanaged
     {
-      return () => { var t = node.GetBytes(id); node.SetBytes(id, b); b = t; };
+      return () => { var t = node.GetArray<T>(id); node.SetArray(id, b); b = t; };
     }
     internal static Action undo(INode node, BUFFER id, void* p, int n)
     {

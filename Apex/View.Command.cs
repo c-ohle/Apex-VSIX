@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -42,7 +43,7 @@ namespace Apex
         case 2038: return OnNormalize(test);
         case 2039: return OnRetess(test);
         case 2300: return OnCenter(test);
-        case 2305: return OnInfo(test);
+        case 2305: return OnCheck(test);
         case 2210: //Select Box
         case 2211: //Select Pivot
         case 2212: //Select Normals
@@ -185,6 +186,92 @@ namespace Apex
     {
       var str = COM.SHCreateMemStream(); mesh.WriteToStream(str); return COM.Stream(str);
     }
+
+    static int[] caladj(int[] a)
+    {
+      var b = new int[a.Length];
+      var dict = new System.Collections.Generic.Dictionary<(int, int), int>(a.Length);
+      for (int i = 0; i < a.Length; i++) dict[(a[i], a[i + (i % 3 == 2 ? -2 : 1)])] = i;
+      for (int i = 0; i < a.Length; i++) b[i] = dict.TryGetValue((a[i + (i % 3 == 2 ? -2 : 1)], a[i]), out var k) ? k : -1;
+      return b;
+    }
+    static void testmesh(CSG.IMesh mesh)
+    {
+      var vv = mesh.Vertices().ToArray();
+      var ii = mesh.Indices().ToArray();
+      var ad = caladj(ii); var ade = ad.Count(p => p == -1); if (ade != 0) { }
+      var ee = new CSG.Rational.Plane[ii.Length / 3];
+      for (int i = 0, k = 0; i < ee.Length; i++, k += 3) ee[i] = CSG.Rational.Plane.FromPoints(vv[ii[k]], vv[ii[k + 1]], vv[ii[k + 2]]);
+      int wrong = 0;
+      for (int i = 0; i < ii.Length; i++)
+      {
+        var e1 = ee[i / 3];
+        var e2 = ee[ad[i] / 3];
+        if (e1 != -e2) continue;
+        wrong++;
+      }
+      if (wrong != 0) { }
+    }
+
+    static void MeshRound(ref float3[] pp, ref ushort[] ii)
+    {
+      for (int i = 0, j, k; i < ii.Length; i++)
+      {
+        var d = (pp[j = ii[i]] - pp[k = ii[i + (i % 3 == 2 ? -2 : 1)]]).LengthSq;
+        if (d != 0 && d < 1e-10f) pp[j] = pp[k];// = (pp[j] + pp[k]) / 2;
+      }
+      var dict = new Dictionary<float3, ushort>(pp.Length); var ni = 0;
+      for (int i = 0; i < ii.Length; i++)
+      {
+        if (!dict.TryGetValue(pp[ii[i]], out var k)) dict.Add(pp[ii[i]], k = (ushort)dict.Count);
+        ii[ni++] = k; if (i % 3 != 2) continue;
+        if (ii[ni - 3] != ii[ni - 2] && ii[ni - 2] != ii[ni - 1] && ii[ni - 1] != ii[ni - 3]) continue;
+        ni -= 3;
+      }
+      Array.Resize(ref pp, dict.Count); dict.Keys.CopyTo(pp, 0);
+      Array.Resize(ref ii, ni);
+    }
+
+    //static void MeshRound2(ref float3[] pp, ref int[] ii)
+    //{
+    //  var ad = new int[ii.Length];
+    //  var dict = new System.Collections.Generic.Dictionary<(int, int), int>(ii.Length);
+    //  for (int i = 0; i < ii.Length; i++) dict[(ii[i], ii[i + (i % 3 == 2 ? -2 : 1)])] = i;
+    //  for (int i = 0; i < ii.Length; i++) ad[i] = dict.TryGetValue((ii[i + (i % 3 == 2 ? -2 : 1)], ii[i]), out var k) ? k : -1;
+    //  var ee = new float4[ii.Length / 3];
+    //  for (int i = 0, k = 0; i < ee.Length; i++, k += 3) ee[i] = PlaneFromPoints(pp[ii[k]], pp[ii[k + 1]], pp[ii[k + 2]]);
+    //
+    //  int wrong = 0; //var join = new System.Collections.Generic.List<int>(); 
+    //  for (int i = 0; i < ii.Length; i++)
+    //  {
+    //    if (i > ad[i]) continue;
+    //    var e1 = ee[i / 3]; var e2 = ee[ad[i] / 3];
+    //    if (e1 != -e2) continue;
+    //    wrong++;
+    //    //var i1 = i / 3 * 3;
+    //    //var i2 = ad[i] / 3 * 3;
+    //    //var a1 = (pp[ii[i1 + 1]] - pp[ii[i1]] ^ pp[ii[i1 + 2]] - pp[ii[i1]]).Length;
+    //    //var a2 = (pp[ii[i2 + 1]] - pp[ii[i2]] ^ pp[ii[i2 + 2]] - pp[ii[i2]]).Length;
+    //    ref var p1 = ref pp[ii[i]]; ref var p2 = ref pp[ii[i + (i % 3 == 2 ? -2 : 1)]];
+    //    //var dp = (p2 - p1).Length;
+    //    p1 = p2;
+    //  }
+    //  if (wrong == 0) return;
+    //
+    //  var newii = new List<int>();
+    //  var ptdict = new Dictionary<float3, int>(pp.Length);
+    //  for (int i = 0; i < ii.Length; i++)
+    //  {
+    //    if (!ptdict.TryGetValue(pp[ii[i]], out var k)) ptdict.Add(pp[ii[i]], k = ptdict.Count);
+    //    newii.Add(k); if (i % 3 != 2) continue; var x = newii.Count - 3;
+    //    if (newii[x] != newii[x + 1] && newii[x + 1] != newii[x + 2] && newii[x + 2] != newii[x]) continue;
+    //    newii.RemoveRange(x, 3);
+    //  }
+    //  pp = ptdict.Keys.ToArray();
+    //  ii = newii.ToArray();
+    //
+    //}
+
     int OnJoin(object test, int id)
     {
       if (scene.SelectionCount != 2) return 0;
@@ -200,19 +287,24 @@ namespace Apex
       var vm = (CSG.Rational.Matrix)rm; r2.Transform(vm);
       CSG.Tesselator.Join(r1, r2, id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference);
 
-      var ro = MeshToBytes(r1);
-      CSG.Tesselator.Round(r1, CSG.VarType.Float);
+      //var ro = MeshToBytes(r1);
+      //CSG.Tesselator.Round(r1, CSG.VarType.Float);
 
+      var vv = r1.GetVertices();
+      var ii = r1.GetIndices();
+      MeshRound(ref vv, ref ii);
+
+      r1.Copy(vv, ii.Select(p => (int)p).ToArray()); testmesh(r1);
       r1.CopyTo(out var pb, out var ib);
       var tb = n1.CopyCoords(pb, ib);
 
       Execute(undo(
         undosel(false, n1, n2),
-        undo(n1, BUFFER.CSGMESH, ro),
-        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
-        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
-        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()),
-        undodel(n2), undosel(true, n1)));
+          //undo(n1, BUFFER.CSGMESH, ro),
+          undo(n1, BUFFER.POINTBUFFER, vv),//pb.ToBytes()), //
+          undo(n1, BUFFER.INDEXBUFFER, ii),//ib.ToBytes()), //
+          undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()),
+          undodel(n2), undosel(true, n1)));
 
       return 1;
     }
@@ -241,13 +333,14 @@ namespace Apex
     int OnRetess(object test)
     {
       if (scene.SelectionCount != 1) return 0;
-      var n1 = scene.GetSelection(0); 
+      var n1 = scene.GetSelection(0);
       if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
       if (n1.HasBuffer(BUFFER.CSGMESH)) return 0;
       if (test != null) return 1;
       Cursor = Cursors.WaitCursor;
       var r1 = MeshFromNode(n1);
       CSG.Tesselator.Join(r1, r1, 0);
+       
       var ro = MeshToBytes(r1);
       CSG.Tesselator.Round(r1, CSG.VarType.Float);
       r1.CopyTo(out var pb, out var ib);
@@ -426,32 +519,34 @@ namespace Apex
       }
       return 1;
     }
-    int OnInfo(object test)
+    int OnCheck(object test)
     {
       if (scene.SelectionCount != 1) return 0;
       if (test != null) return 1; Cursor = Cursors.WaitCursor;
       var node = scene.GetSelection(0);
       var box = GetBox(scene.Selection(), node.Parent);
-      var ss = $"Size: {box.max - box.min} {node.Scene.Unit}";
-      int nc = 0, np = 0, ni = 0, pl = 0, eg = 0; CSG.MeshCheck checks = 0;
+      var ss = $"Size: {box.max - box.min} {(ShortUnit)node.Scene.Unit}";
+      int nc = 0, np = 0, ni = 0, pl = 0, eg = 0; CSG.MeshCheck checks = 0; double vol = 0, surf = 0;
       foreach (var p in node.Descendants(true))
       {
         nc++; void* t;
         if (!p.HasBuffer(BUFFER.POINTBUFFER)) { if (p.Child == null) eg++; continue; }
         np += p.GetBufferPtr(BUFFER.POINTBUFFER, &t) / sizeof(float3);
         ni += p.GetBufferPtr(BUFFER.INDEXBUFFER, &t) / sizeof(ushort);
-
-        var mesh = CSG.Factory.CreateMesh(); p.CopyTo(mesh);
-        var check = mesh.Check(); if (check == 0) { mesh.InitPlanes(); pl += mesh.PlaneCount; }
-        checks |= check; Marshal.ReleaseComObject(mesh);
+        var mesh = CSG.Factory.CreateMesh(); p.CopyTo(mesh); mesh.InitPlanes();
+        var check = mesh.Check(); if (check == 0) { /*mesh.InitPlanes();*/ pl += mesh.PlaneCount; }
+        checks |= check; Marshal.ReleaseComObject(mesh); if (check == 0) { vol += p.GetVolume(); surf += p.GetSurface(); }
       }
-      ss += '\n'; ss += $"{np} Vertices {ni / 3} Polygones Planes {np} in {nc} Objects.";
+      ss += '\n'; ss += $"{np} Vertices {ni / 3} Polygones Planes {pl} in {nc} Models.";
       if (checks != 0) { ss += '\n'; ss += $"Errors: {checks}"; }
+      if (vol != 0) { ss += '\n'; ss += $"Volume: {vol} {(ShortUnit)scene.Unit}³ Surface: {surf} {(ShortUnit)scene.Unit}²"; }
       if (eg != 0) { { ss += '\n'; ss += $"Errors: {eg} Empty Groups"; } }
-      VsShellUtilities.ShowMessageBox(pane, ss, "Properties",
+      VsShellUtilities.ShowMessageBox(pane, ss, "Check",
         OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
       return 1;
     }
+    public enum ShortUnit { m = 1, cm = 2, mm = 3, μm = 4, ft = 5, @in = 6, }
+
 
     //static double scaling(Unit u)
     //{

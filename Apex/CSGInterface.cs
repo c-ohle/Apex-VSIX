@@ -275,6 +275,7 @@ namespace Apex
         public static implicit operator Variant(Vector3 p) => new Variant(p.m.p, 3, p.m.i);
         public static implicit operator Vector3(in (Variant x, Variant y, Variant z) p) => new Vector3(p.x, p.y, p.z);
         public static implicit operator Vector3(CDX.float3 p) => new Vector3(p.x, p.y, p.z);
+        public static explicit operator CDX.float3(Vector3 p) => new CDX.float3((float)p.x, (float)p.y, (float)p.z);
         public static bool operator ==(in Vector3 a, in Vector3 b) => a.Equals(b);
         public static bool operator !=(in Vector3 a, in Vector3 b) => !a.Equals(b);
         public static Vector3 operator -(Vector3 a) => new Vector3(-a.m, -a.y, -a.z);
@@ -305,6 +306,7 @@ namespace Apex
         public static bool operator !=(in Plane a, in Plane b) => !a.Equals(b);
         public static implicit operator Variant(Plane p) => new Variant(p.m.p, 4, p.m.i);
         public static explicit operator Vector3(Plane p) => new Vector3(p.m, p.y, p.z);
+        public static Plane operator -(Plane a) => new Plane(-a.m, -a.y, -a.z, -a.w);
         public static Plane FromPoints(Vector3 a, Vector3 b, Vector3 c)
         {
           var e = new Plane(0); for (int i = 0; i < 3; i++) e.m.p.Execute1(Op1.Copy, e.m.i + i, a.m.p, a.m.i + i);
@@ -441,12 +443,9 @@ namespace Apex
     {
       tess.AddVertex(new Rational.Vector2(x, y));
     }
-    public static PointF GetVertexF2(this ITesselator tess, int i) { PointF p; tess.GetVertex(i, new Variant((float*)&p, 2)); return p; }
-    public static (decimal x, decimal y) GetVertexD2(this ITesselator tess, int i) { (decimal x, decimal y) p = default; tess.GetVertex(i, new Variant(&p.x, 2)); return p; }
-    public static Rational.Vector3 GetVertexR3(this IMesh mesh, int i)
-    {
-      var p = new Rational.Vector3(0); mesh.GetVertex(i, p); return p;
-    }
+    //public static PointF GetVertexF2(this ITesselator tess, int i) { PointF p; tess.GetVertex(i, new Variant((float*)&p, 2)); return p; }
+    //public static (decimal x, decimal y) GetVertexD2(this ITesselator tess, int i) { (decimal x, decimal y) p = default; tess.GetVertex(i, new Variant(&p.x, 2)); return p; }
+    public static Rational.Vector3 GetVertexR3(this IMesh mesh, int i) { var p = new Rational.Vector3(0); mesh.GetVertex(i, p); return p; }
     public static CDX.float3 GetVertexF3(this IMesh mesh, int i)
     {
       CDX.float3 p; mesh.GetVertex(i, new Variant((float*)&p, 3)); return p;
@@ -486,11 +485,7 @@ namespace Apex
     public static void ConvexHull(this ITesselator tess, IMesh mesh, CDX.float3[] pp)
     {
       mesh.Update(pp.Length, 0); 
-      for (int i = 0; i < pp.Length; i++)
-      {
-        var p = pp[i];
-        mesh.SetVertex(i, new Variant(&p.x, 3));
-      }
+      for (int i = 0; i < pp.Length; i++) { var p = pp[i]; mesh.SetVertex(i, new Variant(&p.x, 3)); }
       tess.ConvexHull(mesh);
     }
     public static void Stretch(this ITesselator tess, IMesh mesh, CDX.float3 dir)

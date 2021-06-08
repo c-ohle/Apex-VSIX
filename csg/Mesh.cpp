@@ -256,8 +256,6 @@ HRESULT CTesselatorRat::Stretch(ICSGMesh* mesh, CSGVAR v)
   return 0;
 }
 
-bool intersect_triangle(const Vector3R& P, const Vector3R& V, const Vector3R& A, const Vector3R& B, const Vector3R& C);
-
 HRESULT CMesh::Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p)
 {
   sarray<UINT> tt; *p = (CSG_MESH_CHECK)0; if (!check) check = (CSG_MESH_CHECK)0xffff;
@@ -320,7 +318,7 @@ HRESULT CMesh::Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p)
     for (UINT i = 0; i < nk; i++)
     {
       if (!kk[i]) continue;
-      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_OPENINGS); 
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_OPENINGS);
       break; //openings
     }
   }
@@ -352,6 +350,22 @@ HRESULT CMesh::Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p)
       break;
     }
   }
+
+  if (check & CSG_MESH_CHECK_SELFINTERSECT && flags & MESH_FL_ENCODE && ee.n != 0)
+  {
+    auto ff = tt.getptr(ii.n / 3);
+    for (UINT i = 0, k = 0, e = -1; i < ii.n; i += 3) { if (decode(ii.p + i)) e++; ff[k++] = e; }
+    for (UINT i = 0; i < ii.n - 3; i++)
+    {
+      UINT m = i % 3, i1 = ii.p[i], i2 = ii.p[i + (m == 2 ? -2 : 1)];
+      UINT k = i + (3 - m); for (; k < ii.n && !(ii.p[k] == i2 && ii.p[k + (k % 3 == 2 ? -2 : 1)] == i1); k++);
+      if (k == ii.n) continue; // openings
+      const  auto& e1 = ee.p[ff[i / 3]]; const  auto& e2 = ee.p[ff[k / 3]];
+      if (e1.x != -e2.x || e1.y != -e2.y || e1.z != -e2.z || e1.w != -e2.w) continue;
+      *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_SELFINTERSECT); break;
+    }
+  }
+
 #if(0) //slow
   if (check & CSG_MESH_CHECK_SELFINTERSECT)
   {
@@ -378,7 +392,7 @@ HRESULT CMesh::Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p)
         *p = (CSG_MESH_CHECK)(*p | CSG_MESH_CHECK_SELFINTERSECT); return 0;
       }
     }
-  }
+}
 #endif 
   return 0;
 }

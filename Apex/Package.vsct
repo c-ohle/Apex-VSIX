@@ -189,7 +189,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Analyze...</ButtonText>
+          <ButtonText>Check...</ButtonText>
         </Strings>
       </Button>
       <Button guid="g2" id="_2038" type="Button" priority="14">

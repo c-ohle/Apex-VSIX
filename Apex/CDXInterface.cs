@@ -214,6 +214,31 @@ namespace Apex
       float Height { get; }
     }
 
+    internal static double GetVolume(this INode p)
+    {
+      float3* pp; p.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&pp); if (pp == null) return -1;
+      ushort* ii; var ni = p.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
+      var v = 0.0; for (int i = 0; i < ni; i += 3) v += pp[ii[i]] & (pp[ii[i + 1]] ^ pp[ii[i + 2]]); return v * (1.0 / 6);
+    }
+    internal static double GetSurface(this INode p)
+    {
+      float3* pp; p.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&pp); if (pp == null) return -1;
+      ushort* ii; var ni = p.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
+      var v = 0.0; for (int i = 0; i < ni; i += 3)
+        v += (pp[ii[i + 1]] - pp[ii[i]] ^ pp[ii[i + 2]] - pp[ii[i]]).Length; return v * 0.5;
+    }
+    internal static T[] GetArray<T>(this INode p, BUFFER id) where T : unmanaged
+    {
+      void* s; var n = p.GetBufferPtr(id, &s) / sizeof(T); if (s == null) return null;
+      var a = new T[n]; fixed (void* d = a) Native.memcpy(d, s, (void*)(n * sizeof(T))); return a;
+    }
+    internal static void SetArray<T>(this INode p, BUFFER id, T[] a) where T : unmanaged
+    {
+      fixed (void* t = a) p.SetBufferPtr(id, t, a != null ? a.Length * sizeof(T) : 0);
+    }
+    internal static float3[] GetPoints(this INode p) => p.GetArray<float3>(BUFFER.POINTBUFFER);
+    internal static ushort[] GetIndices(this INode p) => p.GetArray<ushort>(BUFFER.INDEXBUFFER);
+
     //public static bool Group(this IExchange p, string s) => p.Category(s);
     //public static void Display(this IExchange p, string s) => p.DisplayName(s);
     //public static bool HasTexture(this INode p) => p.HasBuffer(BUFFER.TEXTURE);
@@ -249,15 +274,8 @@ namespace Apex
       var a = new byte[p.GetBytes(null)];
       fixed (byte* t = a) p.GetBytes(t); return a;
     }
-    public static byte[] GetBytes(this INode p, BUFFER id)
-    {
-      void* t; var n = p.GetBufferPtr(id, &t); if (t == null) return null;
-      var a = new byte[n]; fixed (byte* b = a) Native.memcpy(b, t, (void*)n); return a;
-    }
-    public static void SetBytes(this INode node, BUFFER id, byte[] data)
-    {
-      fixed (byte* p = data) node.SetBufferPtr(id, p, data != null ? data.Length : 0);
-    }
+    public static byte[] GetBytes(this INode p, BUFFER id) => p.GetArray<byte>(id);
+    public static void SetBytes(this INode node, BUFFER id, byte[] data) => node.SetArray(id, data);
     internal static void RemoveBuffer(this INode node, BUFFER id) => node.SetBufferPtr(id, null, 0);
     internal static void FetchBuffer(this INode p)
     {
@@ -269,13 +287,24 @@ namespace Apex
       //var s = Node.GetData(xn.GetMethod<Action<IExchange>>()); if (s == null) return;
       //p.SetBytes(BUFFER.SCRIPTDATA, System.Text.Encoding.UTF8.GetBytes(s));
     }
-    //public static (byte[] pp, byte[] ii) GetFloatBuffer(this CSG.IMesh a)
+    //internal static (byte[] pp, byte[] ii) GetFloatBuffer(this CSG.IMesh a)
     //{
     //  var nv = a.VertexCount; var ni = a.IndexCount;
     //  var pp = new byte[nv * sizeof(float3)]; fixed (void* p = pp) a.CopyBuffer(0, 0, new CSG.Variant((float* )p, 3, nv));
     //  var ii = new byte[ni * sizeof(ushort)]; fixed (void* p = ii) a.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, ni));
     //  return (pp, pp);
     //}
+    internal static float3[] GetVertices(this CSG.IMesh m)
+    {
+      var n = m.VertexCount; var a = new float3[n];
+      fixed (void* p = a) m.CopyBuffer(0, 0, new CSG.Variant((float*)p, 3, n)); return a;
+    }
+    internal static ushort[] GetIndices(this CSG.IMesh m)
+    {
+      var n = m.IndexCount; var a = new ushort[n];
+      fixed (void* p = a) m.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, n)); return a;
+    }
+
     public static void CopyTo(this CSG.IMesh a, INode b, float2[] tt = null)
     {
       var nv = a.VertexCount; var ni = a.IndexCount;
@@ -837,6 +866,10 @@ namespace Apex
       public static bool operator !=(float4 a, float4 b)
       {
         return !(a == b);
+      }
+      public static float4 operator -(float4 v)
+      {
+        v.x = -v.x; v.y = -v.y; v.z = -v.z; v.w = -v.w; return v;
       }
       public static float4 operator *(float4 v, float f)
       {
