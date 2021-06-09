@@ -9,7 +9,12 @@ concurrency::critical_section __crit;
 HRESULT CTesselatorRat::Cut(ICSGMesh* mesh, CSGVAR vplane)
 {
   auto& m = *static_cast<CMesh*>(mesh);
-  if (!m.ee.n) initplanes(m); if (vplane.vt == 0) return 0;
+  if (!m.ee.n)
+  {
+    initplanes(m); 
+    if (vplane.vt == CSG_TYPE_INT) { memcpy((int*)vplane.p, csg.ii.p, min(csg.ii.n, vplane.length) << 2); return 0; } //get plane sort
+  }
+  if (vplane.vt == 0) return 0;
   Vector4R plane; conv(&plane.x, 4, vplane);
   UINT np = m.pp.n, xe = np, mf = 0; auto ff = csg.ff.getptr(np + m.ee.n + 1);
   for (UINT i = 0; i < np; i++) mf |= ff[i] = 1 << (1 + (0 ^ plane.DotCoord(m.pp[i])));
@@ -87,7 +92,7 @@ HRESULT CTesselatorRat::Cut(ICSGMesh* mesh, CSGVAR vplane)
   m.ee.setsize(xe);
   csg.trim(nk);
   m.pp.copy(csg.pp.p, csg.np);
-  m.ii.copy((const UINT*)csg.ii.p, nk); m.flags |= MESH_FL_MODIFIED;
+  m.ii.copy((const UINT*)csg.ii.p, nk);
   return 0;
 }
 HRESULT CTesselatorRat::Join(ICSGMesh* pa, ICSGMesh* pb, CSG_JOIN op)
@@ -161,12 +166,12 @@ HRESULT CTesselatorRat::Join(ICSGMesh* pa, ICSGMesh* pb, CSG_JOIN op)
       auto in = a.ii.n; a.ii.setsize(a.ii.n + b.ii.n); for (UINT i = 0; i < b.ii.n; i++) a.ii.p[in + i] = an + b.ii.p[i];
       if (csg.ne < a.ee.n + b.ee.n) a.resetee();
       else { auto en = a.ee.n; a.ee.setsize(a.ee.n + b.ee.n); for (UINT i = 0; i < b.ee.n; i++) a.ee[en + i] = b.ee[i]; }
-      a.flags |= MESH_FL_MODIFIED; return 0;
+      return 0;
     }
     if (mp != 1) { a.clear(); } return 0;
   }
   mode = (CSG_TESS)((mp == 0 ? CSG_TESS_POSITIVE : mp == 1 ? CSG_TESS_ABSGEQTWO : CSG_TESS_GEQTHREE) | CSG_TESS_FILL | CSG_TESS_NOTRIM);
-#if(0)
+#if(1)
   csg._pp_.copy(csg.pp.p, csg.np);
   concurrency::parallel_for(size_t(0), size_t(csg.ne), [&](size_t _i)
     {
@@ -178,7 +183,7 @@ HRESULT CTesselatorRat::Join(ICSGMesh* pa, ICSGMesh* pb, CSG_JOIN op)
       case 3: __crit.lock(); goto tb;
       }
       auto& rt = __tess.local(); if (!rt.p) rt.p = new CTesselatorRat(); auto& tess = *rt.p;
-      tess.mode = mode;
+      tess.mode = mode; 
       tess.csg.dictpp(32);
       tess.beginsex();
       const auto& plane = csg.ee[e];
@@ -314,13 +319,13 @@ HRESULT CTesselatorRat::Join(ICSGMesh* pa, ICSGMesh* pb, CSG_JOIN op)
   a.ee.setsize(ne); for (UINT i = 0; i < ne; i++) a.ee[i] = csg.ee[fm[i]];
   csg.trim(ni);
   a.pp.copy(csg.pp.p, csg.np);
-  a.ii.copy((const UINT*)csg.ii.p, ni); a.flags |= MESH_FL_MODIFIED;
+  a.ii.copy((const UINT*)csg.ii.p, ni);
   return 0;
 }
 
 void CTesselatorRat::initplanes(CMesh& m)
 {
-  if (m.ii.n == 0) return;
+  if (m.ii.n == 0) { m.flags |= MESH_FL_ENCODE; return; }
   if (m.flags & MESH_FL_ENCODE)
   {
     UINT c = 1; for (UINT i = 3; i < m.ii.n; i += 3) if (decode(m.ii.p + i)) c++;
@@ -498,10 +503,11 @@ HRESULT CTesselatorRat::ConvexHull(ICSGMesh* mesh)
   }
   if (ni == 6) { m.clear(); return 0; } //plane
   m.pp.setsize(csg.trim(m.pp.p, m.pp.n, ni));
-  m.ii.copy((UINT*)ii, ni); m.flags |= MESH_FL_MODIFIED;
+  m.ii.copy((UINT*)ii, ni);
   return 0;
 }
 
+/*
 HRESULT CTesselatorRat::Round(ICSGMesh* mesh, CSG_TYPE t)
 {
   if (!(t == CSG_TYPE_FLOAT || t == CSG_TYPE_DOUBLE || t == CSG_TYPE_DECIMAL)) return E_INVALIDARG;
@@ -534,4 +540,4 @@ HRESULT CTesselatorRat::Round(ICSGMesh* mesh, CSG_TYPE t)
   m.ii.copy((UINT*)ii, ni);
   return 0;
 }
-
+*/

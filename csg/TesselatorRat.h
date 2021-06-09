@@ -6,16 +6,16 @@
 
 class CTesselatorRat : public ICSGTesselator
 {
-//public:
-//  CTesselatorRat() 
-//  { 
-//    TRACE(L"CTesselatorRat() %i %p\n", GetCurrentThreadId(), this);
-//  }
-//  ~CTesselatorRat() 
-//  { 
-//    TRACE(L"~CTesselatorRat() %i %p\n", GetCurrentThreadId(), this);
-//  }
-//private:
+  //public:
+  //  CTesselatorRat() 
+  //  { 
+  //    TRACE(L"CTesselatorRat() %i %p\n", GetCurrentThreadId(), this);
+  //  }
+  //  ~CTesselatorRat() 
+  //  { 
+  //    TRACE(L"~CTesselatorRat() %i %p\n", GetCurrentThreadId(), this);
+  //  }
+  //private:
   struct ts { int next, ic, line, fl, t1, t2; Rational x, y, z, a, f, x1, x2; };
   struct ab
   {
@@ -178,8 +178,8 @@ class CTesselatorRat : public ICSGTesselator
         }
         if (ll.n == nl) 
         {
-          this->nl = 0; return; //todo: ERROR possible?
-        }
+          this->nl = 0; return; // -> error 
+        } 
         ll[nl++] = u.a; skip: dict[u.a] = dict[t + 1];
         if (u.b != i) { t = dict[u.b]; continue; }
         ll[nl - 1] |= 0x40000000; i--; break;
@@ -334,7 +334,7 @@ public:
   HRESULT __stdcall Stretch(ICSGMesh* a, CSGVAR dir);
   HRESULT __stdcall Skeleton(ICSGMesh* a, CSGVAR data);
   HRESULT __stdcall ConvexHull(ICSGMesh* a);
-  HRESULT __stdcall Round(ICSGMesh* a, CSG_TYPE t);
+  //HRESULT __stdcall Round(ICSGMesh* a, CSG_TYPE t);
 private:
   //CSG extension
   struct _csg
@@ -399,16 +399,16 @@ private:
     int dot(int e, int p)
     {
       int x = e * dotx + (p >> 4), y = (p & 0xf) << 2, v = (int)(dots[x] >> y) & 0xf;
-      if (v == 0) dots.p[x] |= (ULONGLONG)(v = 1 << (1 + (0 ^ ee[e].DotCoord(pp[p])))) << y;  
+      if (v == 0) dots.p[x] |= (ULONGLONG)(v = 1 << (1 + (0 ^ ee[e].DotCoord(pp[p])))) << y;
       return v;
-    } 
+    }
     int _dot_(int e, int p)
     {
-      int x = e * dotx + (p >> 4), y = (p & 0xf) << 2; 
+      int x = e * dotx + (p >> 4), y = (p & 0xf) << 2;
       volatile auto t = dots.p + x; int v = (int)(*t >> y) & 0xf;
       //int v = (int)(InterlockedOr64((LONG64*)t, 0) >> y) & 0xf;
       if (v == 0)
-      { 
+      {
         auto f = (ULONGLONG)(v = 1 << (1 + (0 ^ ee.p[e].DotCoord(_pp_.p[p])))) << y;
         InterlockedOr64((LONG64*)t, f);
       }

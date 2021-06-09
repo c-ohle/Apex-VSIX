@@ -35,6 +35,7 @@ namespace Apex
       IFont GetFont(string name, float size, System.Drawing.FontStyle style);
       int GetInfo(int id);
       IBuffer GetBuffer(BUFFER id, void* p, int n);
+      void CopyCoords(float3* app, ushort* aii, int ani, float2* att, float3* bpp, ushort* bii, int bni, float2* btt, float eps = 0);
     }
 
     public enum BUFFER
@@ -198,7 +199,7 @@ namespace Apex
       int GetBufferPtr(BUFFER id, void** p);
       void SetBufferPtr(BUFFER id, void* p, int n);
       void GetBox(ref float3box box, float4x3* pm);
-      IBuffer CopyCoords(IBuffer bp, IBuffer bi, float eps = 1e-6f);
+      //IBuffer CopyCoords(IBuffer bp, IBuffer bi, float eps = 1e-6f);
       float4x3 GetTypeTransform(int typ);
       void SetTypeTransform(int typ, in float4x3 m);
     }
@@ -294,17 +295,7 @@ namespace Apex
     //  var ii = new byte[ni * sizeof(ushort)]; fixed (void* p = ii) a.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, ni));
     //  return (pp, pp);
     //}
-    internal static float3[] GetVertices(this CSG.IMesh m)
-    {
-      var n = m.VertexCount; var a = new float3[n];
-      fixed (void* p = a) m.CopyBuffer(0, 0, new CSG.Variant((float*)p, 3, n)); return a;
-    }
-    internal static ushort[] GetIndices(this CSG.IMesh m)
-    {
-      var n = m.IndexCount; var a = new ushort[n];
-      fixed (void* p = a) m.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, n)); return a;
-    }
-
+    
     public static void CopyTo(this CSG.IMesh a, INode b, float2[] tt = null)
     {
       var nv = a.VertexCount; var ni = a.IndexCount;

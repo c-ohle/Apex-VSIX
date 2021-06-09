@@ -20,6 +20,73 @@ using static Apex.CDX;
 namespace Apex
 {
 #if(false)
+    static int[] caladj(ushort[] a)
+    {
+      var b = new int[a.Length];
+      var dict = new System.Collections.Generic.Dictionary<(int, int), int>(a.Length);
+      for (int i = 0; i < a.Length; i++) dict[(a[i], a[i + (i % 3 == 2 ? -2 : 1)])] = i;
+      for (int i = 0; i < a.Length; i++) b[i] = dict.TryGetValue((a[i + (i % 3 == 2 ? -2 : 1)], a[i]), out var k) ? k : -1;
+      return b;
+    }
+    static void testmesh(CSG.IMesh mesh)
+    {
+      var vv = mesh.GetVertices();
+      var ii = mesh.GetIndices();
+      var ad = caladj(ii); var ade = ad.Count(p => p == -1); if (ade != 0) { }
+      var ee = new CSG.Rational.Plane[ii.Length / 3];
+      for (int i = 0, k = 0; i < ee.Length; i++, k += 3) ee[i] = CSG.Rational.Plane.FromPoints(vv[ii[k]], vv[ii[k + 1]], vv[ii[k + 2]]);
+      int wrong = 0;
+      for (int i = 0; i < ii.Length; i++)
+      {
+        var e1 = ee[i / 3];
+        var e2 = ee[ad[i] / 3];
+        if (e1 != -e2) continue;
+        wrong++;
+      }
+      if (wrong != 0) { }
+    }
+
+  static void MeshRound2(ref float3[] pp, ref int[] ii)
+  {
+    var ad = new int[ii.Length];
+    var dict = new System.Collections.Generic.Dictionary<(int, int), int>(ii.Length);
+    for (int i = 0; i < ii.Length; i++) dict[(ii[i], ii[i + (i % 3 == 2 ? -2 : 1)])] = i;
+    for (int i = 0; i < ii.Length; i++) ad[i] = dict.TryGetValue((ii[i + (i % 3 == 2 ? -2 : 1)], ii[i]), out var k) ? k : -1;
+    var ee = new float4[ii.Length / 3];
+    for (int i = 0, k = 0; i < ee.Length; i++, k += 3) ee[i] = PlaneFromPoints(pp[ii[k]], pp[ii[k + 1]], pp[ii[k + 2]]);
+  
+    int wrong = 0; //var join = new System.Collections.Generic.List<int>(); 
+    for (int i = 0; i < ii.Length; i++)
+    {
+      if (i > ad[i]) continue;
+      var e1 = ee[i / 3]; var e2 = ee[ad[i] / 3];
+      if (e1 != -e2) continue;
+      wrong++;
+      //var i1 = i / 3 * 3;
+      //var i2 = ad[i] / 3 * 3;
+      //var a1 = (pp[ii[i1 + 1]] - pp[ii[i1]] ^ pp[ii[i1 + 2]] - pp[ii[i1]]).Length;
+      //var a2 = (pp[ii[i2 + 1]] - pp[ii[i2]] ^ pp[ii[i2 + 2]] - pp[ii[i2]]).Length;
+      ref var p1 = ref pp[ii[i]]; ref var p2 = ref pp[ii[i + (i % 3 == 2 ? -2 : 1)]];
+      //var dp = (p2 - p1).Length;
+      p1 = p2;
+    }
+    if (wrong == 0) return;
+  
+    var newii = new List<int>();
+    var ptdict = new Dictionary<float3, int>(pp.Length);
+    for (int i = 0; i < ii.Length; i++)
+    {
+      if (!ptdict.TryGetValue(pp[ii[i]], out var k)) ptdict.Add(pp[ii[i]], k = ptdict.Count);
+      newii.Add(k); if (i % 3 != 2) continue; var x = newii.Count - 3;
+      if (newii[x] != newii[x + 1] && newii[x + 1] != newii[x + 2] && newii[x + 2] != newii[x]) continue;
+      newii.RemoveRange(x, 3);
+    }
+    pp = ptdict.Keys.ToArray();
+    ii = newii.ToArray();
+  
+  }
+#endif
+#if (false)
   public unsafe static class Rational
   {
     public struct Number : IEquatable<Number>, IComparable<Number>
@@ -2410,7 +2477,7 @@ namespace Apex
         }
       }
 
-      #region shared buffer
+  #region shared buffer
       Dictionary<KeyValuePair<Type, int>, object> buffers;
       internal T GetBuffer<T>(int slot) where T : new()
       {
@@ -2431,7 +2498,7 @@ namespace Apex
       {
         var a = GetBuffer<HashSet<T>>(slot); a.Clear(); return a;
       }
-      #endregion
+  #endregion
 
       Edge eCache; Vertex vCache; Face fCache; Region rCache; Node nCache;
       Edge newEdge()
@@ -3141,7 +3208,7 @@ namespace Apex
         internal bool inside, sentinel, dirty, fixUpperEdge;
       }
 
-      #region Mesh
+  #region Mesh
       Vertex vHead; Face fHead; Edge eHead, eHeadSym;
       Edge MakeEdge()
       {
@@ -3338,7 +3405,7 @@ namespace Apex
             && e.Org == null && e.Sym.Org == null
             && e.Lface == null && e.Sym.Lface == null);
       }
-      #endregion
+  #endregion
 
       class Face
       {
@@ -3665,7 +3732,7 @@ namespace Apex
 
       class Node { internal Region key; internal Node prev, next; }
 
-      #region Regions
+  #region Regions
       Node nodehead;
       Node Insert(Region key)
       {
@@ -3692,8 +3759,8 @@ namespace Apex
         node.prev.next = node.next;
         node.next = nCache; nCache = node; //free(node);
       }
-      #endregion
-      #region VertexQueue
+  #endregion
+  #region VertexQueue
       Vertex[] vqkeys; int[] vqorder; int vqsize, vqmax;
       bool vqEmpty { get { return vqsize == 0 && vhEmpty; } }
       void vqInit()
@@ -3770,8 +3837,8 @@ namespace Apex
         Debug.Assert(curr < vqmax && vqkeys[curr] != null);
         vqkeys[curr] = null; while (vqsize > 0 && vqkeys[vqorder[vqsize - 1]] == null) --vqsize;
       }
-      #endregion
-      #region VertexHeap
+  #endregion
+  #region VertexHeap
       struct Elem { internal Vertex key; internal int node; }
       int[] vhnodes; Elem[] vhhandles;
       int vhsize, vhmax, vhfreeList;
@@ -3868,7 +3935,7 @@ namespace Apex
         vhhandles[hCurr].node = vhfreeList;
         vhfreeList = hCurr;
       }
-      #endregion
+  #endregion
     }
   }
 #endif

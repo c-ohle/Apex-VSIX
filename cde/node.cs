@@ -70,22 +70,6 @@ namespace cde
         if (node.Texcoords != null) { }
       }
     }
-
-
-    //public void Optimize()
-    //{
-    //  if (Points == null) return;
-    //  var dict = new Dictionary<double3, ushort>(Points.Length);
-    //  for (int i = 0; i < Indices.Length; i++)
-    //  {
-    //    var p = Points[Indices[i]];
-    //    if (dict.TryGetValue(p, out var t)) Indices[i] = t;
-    //    else dict[p] = Indices[i] = (ushort)dict.Count;
-    //  }
-    //  Points = dict.Keys.ToArray();
-    //  //Indices = dict.Values.ToArray();
-    //}
-
     public void GetBox(in double3x4 m, ref double3box box)
     {
       var wm = Transform * m;

@@ -243,10 +243,6 @@ EXTERN_C const IID IID_ICSGTesselator;
         virtual HRESULT STDMETHODCALLTYPE ConvexHull( 
             /* [in] */ ICSGMesh *a) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Round( 
-            /* [in] */ ICSGMesh *a,
-            CSG_TYPE t) = 0;
-        
     };
     
     
@@ -360,11 +356,6 @@ EXTERN_C const IID IID_ICSGTesselator;
             ICSGTesselator * This,
             /* [in] */ ICSGMesh *a);
         
-        HRESULT ( STDMETHODCALLTYPE *Round )( 
-            ICSGTesselator * This,
-            /* [in] */ ICSGMesh *a,
-            CSG_TYPE t);
-        
         END_INTERFACE
     } ICSGTesselatorVtbl;
 
@@ -450,9 +441,6 @@ EXTERN_C const IID IID_ICSGTesselator;
 
 #define ICSGTesselator_ConvexHull(This,a)	\
     ( (This)->lpVtbl -> ConvexHull(This,a) ) 
-
-#define ICSGTesselator_Round(This,a,t)	\
-    ( (This)->lpVtbl -> Round(This,a,t) ) 
 
 #endif /* COBJMACROS */
 
@@ -859,16 +847,9 @@ EXTERN_C const IID IID_ICSGMesh;
         virtual HRESULT STDMETHODCALLTYPE ReadFromStream( 
             /* [in] */ IStream *str) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE CreateBox( 
-            /* [in] */ CSGVAR a,
-            /* [in] */ CSGVAR b) = 0;
-        
         virtual HRESULT STDMETHODCALLTYPE Check( 
             /* [in] */ CSG_MESH_CHECK check,
             /* [out] */ CSG_MESH_CHECK *p) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetModified( 
-            /* [retval][out] */ BOOL *p) = 0;
         
     };
     
@@ -955,19 +936,10 @@ EXTERN_C const IID IID_ICSGMesh;
             ICSGMesh * This,
             /* [in] */ IStream *str);
         
-        HRESULT ( STDMETHODCALLTYPE *CreateBox )( 
-            ICSGMesh * This,
-            /* [in] */ CSGVAR a,
-            /* [in] */ CSGVAR b);
-        
         HRESULT ( STDMETHODCALLTYPE *Check )( 
             ICSGMesh * This,
             /* [in] */ CSG_MESH_CHECK check,
             /* [out] */ CSG_MESH_CHECK *p);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetModified )( 
-            ICSGMesh * This,
-            /* [retval][out] */ BOOL *p);
         
         END_INTERFACE
     } ICSGMeshVtbl;
@@ -1034,14 +1006,8 @@ EXTERN_C const IID IID_ICSGMesh;
 #define ICSGMesh_ReadFromStream(This,str)	\
     ( (This)->lpVtbl -> ReadFromStream(This,str) ) 
 
-#define ICSGMesh_CreateBox(This,a,b)	\
-    ( (This)->lpVtbl -> CreateBox(This,a,b) ) 
-
 #define ICSGMesh_Check(This,check,p)	\
     ( (This)->lpVtbl -> Check(This,check,p) ) 
-
-#define ICSGMesh_GetModified(This,p)	\
-    ( (This)->lpVtbl -> GetModified(This,p) ) 
 
 #endif /* COBJMACROS */
 

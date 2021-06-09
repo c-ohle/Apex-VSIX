@@ -2,7 +2,7 @@
 
 #define MESH_FL_ENCODE    0x01
 #define MESH_FL_SHELL     0x02
-#define MESH_FL_MODIFIED  0x10
+//#define MESH_FL_MODIFIED  0x10
 #define MESH_FL_WRITEMASK 0x0f
 
 struct CMesh : public ICSGMesh
@@ -14,7 +14,6 @@ struct CMesh : public ICSGMesh
   void clear()
   {
     ii.setsize(0); pp.setsize(0); ee.setsize(0);
-    flags = MESH_FL_MODIFIED;
   }
   void invert()
   {
@@ -58,7 +57,7 @@ struct CMesh : public ICSGMesh
       if (p.count != 1) return E_INVALIDARG;
       if (p.vt == CSG_TYPE_USHORT)
       {
-        for (UINT i = 0, n = min(p.length, ii.n - ab); i < n; i++) 
+        for (UINT i = 0, n = min(p.length, ii.n - ab); i < n; i++)
           ((USHORT*)p.p)[i] = ii[ab + i];
         return 0;
       }
@@ -88,7 +87,7 @@ struct CMesh : public ICSGMesh
   HRESULT __stdcall SetVertex(UINT i, CSGVAR p)
   {
     if ((UINT)i >= (UINT)pp.n) return E_INVALIDARG;
-    conv(&pp.p[i].x, 3, p); resetee(); flags |= MESH_FL_MODIFIED; return 0;
+    conv(&pp.p[i].x, 3, p); resetee(); return 0;
   }
   HRESULT __stdcall get_IndexCount(UINT* p)
   {
@@ -102,11 +101,11 @@ struct CMesh : public ICSGMesh
   HRESULT __stdcall SetIndex(UINT i, UINT p)
   {
     if (i >= (UINT)ii.n) return E_INVALIDARG;
-    ii.p[i] = p; resetee(); flags |= MESH_FL_MODIFIED; return 0;
+    ii.p[i] = p; resetee(); return 0;
   }
   HRESULT __stdcall get_PlaneCount(UINT* p)
   {
-    *p = ee.n; return 0;
+    *p = flags & MESH_FL_ENCODE ? ee.n : -1; return 0;
   }
   HRESULT __stdcall GetPlane(UINT i, CSGVAR p)
   {
@@ -117,7 +116,7 @@ struct CMesh : public ICSGMesh
   {
     if (*(USHORT*)&indices.vt != CSG_TYPE_INT && (indices.count != 1 || !(indices.vt == CSG_TYPE_INT || indices.vt == CSG_TYPE_USHORT)))
       return E_INVALIDARG;
-    resetee(); flags |= MESH_FL_MODIFIED;
+    resetee();
     if (*(USHORT*)&vertices.vt == CSG_TYPE_INT) pp.setsize(*(UINT*)&vertices.p);
     else
     {
@@ -129,7 +128,7 @@ struct CMesh : public ICSGMesh
     if (*(USHORT*)&indices.vt == CSG_TYPE_INT) ii.setsize(*(UINT*)&indices.p);
     else
     {
-      if(indices.vt == CSG_TYPE_USHORT) 
+      if (indices.vt == CSG_TYPE_USHORT)
       {
         ii.setsize(indices.length);
         for (UINT i = 0; i < ii.n; i++) ii.p[i] = ((USHORT*)indices.p)[i];
@@ -144,7 +143,7 @@ struct CMesh : public ICSGMesh
     m.flags = flags;
     ii.copyto(m.ii);
     pp.copyto(m.pp);
-    ee.copyto(m.ee); m.flags |= MESH_FL_MODIFIED;
+    ee.copyto(m.ee);
     return 0;
   }
   HRESULT __stdcall Transform(CSGVAR m);
@@ -158,13 +157,12 @@ struct CMesh : public ICSGMesh
   }
   HRESULT __stdcall ReadFromStream(IStream* str)
   {
-    CHR(readcount(str, flags)); if (ee.n) ee.setsize(0); flags |= MESH_FL_MODIFIED;
+    CHR(readcount(str, flags)); if (ee.n) ee.setsize(0);
     UINT np; CHR(readcount(str, np)); pp.setsize(np);
     CHR(Rational::read(str, &pp.p->x, pp.n * 3));
     UINT ni; CHR(readcount(str, ni)); ii.setsize(ni * 3);
     for (UINT i = 0; i < ii.n; i++) CHR(readcount(str, ii.p[i])); return 0;
   }
-  HRESULT __stdcall CreateBox(CSGVAR a, CSGVAR b);
   HRESULT __stdcall Check(CSG_MESH_CHECK check, CSG_MESH_CHECK* p);
   HRESULT __stdcall FreeExtra()
   {
@@ -173,12 +171,11 @@ struct CMesh : public ICSGMesh
     ee.freeextra();
     return 0;
   }
-  HRESULT __stdcall GetModified(BOOL* p)
-  {
-    *p = (flags & MESH_FL_MODIFIED) != 0; flags &= ~MESH_FL_MODIFIED;
-    return 0;
-  }
-
+  //HRESULT __stdcall GetModified(BOOL* p)
+  //{
+  //  *p = (flags & MESH_FL_MODIFIED) != 0; flags &= ~MESH_FL_MODIFIED;
+  //  return 0;
+  //}
   //HRESULT __stdcall get_Indices(SAFEARRAY** p)
   //{
   //  SAFEARRAYBOUND rgsabound; rgsabound.cElements = ii.n; rgsabound.lLbound = 0;

@@ -187,7 +187,6 @@ interface ICDXNode : ICDXRoot
   HRESULT GetBufferPtr([in] CDX_BUFFER id, [in] const BYTE** p, [out, retval] UINT* n);
   HRESULT SetBufferPtr([in] CDX_BUFFER id, [in] const BYTE* p, [in] UINT n);
   HRESULT GetBox([in, out] XMFLOAT3 box[2], [in] const XMFLOAT4X3* pm);
-  HRESULT CopyCoords([in] ICDXBuffer* bpp, [in] ICDXBuffer* bii, [in] float eps, [out, retval] ICDXBuffer** btt);
   HRESULT GetTypeTransform([in] UINT typ, [out, retval] XMFLOAT4X3* p);
   HRESULT SetTypeTransform([in] UINT typ, [in] const XMFLOAT4X3* p);
 };
@@ -238,6 +237,7 @@ interface ICDXFactory : IUnknown
   HRESULT GetFont([in] BSTR name, FLOAT size, UINT style, [out, retval] ICDXFont** p);
   HRESULT GetInfo([in] CDX_INFO id, [out, retval] UINT* v);
   HRESULT GetBuffer([in] CDX_BUFFER id, [in] const BYTE* p, [in] UINT n, [out, retval] ICDXBuffer** v);
+  HRESULT CopyCoords([in] const XMFLOAT3* appp, [in] const USHORT* aiip, [in] UINT aiin, [in] const XMFLOAT2* attp, [in] const XMFLOAT3* bppp, [in] const USHORT* biip, [in] UINT biin, [in] XMFLOAT2* bttp, [in] FLOAT eps);
 };
 
 [uuid(6d43a611-b5a3-489c-aa3a-dc01bb9225e8), version(1.0)]

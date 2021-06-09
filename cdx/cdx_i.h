@@ -1075,12 +1075,6 @@ EXTERN_C const IID IID_ICDXNode;
             /* [out][in] */ XMFLOAT3 box[ 2 ],
             /* [in] */ const XMFLOAT4X3 *pm) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE CopyCoords( 
-            /* [in] */ ICDXBuffer *bpp,
-            /* [in] */ ICDXBuffer *bii,
-            /* [in] */ float eps,
-            /* [retval][out] */ ICDXBuffer **btt) = 0;
-        
         virtual HRESULT STDMETHODCALLTYPE GetTypeTransform( 
             /* [in] */ UINT typ,
             /* [retval][out] */ XMFLOAT4X3 *p) = 0;
@@ -1265,13 +1259,6 @@ EXTERN_C const IID IID_ICDXNode;
             /* [out][in] */ XMFLOAT3 box[ 2 ],
             /* [in] */ const XMFLOAT4X3 *pm);
         
-        HRESULT ( STDMETHODCALLTYPE *CopyCoords )( 
-            ICDXNode * This,
-            /* [in] */ ICDXBuffer *bpp,
-            /* [in] */ ICDXBuffer *bii,
-            /* [in] */ float eps,
-            /* [retval][out] */ ICDXBuffer **btt);
-        
         HRESULT ( STDMETHODCALLTYPE *GetTypeTransform )( 
             ICDXNode * This,
             /* [in] */ UINT typ,
@@ -1413,9 +1400,6 @@ EXTERN_C const IID IID_ICDXNode;
 
 #define ICDXNode_GetBox(This,box,pm)	\
     ( (This)->lpVtbl -> GetBox(This,box,pm) ) 
-
-#define ICDXNode_CopyCoords(This,bpp,bii,eps,btt)	\
-    ( (This)->lpVtbl -> CopyCoords(This,bpp,bii,eps,btt) ) 
 
 #define ICDXNode_GetTypeTransform(This,typ,p)	\
     ( (This)->lpVtbl -> GetTypeTransform(This,typ,p) ) 
@@ -1791,6 +1775,17 @@ EXTERN_C const IID IID_ICDXFactory;
             /* [in] */ UINT n,
             /* [retval][out] */ ICDXBuffer **v) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE CopyCoords( 
+            /* [in] */ const XMFLOAT3 *appp,
+            /* [in] */ const USHORT *aiip,
+            /* [in] */ UINT aiin,
+            /* [in] */ const XMFLOAT2 *attp,
+            /* [in] */ const XMFLOAT3 *bppp,
+            /* [in] */ const USHORT *biip,
+            /* [in] */ UINT biin,
+            /* [in] */ XMFLOAT2 *bttp,
+            /* [in] */ FLOAT eps) = 0;
+        
     };
     
     
@@ -1858,6 +1853,18 @@ EXTERN_C const IID IID_ICDXFactory;
             /* [in] */ UINT n,
             /* [retval][out] */ ICDXBuffer **v);
         
+        HRESULT ( STDMETHODCALLTYPE *CopyCoords )( 
+            ICDXFactory * This,
+            /* [in] */ const XMFLOAT3 *appp,
+            /* [in] */ const USHORT *aiip,
+            /* [in] */ UINT aiin,
+            /* [in] */ const XMFLOAT2 *attp,
+            /* [in] */ const XMFLOAT3 *bppp,
+            /* [in] */ const USHORT *biip,
+            /* [in] */ UINT biin,
+            /* [in] */ XMFLOAT2 *bttp,
+            /* [in] */ FLOAT eps);
+        
         END_INTERFACE
     } ICDXFactoryVtbl;
 
@@ -1907,6 +1914,9 @@ EXTERN_C const IID IID_ICDXFactory;
 
 #define ICDXFactory_GetBuffer(This,id,p,n,v)	\
     ( (This)->lpVtbl -> GetBuffer(This,id,p,n,v) ) 
+
+#define ICDXFactory_CopyCoords(This,appp,aiip,aiin,attp,bppp,biip,biin,bttp,eps)	\
+    ( (This)->lpVtbl -> CopyCoords(This,appp,aiip,aiin,attp,bppp,biip,biin,bttp,eps) ) 
 
 #endif /* COBJMACROS */
 

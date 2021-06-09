@@ -65,7 +65,7 @@ namespace Apex
       void Stretch(IMesh a, Variant v);
       void Skeleton(IMesh a, Variant v);
       void ConvexHull(IMesh a);
-      void Round(IMesh a, VarType t);
+      //void Round(IMesh a, VarType t);
     }
 
     public enum JoinOp { Union = 0, Difference = 1, Intersection = 2 }
@@ -93,9 +93,7 @@ namespace Apex
       void GetPlane(int i, Variant p);
       void WriteToStream(COM.IStream str);
       void ReadFromStream(COM.IStream str);
-      void CreateBox(Variant a, Variant b);
       MeshCheck Check(MeshCheck m = 0);
-      bool GetModified();
     }
 
     public enum Op1 { Copy = 0, Neg = 1, TransPM = 2, Inv3x4 = 3, Dot2 = 4, Dot3 = 5, Norm3 = 6, Num = 7, Den = 8, Lsb = 9, Msb = 10, Trunc = 11, Floor = 12, Ceil = 13, Round = 14, Rnd10 = 15, Com = 16 }
@@ -423,6 +421,7 @@ namespace Apex
     }
 
     #region example extensions
+
     public static void AddVertex(this ITesselator tess, CDX.float2 p)
     {
       tess.AddVertex(new Variant(&p.x, 2));
@@ -443,25 +442,46 @@ namespace Apex
     {
       tess.AddVertex(new Rational.Vector2(x, y));
     }
-    //public static PointF GetVertexF2(this ITesselator tess, int i) { PointF p; tess.GetVertex(i, new Variant((float*)&p, 2)); return p; }
-    //public static (decimal x, decimal y) GetVertexD2(this ITesselator tess, int i) { (decimal x, decimal y) p = default; tess.GetVertex(i, new Variant(&p.x, 2)); return p; }
-    public static Rational.Vector3 GetVertexR3(this IMesh mesh, int i) { var p = new Rational.Vector3(0); mesh.GetVertex(i, p); return p; }
-    public static CDX.float3 GetVertexF3(this IMesh mesh, int i)
+
+    internal static CDX.float3[] GetVertices(this CSG.IMesh m)
+    {
+      var n = m.VertexCount; var a = new CDX.float3[n];
+      fixed (void* p = a) m.CopyBuffer(0, 0, new CSG.Variant((float*)p, 3, n)); return a;
+    }
+    internal static ushort[] GetIndices(this CSG.IMesh m)
+    {
+      var n = m.IndexCount; var a = new ushort[n];
+      fixed (void* p = a) m.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, n)); return a;
+    }
+    internal static CDX.float4[] GetPlanes(this CSG.IMesh m)
+    {
+      var n = m.PlaneCount; var a = new CDX.float4[n];
+      fixed (void* p = a) m.CopyBuffer(2, 0, new CSG.Variant((float*)p, 4, n)); return a;
+    }
+    internal static CDX.float3 GetVertex(this IMesh mesh, int i)
     {
       CDX.float3 p; mesh.GetVertex(i, new Variant((float*)&p, 3)); return p;
     }
+    internal static CDX.float4 GetPlane(this IMesh mesh, int i)
+    {
+      CDX.float4 p; mesh.GetPlane(i, new Variant((float*)&p, 4)); return p;
+    }
+
+    //public static PointF GetVertexF2(this ITesselator tess, int i) { PointF p; tess.GetVertex(i, new Variant((float*)&p, 2)); return p; }
+    //public static (decimal x, decimal y) GetVertexD2(this ITesselator tess, int i) { (decimal x, decimal y) p = default; tess.GetVertex(i, new Variant(&p.x, 2)); return p; }
+    public static Rational.Vector3 GetVertexR3(this IMesh mesh, int i) { var p = new Rational.Vector3(0); mesh.GetVertex(i, p); return p; }
     public static Rational.Plane GetPlaneR4(this IMesh mesh, int i)
     {
       var p = new Rational.Plane(0); mesh.GetPlane(i, p); return p;
     }
     public static IMesh Clone(this IMesh p) { var d = Factory.CreateMesh(); p.CopyTo(d); return d; }
     public static void InitPlanes(this IMesh mesh) => Tesselator.Cut(mesh, new Variant());
-    public static IEnumerable<Rational.Vector3> Vertices(this IMesh mesh) { for (int i = 0, n = mesh.VertexCount; i < n; i++) yield return mesh.GetVertexR3(i); }
+    //public static IEnumerable<Rational.Vector3> Vertices(this IMesh mesh) { for (int i = 0, n = mesh.VertexCount; i < n; i++) yield return mesh.GetVertexR3(i); }
     //public static IEnumerable<CDX.float3> Vertices(this CDX.IMesh mesh) { for (int i = 0, n = mesh.VertexCount; i < n; i++) yield return mesh.GetVertex(i); }
     //public static IEnumerable<CDX.float2> Coords(this CDX.IMesh mesh) { for (int i = 0, n = mesh.CoordsCount; i < n; i++) yield return mesh.GetCoord(i); }
     //public static IEnumerable<int> Indices(this CDX.IMesh mesh) { for (int i = 0, n = mesh.IndexCount; i < n; i++) yield return mesh.GetIndex(i); }
-    public static IEnumerable<int> Indices(this IMesh mesh) { for (int i = 0, n = mesh.IndexCount; i < n; i++) yield return mesh.GetIndex(i); }
-    public static IEnumerable<Rational.Plane> Planes(this IMesh mesh) { for (int i = 0, n = mesh.PlaneCount; i < n; i++) yield return mesh.GetPlaneR4(i); }
+    //public static IEnumerable<int> Indices(this IMesh mesh) { for (int i = 0, n = mesh.IndexCount; i < n; i++) yield return mesh.GetIndex(i); }
+    //public static IEnumerable<Rational.Plane> Planes(this IMesh mesh) { for (int i = 0, n = mesh.PlaneCount; i < n; i++) yield return mesh.GetPlaneR4(i); }
     public static void AddGlyphContour(this ITesselator tess, string text, Font font, int flat = 8)
     {
       //if (text.AsSpan().Trim().Length == 0) return;
@@ -496,6 +516,7 @@ namespace Apex
     {
       tess.Cut(mesh, new Variant(&plane.x, 4));
     }
+
     #endregion
   }
 

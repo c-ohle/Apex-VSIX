@@ -312,7 +312,7 @@ struct __declspec(novtable) CNode : ICDXNode
   HRESULT __stdcall GetBufferPtr(CDX_BUFFER id, const BYTE** p, UINT* n);
   HRESULT __stdcall SetBufferPtr(CDX_BUFFER id, const BYTE* p, UINT n);
   HRESULT __stdcall GetBox(XMFLOAT3 box[2], const XMFLOAT4X3* pm);
-  HRESULT __stdcall CopyCoords(ICDXBuffer* bpp, ICDXBuffer* bii, float eps, ICDXBuffer** btt);
+//HRESULT __stdcall CopyCoords(ICDXBuffer* bpp, ICDXBuffer* bii, float eps, ICDXBuffer** btt);
   HRESULT __stdcall get_Child(ICDXNode** p);
   HRESULT __stdcall get_Next(ICDXNode** p);
   HRESULT __stdcall NextSibling(ICDXNode* r, ICDXNode** p);

@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
 //todo: check zrange / import couriosity
+//todo: ranges as/in buffer 
 //todo: refresh after load
 //todo: camera dpi
 //todo: intersection dup points + div 0 on boolop

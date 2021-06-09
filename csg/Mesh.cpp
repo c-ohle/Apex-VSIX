@@ -72,7 +72,7 @@ HRESULT CTesselatorRat::Update(ICSGMesh* mesh, CSGVAR v, UINT flags)
   }
   _ASSERT(t == m.ii.n);
   if (inv) m.invert();
-  m.flags = !nn && m.ii.n ? MESH_FL_SHELL : 0; m.flags |= MESH_FL_MODIFIED;
+  m.flags = !nn && m.ii.n ? MESH_FL_SHELL : 0;
   /// todo: the other cases
   if (nn && mo == 0 && nn == 1 && simplepoly())
   {
@@ -153,12 +153,12 @@ HRESULT CTesselatorDbl::Update(ICSGMesh* mesh, CSGVAR v, UINT flags)
   }
   _ASSERT(t == m.ii.n);
   if (inv) m.invert();
-  m.flags = !nn && m.ii.n ? MESH_FL_SHELL : 0; m.flags |= MESH_FL_MODIFIED; return 0;
+  m.flags = !nn && m.ii.n ? MESH_FL_SHELL : 0; return 0;
 }
 
 HRESULT CMesh::Transform(CSGVAR m)
 {
-  if (ee.n) ee.setsize(0); flags |= MESH_FL_MODIFIED;
+  if (ee.n) ee.setsize(0);
   if (m.vt == CSG_TYPE_RATIONAL)
   {
     if (m.count == 12)
@@ -176,7 +176,7 @@ HRESULT CMesh::Transform(CSGVAR m)
   Matrix3x4R t; conv(t.m[0], 12, m);
   Matrix3x4R::Transform(pp.p, pp.n, t); return 0;
 }
-
+/*
 HRESULT CMesh::CreateBox(CSGVAR a, CSGVAR b)
 {
   UINT l = -1; ee.setsize(0);
@@ -193,7 +193,7 @@ HRESULT CMesh::CreateBox(CSGVAR a, CSGVAR b)
     p[0] = ab[0]; p[1].x = ab[1].x; p[1].y = ab[l == 0 ? 1 : 0].y; p[1].z = ab[0].z;
     p[2] = ab[1]; p[3].x = ab[0].x; p[3].y = ab[l == 0 ? 0 : 1].y; p[3].z = ab[1].z;
     byte bb[12] = { 2, 0, 1, 2, 3, 0, 1, 0, 2, 0, 3, 2 };
-    for (UINT i = 0; i < 12; i++) ii.p[i] = bb[i]; flags = MESH_FL_ENCODE | MESH_FL_SHELL | MESH_FL_MODIFIED;
+    for (UINT i = 0; i < 12; i++) ii.p[i] = bb[i]; flags = MESH_FL_ENCODE | MESH_FL_SHELL;
   }
   else
   {
@@ -207,11 +207,11 @@ HRESULT CMesh::CreateBox(CSGVAR a, CSGVAR b)
     p[6].x = ab[1].x; p[6].y = ab[1].y; p[6].z = ab[1].z;
     p[7].x = ab[0].x; p[7].y = ab[1].y; p[7].z = ab[1].z;
     byte bb[36] = { 2, 1, 0, 0, 3, 2, 4, 0, 1, 1, 5, 4, 5, 1, 2, 2, 6, 5, 6, 2, 3, 3, 7, 6, 3, 0, 7, 0, 4, 7, 6, 4, 5, 6, 7, 4 }; //encoded
-    for (UINT i = 0; i < 36; i++) ii.p[i] = bb[i]; flags = MESH_FL_ENCODE | MESH_FL_MODIFIED;
+    for (UINT i = 0; i < 36; i++) ii.p[i] = bb[i]; flags = MESH_FL_ENCODE;
   }
   return 0;
 }
-
+*/
 HRESULT CTesselatorRat::Stretch(ICSGMesh* mesh, CSGVAR v)
 {
   Vector3R dir; conv(&dir.x, 3, v);
@@ -252,7 +252,7 @@ HRESULT CTesselatorRat::Stretch(ICSGMesh* mesh, CSGVAR v)
   }
   m.pp.copy(csg.pp.p, csg.np);
   m.ii.copy((UINT*)ii, ni);
-  m.resetee(); m.flags &= ~MESH_FL_SHELL; m.flags |= MESH_FL_MODIFIED;
+  m.resetee(); m.flags &= ~MESH_FL_SHELL;
   return 0;
 }
 

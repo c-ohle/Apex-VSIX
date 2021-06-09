@@ -178,39 +178,12 @@ namespace Apex
     {
       var mesh = CSG.Factory.CreateMesh();
       void* s; var n = node.GetBufferPtr(BUFFER.CSGMESH, &s);
-      if (n == 0) node.CopyTo(mesh);
-      else { var str = COM.SHCreateMemStream(s, n); mesh.ReadFromStream(str); Marshal.ReleaseComObject(str); }
-      return mesh;
+      if (s != null) { var str = COM.SHCreateMemStream(s, n); mesh.ReadFromStream(str); Marshal.ReleaseComObject(str); }
+      else node.CopyTo(mesh); return mesh;
     }
     static byte[] MeshToBytes(CSG.IMesh mesh)
     {
       var str = COM.SHCreateMemStream(); mesh.WriteToStream(str); return COM.Stream(str);
-    }
-
-    static int[] caladj(int[] a)
-    {
-      var b = new int[a.Length];
-      var dict = new System.Collections.Generic.Dictionary<(int, int), int>(a.Length);
-      for (int i = 0; i < a.Length; i++) dict[(a[i], a[i + (i % 3 == 2 ? -2 : 1)])] = i;
-      for (int i = 0; i < a.Length; i++) b[i] = dict.TryGetValue((a[i + (i % 3 == 2 ? -2 : 1)], a[i]), out var k) ? k : -1;
-      return b;
-    }
-    static void testmesh(CSG.IMesh mesh)
-    {
-      var vv = mesh.Vertices().ToArray();
-      var ii = mesh.Indices().ToArray();
-      var ad = caladj(ii); var ade = ad.Count(p => p == -1); if (ade != 0) { }
-      var ee = new CSG.Rational.Plane[ii.Length / 3];
-      for (int i = 0, k = 0; i < ee.Length; i++, k += 3) ee[i] = CSG.Rational.Plane.FromPoints(vv[ii[k]], vv[ii[k + 1]], vv[ii[k + 2]]);
-      int wrong = 0;
-      for (int i = 0; i < ii.Length; i++)
-      {
-        var e1 = ee[i / 3];
-        var e2 = ee[ad[i] / 3];
-        if (e1 != -e2) continue;
-        wrong++;
-      }
-      if (wrong != 0) { }
     }
 
     static void MeshRound(ref float3[] pp, ref ushort[] ii)
@@ -231,47 +204,16 @@ namespace Apex
       Array.Resize(ref pp, dict.Count); dict.Keys.CopyTo(pp, 0);
       Array.Resize(ref ii, ni);
     }
-
-    //static void MeshRound2(ref float3[] pp, ref int[] ii)
-    //{
-    //  var ad = new int[ii.Length];
-    //  var dict = new System.Collections.Generic.Dictionary<(int, int), int>(ii.Length);
-    //  for (int i = 0; i < ii.Length; i++) dict[(ii[i], ii[i + (i % 3 == 2 ? -2 : 1)])] = i;
-    //  for (int i = 0; i < ii.Length; i++) ad[i] = dict.TryGetValue((ii[i + (i % 3 == 2 ? -2 : 1)], ii[i]), out var k) ? k : -1;
-    //  var ee = new float4[ii.Length / 3];
-    //  for (int i = 0, k = 0; i < ee.Length; i++, k += 3) ee[i] = PlaneFromPoints(pp[ii[k]], pp[ii[k + 1]], pp[ii[k + 2]]);
-    //
-    //  int wrong = 0; //var join = new System.Collections.Generic.List<int>(); 
-    //  for (int i = 0; i < ii.Length; i++)
-    //  {
-    //    if (i > ad[i]) continue;
-    //    var e1 = ee[i / 3]; var e2 = ee[ad[i] / 3];
-    //    if (e1 != -e2) continue;
-    //    wrong++;
-    //    //var i1 = i / 3 * 3;
-    //    //var i2 = ad[i] / 3 * 3;
-    //    //var a1 = (pp[ii[i1 + 1]] - pp[ii[i1]] ^ pp[ii[i1 + 2]] - pp[ii[i1]]).Length;
-    //    //var a2 = (pp[ii[i2 + 1]] - pp[ii[i2]] ^ pp[ii[i2 + 2]] - pp[ii[i2]]).Length;
-    //    ref var p1 = ref pp[ii[i]]; ref var p2 = ref pp[ii[i + (i % 3 == 2 ? -2 : 1)]];
-    //    //var dp = (p2 - p1).Length;
-    //    p1 = p2;
-    //  }
-    //  if (wrong == 0) return;
-    //
-    //  var newii = new List<int>();
-    //  var ptdict = new Dictionary<float3, int>(pp.Length);
-    //  for (int i = 0; i < ii.Length; i++)
-    //  {
-    //    if (!ptdict.TryGetValue(pp[ii[i]], out var k)) ptdict.Add(pp[ii[i]], k = ptdict.Count);
-    //    newii.Add(k); if (i % 3 != 2) continue; var x = newii.Count - 3;
-    //    if (newii[x] != newii[x + 1] && newii[x + 1] != newii[x + 2] && newii[x + 2] != newii[x]) continue;
-    //    newii.RemoveRange(x, 3);
-    //  }
-    //  pp = ptdict.Keys.ToArray();
-    //  ii = newii.ToArray();
-    //
-    //}
-
+    static void CopyCoords(INode sour, float3[] bpp, ushort[] bii, ref float2[] btt)
+    {
+      float3* app; var anp = sour.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&app) / sizeof(float3);
+      ushort* aii; var ani = sour.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&aii) / sizeof(ushort);
+      float2* att; var ant = sour.GetBufferPtr(BUFFER.TEXCOORDS, (void**)&att) / sizeof(float2);
+      fixed (float3* bp = bpp) fixed (ushort* bi = bii)
+      fixed (float2* bt = btt ?? (btt = new float2[bii.Length]))
+        Factory.CopyCoords(app, aii, ani, att, bp, bi, bii.Length, bt);
+    }
+    
     int OnJoin(object test, int id)
     {
       if (scene.SelectionCount != 2) return 0;
@@ -279,33 +221,24 @@ namespace Apex
       var n2 = scene.GetSelection(1); if (!n2.HasBuffer(BUFFER.POINTBUFFER)) return 0;
       if (test != null) return 1;
       Cursor = Cursors.WaitCursor;
-
       var r1 = MeshFromNode(n1);
       var r2 = MeshFromNode(n2);
-
+      var tess = CSG.Tesselator;
       var rm = n2.GetTransform() * !n1.GetTransform();
       var vm = (CSG.Rational.Matrix)rm; r2.Transform(vm);
-      CSG.Tesselator.Join(r1, r2, id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference);
-
-      //var ro = MeshToBytes(r1);
-      //CSG.Tesselator.Round(r1, CSG.VarType.Float);
-
+      tess.Join(r1, r2, id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference);
       var vv = r1.GetVertices();
-      var ii = r1.GetIndices();
-      MeshRound(ref vv, ref ii);
-
-      r1.Copy(vv, ii.Select(p => (int)p).ToArray()); testmesh(r1);
-      r1.CopyTo(out var pb, out var ib);
-      var tb = n1.CopyCoords(pb, ib);
-
+      var ii = r1.GetIndices(); MeshRound(ref vv, ref ii);
+      var tt = (float2[])null; if (n1.HasBuffer(BUFFER.TEXCOORDS)) CopyCoords(n1, vv, ii, ref tt);
+      Marshal.ReleaseComObject(r1);
+      Marshal.ReleaseComObject(r2);
       Execute(undo(
         undosel(false, n1, n2),
-          //undo(n1, BUFFER.CSGMESH, ro),
-          undo(n1, BUFFER.POINTBUFFER, vv),//pb.ToBytes()), //
-          undo(n1, BUFFER.INDEXBUFFER, ii),//ib.ToBytes()), //
-          undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes()),
-          undodel(n2), undosel(true, n1)));
-
+        //undo(n1, BUFFER.CSGMESH, ro),
+        undo(n1, BUFFER.POINTBUFFER, vv),
+        undo(n1, BUFFER.INDEXBUFFER, ii),
+        undo(n1, BUFFER.TEXCOORDS, tt),  
+        undodel(n2), undosel(true, n1)));
       return 1;
     }
     int OnPlaneCut(object test)
@@ -317,40 +250,41 @@ namespace Apex
       var n2 = scene.GetSelection(1);
       var rm = n2.GetTransform() * !n1.GetTransform();
       var e = CSG.Rational.Plane.FromPointNormal(rm.mp, rm.mz);
-      var r1 = MeshFromNode(n1);// CSG.Factory.CreateMesh(); n1.CopyTo(r1);
+      var r1 = MeshFromNode(n1);
       CSG.Tesselator.Cut(r1, e);
-      var ro = MeshToBytes(r1);
-      CSG.Tesselator.Round(r1, CSG.VarType.Float);
-      r1.CopyTo(out var pb, out var ib); Marshal.ReleaseComObject(r1);
-      var tb = n1.CopyCoords(pb, ib);
+      var vv = r1.GetVertices();
+      var ii = r1.GetIndices(); MeshRound(ref vv, ref ii);
+      var tt = (float2[])null; if (n1.HasBuffer(BUFFER.TEXCOORDS)) CopyCoords(n1, vv, ii, ref tt);
+      Marshal.ReleaseComObject(r1); 
       Execute(undo(
-        undo(n1, BUFFER.CSGMESH, ro),
-        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
-        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
-        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes())));
+        //undo(n1, BUFFER.CSGMESH, ro),
+        undo(n1, BUFFER.POINTBUFFER, vv),
+        undo(n1, BUFFER.INDEXBUFFER, ii),
+        undo(n1, BUFFER.TEXCOORDS, tt)));
       return 1;
     }
     int OnRetess(object test)
     {
-      if (scene.SelectionCount != 1) return 0;
-      var n1 = scene.GetSelection(0);
-      if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
-      if (n1.HasBuffer(BUFFER.CSGMESH)) return 0;
-      if (test != null) return 1;
-      Cursor = Cursors.WaitCursor;
-      var r1 = MeshFromNode(n1);
-      CSG.Tesselator.Join(r1, r1, 0);
-       
-      var ro = MeshToBytes(r1);
-      CSG.Tesselator.Round(r1, CSG.VarType.Float);
-      r1.CopyTo(out var pb, out var ib);
-      var tb = n1.CopyCoords(pb, ib);
-      Execute(undo(
-        undo(n1, BUFFER.CSGMESH, ro),
-        undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
-        undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
-        undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes())));
-      return 1;
+      return 0;
+      //if (scene.SelectionCount != 1) return 0;
+      //var n1 = scene.GetSelection(0);
+      //if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      //if (n1.HasBuffer(BUFFER.CSGMESH)) return 0;
+      //if (test != null) return 1;
+      //Cursor = Cursors.WaitCursor;
+      //var r1 = MeshFromNode(n1);
+      //CSG.Tesselator.Join(r1, r1, 0);
+      //
+      //var ro = MeshToBytes(r1);
+      //CSG.Tesselator.Round(r1, CSG.VarType.Float);
+      //r1.CopyTo(out var pb, out var ib);
+      //var tb = n1.CopyCoords(pb, ib);
+      //Execute(undo(
+      //  undo(n1, BUFFER.CSGMESH, ro),
+      //  undo(n1, BUFFER.POINTBUFFER, pb.ToBytes()),
+      //  undo(n1, BUFFER.INDEXBUFFER, ib.ToBytes()),
+      //  undo(n1, BUFFER.TEXCOORDS, tb?.ToBytes())));
+      //return 1;
     }
     int OnCenter(object test)
     {
@@ -537,7 +471,7 @@ namespace Apex
         var check = mesh.Check(); if (check == 0) { /*mesh.InitPlanes();*/ pl += mesh.PlaneCount; }
         checks |= check; Marshal.ReleaseComObject(mesh); if (check == 0) { vol += p.GetVolume(); surf += p.GetSurface(); }
       }
-      ss += '\n'; ss += $"{np} Vertices {ni / 3} Polygones Planes {pl} in {nc} Models.";
+      ss += '\n'; ss += $"{np} Vertices {ni / 3} Polygones {pl} Planes in {nc} Models.";
       if (checks != 0) { ss += '\n'; ss += $"Errors: {checks}"; }
       if (vol != 0) { ss += '\n'; ss += $"Volume: {vol} {(ShortUnit)scene.Unit}³ Surface: {surf} {(ShortUnit)scene.Unit}²"; }
       if (eg != 0) { { ss += '\n'; ss += $"Errors: {eg} Empty Groups"; } }

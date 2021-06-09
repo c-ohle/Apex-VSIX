@@ -77,19 +77,6 @@ namespace Apex
       {
         scene = Import3MF(path, out _);
       }
-
-      //foreach (var node in scene.SelectNodes(BUFFER.SCRIPTDATA))
-      //{
-      //  byte* p; int n = node.GetBufferPtr(BUFFER.SCRIPTDATA, (void**)&p);
-      //  if (find(p, n, "startup=\"1\"") != -1)
-      //    Node.From(this, node).GetMethod<Action>();
-      //}
-      //foreach (var node in scene.SelectNodes(BUFFER.SCRIPTDATA))
-      //{
-      //  var ss = System.Text.Encoding.UTF8.GetString(node.GetBytes(BUFFER.SCRIPTDATA));
-      //  if (ss.IndexOf("startup=\"1\"") != -1)
-      //    Node.From(this, node).GetMethod<Action>();
-      //}
     }
     internal void Save(string path)
     {
