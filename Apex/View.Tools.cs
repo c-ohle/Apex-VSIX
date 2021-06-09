@@ -814,15 +814,11 @@ namespace Apex
         if (drop == null) return;
       }
       var scene = view.Scene;
-      //if (scene.Unit != drop.Unit)
-      //{
-      //  var f = (float)(scaling(drop.Unit) / scaling(scene.Unit));
-      //  Scale(drop, f); if (!float.IsNaN(wp.x)) wp *= f;
-      //}
       var pp = drop.Nodes().ToArray(); drop.Clear();
       if (float.IsNaN(wp.x))
       {
-        var box = GetBox(pp); if (box.IsEmpty) return;
+        if (pp.Length > 1) { var g = Factory.CreateNode(); for (int i = 0; i < pp.Length; i++) g.InsertAt(i, pp[i]); pp = new INode[] { g }; }
+        var box = GetBox(pp); if (box.IsEmpty) return; //todo: further checks 
         wp = (box.min + box.max) * 0.5f; wp.z = box.min.z;
       }
       var del = undo(pp.Select((p, x) => undodel(p, scene, scene.Count + x)).ToArray()); del();

@@ -4,18 +4,17 @@ using System;
 using System.Runtime.InteropServices;
 #pragma warning disable VSTHRD010
 
+// 0261 281 - 28888
+
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
-//todo: check zrange / import couriosity
+//todo: mesh flat angel
 //todo: ranges as/in buffer 
 //todo: refresh after load
 //todo: camera dpi
-//todo: intersection dup points + div 0 on boolop
-//todo: mesh flat angel
 //todo: F1
 //todo: multisel undo 
 //todo: tool rot vert um obj
-//todo: system.io block for scripts 
 //todo: VS for 2D
 //todo: texture names, io bin...
 //todo: collision

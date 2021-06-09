@@ -130,9 +130,15 @@ namespace Apex
         var c1 = new BUFFERCAMERA { fov = 50, near = 1, far = 10000, minz = -1 };
         defcam.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(BUFFERCAMERA));
         view.Camera = defcam; scene.Camera = defcam;
-        var c2 = new BUFFERCAMERA { fov = 100, near = 1 };
-        view.Command(Cmd.Center, &c2);
-        //todo: check zrange 
+        var c2 = new BUFFERCAMERA { fov = 100, near = 1 }; view.Command(Cmd.Center, &c2); 
+        if(c2.near < c1.near || c2.far > c1.far) 
+        {
+          var box = GetBox(scene.Nodes());
+          var m = Translation(-box.mid.x, -box.mid.y, -box.min.z) * Scaling(500 / box.size.Length);
+          foreach (var p in scene.Nodes()) p.Transform *= m;
+          box = GetBox(scene.Nodes());
+          c2 = new BUFFERCAMERA { fov = 100, near = 1 }; view.Command(Cmd.Center, &c2);
+        }
       }
       else
       {

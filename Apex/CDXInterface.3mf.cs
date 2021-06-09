@@ -56,10 +56,18 @@ namespace Apex
             var it = new XElement(ns + "component"); it.SetAttributeValue("objectid", id); components.Add(it);
           }
           tag.SetAttributeValue("type", "model");
-          tag.SetAttributeValue("pid", bmid); var im = basematerials.Elements().Count(); tag.SetAttributeValue("pindex", im++);
-          var bs = new XElement(ns + "base"); basematerials.Add(bs); bs.SetAttributeValue("name", "Material" + im);
-          var color = mgroup.Color; //group.Color 
-          bs.SetAttributeValue("displaycolor", $"#{(color << 8) | (color >> 24):X8}");
+          tag.SetAttributeValue("pid", bmid);
+          var color = mgroup.Color; var dcolor = $"#{(color << 8) | (color >> 24):X8}";
+          var mat = basematerials.Elements().Select((p, i) => (p, i)).FirstOrDefault(p => (string)p.p.Attribute("displaycolor") == dcolor);
+          if (mat.p == null)
+          {
+            mat.i = basematerials.Elements().Count();
+            basematerials.Add(mat.p = new XElement(ns + "base"));
+            mat.p.SetAttributeValue("name", "Material" + (mat.i + 1));
+            mat.p.SetAttributeValue("displaycolor", dcolor);
+          }
+          tag.SetAttributeValue("pindex", mat.i);
+
           var mesh = new XElement(ns + "mesh"); tag.Add(mesh);
           var vertices = new XElement(ns + "vertices"); mesh.Add(vertices);
           var triangles = new XElement(ns + "triangles"); mesh.Add(triangles);
@@ -194,7 +202,7 @@ namespace Apex
         var model = doc.Root; var ns = model.Name.Namespace;
         //var apex = model.GetPrefixOfNamespace(ax); if (apex == null) ax = string.Empty;
         var scene = Factory.CreateScene();
-        var pt = model.Attribute(ax + "pt") ?? model.Attribute(ax + "dragpt") ; 
+        var pt = model.Attribute(ax + "pt") ?? model.Attribute(ax + "dragpt");
         dragpt = pt != null ? (float3)pt.Value : float.NaN;
         if ((pt = model.Attribute(ax + "ct")) != null)
         {
