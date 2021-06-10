@@ -181,7 +181,7 @@ namespace Apex
         }
         public override void SetValue(object component, object value)
         {
-          if (value is Func<object, object> x) if ((value = x(component)) == null) return;
+          if (value is Func<PropertyDescriptor, object, object> f) if ((value = f(this, component)) == null) return;
           var node = (NodeBase)component; var name = Name; var up = node.view.undopos();
           var old = node.GetProp(name); if (!node.SetProp(name, value)) return;
           if (node.view.undopos() > up) return;
@@ -222,87 +222,6 @@ namespace Apex
     {
       view.AddUndo(p);
     }
-#if(false)
-    object annotations;
-    internal void AddAnnotation(object p)
-    {
-      if (annotations == null)
-      {
-        annotations = p is object[]? new object[] { p } : p;
-      }
-      else
-      {
-        object[] a = annotations as object[];
-        if (a == null)
-        {
-          annotations = new object[] { annotations, p };
-        }
-        else
-        {
-          int i = 0;
-          while (i < a.Length && a[i] != null) i++;
-          if (i == a.Length)
-          {
-            Array.Resize(ref a, i * 2);
-            annotations = a;
-          }
-          a[i] = p;
-        }
-      }
-    }
-    internal object Annotation(Type t)
-    {
-      if (annotations == null) return null;
-      var a = annotations as object[];
-      if (a == null)
-      {
-        if (t.IsInstanceOfType(annotations)) return annotations;
-        return null;
-      }
-      for (int i = 0; i < a.Length; i++)
-      {
-        var obj = a[i];
-        if (obj == null) break;
-        if (t.IsInstanceOfType(obj)) return obj;
-      }
-      return null;
-    }
-    internal T Annotation<T>() where T : class => Annotation(typeof(T)) as T;
-    internal void SetAnnotation<T>(T p)
-    {
-      RemoveAnnotations(typeof(T)); if (p != null) AddAnnotation(p);
-    }
-    internal void RemoveAnnotations(Type type)
-    {
-      if (annotations != null)
-      {
-        var a = annotations as object[];
-        if (a == null)
-        {
-          if (type.IsInstanceOfType(annotations)) annotations = null;
-        }
-        else
-        {
-          int i = 0, j = 0;
-          while (i < a.Length)
-          {
-            object obj = a[i];
-            if (obj == null) break;
-            if (!type.IsInstanceOfType(obj)) a[j++] = obj;
-            i++;
-          }
-          if (j == 0)
-          {
-            annotations = null;
-          }
-          else
-          {
-            while (j < i) a[j++] = null;
-          }
-        }
-      }
-    }
-#endif
     internal string getcode()
     {
       var bs = node.GetBuffer(CDX.BUFFER.SCRIPT);
@@ -358,21 +277,41 @@ namespace Apex
       {
         if (e.Category("Material"))
         {
-          //Range* rr; var nr = node.GetBufferPtr(BUFFER.RANGES, (void**)&rr) / sizeof(Range);
-          //if (nr != 0) { e.Exchange("Ranges", ref nr); }
-
-          var c = System.Drawing.Color.FromArgb(unchecked((int)node.Color));
-          e.DisplayName("Color"); if (e.Exchange(".c", ref c)) node.Color = (uint)c.ToArgb();
-          var t = node.GetBuffer(BUFFER.TEXTURE);
-          e.TypeConverter(typeof(TexturConverter));
-          e.DisplayName("Texture"); if (e.Exchange(".t", ref t))
+          Range* rr; var nr = node.GetBufferPtr(BUFFER.RANGES, (void**)&rr) / sizeof(Range);
+          if (nr != 0)
           {
-            if (node.HasBuffer(BUFFER.TEXTURE) != (t != null)) Invalidate(Inval.PropertySet);
-            node.SetBuffer(BUFFER.TEXTURE, t);
+            for (int i = 0; i < nr; i++)
+            {
+              var cc = System.Drawing.Color.FromArgb(unchecked((int)rr[i].Color));
+              e.DisplayName("Color" + (i + 1)); if (e.Exchange(".c" + i, ref cc))
+              {
+                var a = node.GetArray<Range>(BUFFER.RANGES); a[i].Color = (uint)cc.ToArgb();
+                node.SetArray(BUFFER.RANGES, a);
+              }
+              var t = node.GetBuffer(BUFFER.TEXTURE + i);
+              e.TypeConverter(typeof(TexturConverter));
+              e.DisplayName("Texture" + (i + 1)); if (e.Exchange(".t" + i, ref t))
+              {
+                if (node.HasBuffer(BUFFER.TEXTURE + i) != (t != null)) Invalidate(Inval.PropertySet);
+                node.SetBuffer(BUFFER.TEXTURE + i, t);
+              }
+            }
+          }
+          else
+          {
+            var c = System.Drawing.Color.FromArgb(unchecked((int)node.Color));
+            e.DisplayName("Color"); if (e.Exchange(".c", ref c)) node.Color = (uint)c.ToArgb();
+            var t = node.GetBuffer(BUFFER.TEXTURE);
+            e.TypeConverter(typeof(TexturConverter));
+            e.DisplayName("Texture"); if (e.Exchange(".t", ref t))
+            {
+              if (node.HasBuffer(BUFFER.TEXTURE) != (t != null)) Invalidate(Inval.PropertySet);
+              node.SetBuffer(BUFFER.TEXTURE, t);
+            }
           }
         }
       }
-      if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera")) excam(e, node); 
+      if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera")) excam(e, node);
       if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
       {
         BUFFERLIGHT* t; node.GetBufferPtr(BUFFER.LIGHT, (void**)&t); var ld = *t;

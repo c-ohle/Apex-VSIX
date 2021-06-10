@@ -12,7 +12,7 @@ using System.Security;
 namespace Apex
 {
   public unsafe static class CSG
-  { 
+  {
     public static readonly IFactory Factory = (IFactory)COM.CreateInstance(
       IntPtr.Size == 8 ? "csg64.dll" : "csg32.dll", typeof(CFactory).GUID, typeof(IFactory).GUID);
     //public static readonly IFactory Factory = (IFactory)new CFactory(); //alternative from registry
@@ -443,29 +443,30 @@ namespace Apex
       tess.AddVertex(new Rational.Vector2(x, y));
     }
 
-    internal static CDX.float3[] GetVertices(this CSG.IMesh m)
+    public static CDX.float3[] GetVertices(this CSG.IMesh m)
     {
       var n = m.VertexCount; var a = new CDX.float3[n];
       fixed (void* p = a) m.CopyBuffer(0, 0, new CSG.Variant((float*)p, 3, n)); return a;
     }
-    internal static ushort[] GetIndices(this CSG.IMesh m)
+    public static ushort[] GetIndices(this CSG.IMesh m)
     {
       var n = m.IndexCount; var a = new ushort[n];
       fixed (void* p = a) m.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, n)); return a;
     }
-    internal static CDX.float4[] GetPlanes(this CSG.IMesh m)
+    public static CDX.float4[] GetPlanes(this CSG.IMesh m)
     {
       var n = m.PlaneCount; var a = new CDX.float4[n];
       fixed (void* p = a) m.CopyBuffer(2, 0, new CSG.Variant((float*)p, 4, n)); return a;
     }
-    internal static CDX.float3 GetVertex(this IMesh mesh, int i)
+    public static CDX.float3 GetVertex(this IMesh mesh, int i)
     {
       CDX.float3 p; mesh.GetVertex(i, new Variant((float*)&p, 3)); return p;
     }
-    internal static CDX.float4 GetPlane(this IMesh mesh, int i)
+    public static CDX.float4 GetPlane(this IMesh mesh, int i)
     {
       CDX.float4 p; mesh.GetPlane(i, new Variant((float*)&p, 4)); return p;
     }
+    public static CDX.float3 GetVertexF3(this IMesh mesh, int i) => mesh.GetVertex(i);//script
 
     //public static PointF GetVertexF2(this ITesselator tess, int i) { PointF p; tess.GetVertex(i, new Variant((float*)&p, 2)); return p; }
     //public static (decimal x, decimal y) GetVertexD2(this ITesselator tess, int i) { (decimal x, decimal y) p = default; tess.GetVertex(i, new Variant(&p.x, 2)); return p; }
@@ -504,7 +505,7 @@ namespace Apex
     }
     public static void ConvexHull(this ITesselator tess, IMesh mesh, CDX.float3[] pp)
     {
-      mesh.Update(pp.Length, 0); 
+      mesh.Update(pp.Length, 0);
       for (int i = 0; i < pp.Length; i++) { var p = pp[i]; mesh.SetVertex(i, new Variant(&p.x, 3)); }
       tess.ConvexHull(mesh);
     }
@@ -524,7 +525,7 @@ namespace Apex
   {
     public static object CreateInstance(string path, in Guid clsid, in Guid iid)
     {
-      path = Path.Combine(Path.GetDirectoryName(typeof(CDXView).Assembly.Location),path);
+      path = Path.Combine(Path.GetDirectoryName(typeof(CDXView).Assembly.Location), path);
       var t1 = LoadLibrary(path);
       if (t1 == IntPtr.Zero) throw new FileNotFoundException(path);
       var t2 = GetProcAddress(t1, "DllGetClassObject");

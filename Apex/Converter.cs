@@ -130,13 +130,11 @@ namespace Apex
       return int.Parse(s);
     }
   }
+
   unsafe class TexturConverter : TypeConverter
   {
-    int hash; StandardValuesCollection svc;
-    public override bool IsValid(ITypeDescriptorContext context, object value)
-    {
-      return base.IsValid(context, value);
-    }
+    //int hash; StandardValuesCollection svc; 
+    WeakRef<StandardValuesCollection> wsrv;
     public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => true;
     public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => true;
     public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
@@ -148,45 +146,36 @@ namespace Apex
     }
     public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
     {
-      var name = (string)value;
+      var name = (string)value; if (string.IsNullOrEmpty(name)) return null;
+
       foreach (var p in GetStandardValues(context))
         if ((string)ConvertTo(context, culture, p, null) == name)
           return p;
 
-      var node = (Node)context.Instance;
-      var tex = node.node.GetBuffer(BUFFER.TEXTURE);
+      var tex = context.PropertyDescriptor.GetValue(context.Instance) as IBuffer;
+      if (tex != null) tex.Name = name;
 
-      //if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(
-      //  node.view.pane, "Rename the texture?", "Question",
-      //  Microsoft.VisualStudio.Shell.Interop.OLEMSGICON.OLEMSGICON_QUERY,
-      //  Microsoft.VisualStudio.Shell.Interop.OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-      //  Microsoft.VisualStudio.Shell.Interop.OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST)
-      //  != (int)Microsoft.VisualStudio.Shell.Interop.OLEMSGBUTTON.OLEMSGBUTTON_OK)
-      //  return tex;
-
-      //if (name.Length == 0) return tex;
-      //if (System.Windows.Forms.MessageBox.Show("Rename?", "Texture",
-      //  System.Windows.Forms.MessageBoxButtons.OKCancel) != System.Windows.Forms.DialogResult.OK)
-      //  return tex;
-
-      tex.Name = name;
       return tex;
     }
     public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;
     public override bool GetStandardValuesExclusive(ITypeDescriptorContext context) => false;
     public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
     {
+      var srv = wsrv.Value; if (srv != null) return srv;
       var node = ((Node)context.Instance).node;
-      var hash = (node.GetBuffer(BUFFER.TEXTURE)?.GetHashCode()).GetHashCode();
-      if (this.hash != hash) { this.hash = hash; svc = null; }
-      if (svc != null) return svc;
+      //var hash = (node.GetBuffer(BUFFER.TEXTURE)?.GetHashCode()).GetHashCode();
+      //if (this.hash != hash) { this.hash = hash; svc = null; }
+      //if (svc != null) return svc;
       var list = new List<object> { null };
-      foreach (var t in node.Scene.Descendants().Select(p => p.GetBuffer(BUFFER.TEXTURE)).OfType<object>().Distinct()) list.Add(t);
-      list.Add((Func<object, object>)Import);
-      if (node.GetBuffer(BUFFER.TEXTURE) != null) list.Add((Func<object, object>)Export);
-      return svc = new StandardValuesCollection(list);
+      foreach (var t in node.Scene.Descendants().
+        SelectMany(p => Enumerable.Range(0, 8).Select(i => p.GetBuffer(BUFFER.TEXTURE + i))).
+        OfType<IBuffer>().Distinct().Where(p => !string.IsNullOrEmpty(p.Name))) list.Add(t);
+      list.Add((Func<PropertyDescriptor, object, object>)Import);
+      var tv = context.PropertyDescriptor.GetValue(context.Instance);
+      if (tv != null) list.Add((Func<PropertyDescriptor, object, object>)Export);
+      return wsrv.Value = srv = new StandardValuesCollection(list);
     }
-    object Import(object context)
+    object Import(PropertyDescriptor pd, object inst)
     {
       var dlg = new System.Windows.Forms.OpenFileDialog() { Filter = "Image files|*.png;*.jpg|All files|*.*" }; //;*.gif
       if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return null;
@@ -217,11 +206,11 @@ namespace Apex
       }
       IBuffer tex; fixed (byte* p = a) tex = Factory.GetBuffer(BUFFER.TEXTURE, p, a.Length);
       tex.Name = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName);
-      svc = null; return tex;
+      wsrv.Value = null; return tex;
     }
-    object Export(object context)
+    object Export(PropertyDescriptor pd, object inst)
     {
-      var tex = ((Node)context).node.GetBuffer(BUFFER.TEXTURE);
+      var tex = pd.GetValue(inst) as IBuffer; if (tex == null) return null;
       var dlg = new System.Windows.Forms.SaveFileDialog() { FileName = tex.Name, DefaultExt = "png", Filter = "PNG file|*.png|JPEG file|*.jpg" };
       if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return null;
       byte* pp; var np = tex.GetBufferPtr((void**)&pp);

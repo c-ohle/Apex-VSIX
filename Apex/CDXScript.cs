@@ -657,7 +657,7 @@ namespace Apex
     internal static Type[] GetExtensions()
     {
       if (extensions == null)
-        extensions = new Type[] { typeof(CSG), typeof(CDX), typeof(Enumerable), typeof(ParallelEnumerable) };
+        extensions = new Type[] { typeof(CSG), typeof(CDX), typeof(Enumerable) };//, typeof(ParallelEnumerable) };
       //extensions = assemblys.SelectMany(p => p.GetExportedTypes()).Where(p => p.GetCustomAttribute(typeof(System.Runtime.CompilerServices.ExtensionAttribute)) != null).ToArray();
       return extensions;
     }
