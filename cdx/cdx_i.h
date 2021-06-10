@@ -946,11 +946,12 @@ enum CDX_BUFFER
         CDX_BUFFER_POINTBUFFER	= 0,
         CDX_BUFFER_INDEXBUFFER	= 1,
         CDX_BUFFER_TEXCOORDS	= 2,
-        CDX_BUFFER_TEXTURE	= 3,
+        CDX_BUFFER_RANGES	= 4,
         CDX_BUFFER_CAMERA	= 7,
         CDX_BUFFER_LIGHT	= 8,
-        CDX_BUFFER_SCRIPT	= 20,
-        CDX_BUFFER_SCRIPTDATA	= 21
+        CDX_BUFFER_SCRIPT	= 10,
+        CDX_BUFFER_SCRIPTDATA	= 11,
+        CDX_BUFFER_TEXTURE	= 16
     } 	CDX_BUFFER;
 
 
@@ -1030,12 +1031,6 @@ EXTERN_C const IID IID_ICDXNode;
         virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_Texture( 
             /* [in] */ ICDXBuffer *p) = 0;
         
-        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Range( 
-            /* [retval][out] */ POINT *p) = 0;
-        
-        virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_Range( 
-            /* [in] */ POINT p) = 0;
-        
         virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Tag( 
             /* [retval][out] */ IUnknown **p) = 0;
         
@@ -1059,6 +1054,7 @@ EXTERN_C const IID IID_ICDXNode;
             /* [retval][out] */ ICDXBuffer **p) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE SetBuffer( 
+            /* [in] */ CDX_BUFFER id,
             /* [in] */ ICDXBuffer *p) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE GetBufferPtr( 
@@ -1202,14 +1198,6 @@ EXTERN_C const IID IID_ICDXNode;
             ICDXNode * This,
             /* [in] */ ICDXBuffer *p);
         
-        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Range )( 
-            ICDXNode * This,
-            /* [retval][out] */ POINT *p);
-        
-        /* [propput] */ HRESULT ( STDMETHODCALLTYPE *put_Range )( 
-            ICDXNode * This,
-            /* [in] */ POINT p);
-        
         /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Tag )( 
             ICDXNode * This,
             /* [retval][out] */ IUnknown **p);
@@ -1240,6 +1228,7 @@ EXTERN_C const IID IID_ICDXNode;
         
         HRESULT ( STDMETHODCALLTYPE *SetBuffer )( 
             ICDXNode * This,
+            /* [in] */ CDX_BUFFER id,
             /* [in] */ ICDXBuffer *p);
         
         HRESULT ( STDMETHODCALLTYPE *GetBufferPtr )( 
@@ -1365,12 +1354,6 @@ EXTERN_C const IID IID_ICDXNode;
 #define ICDXNode_put_Texture(This,p)	\
     ( (This)->lpVtbl -> put_Texture(This,p) ) 
 
-#define ICDXNode_get_Range(This,p)	\
-    ( (This)->lpVtbl -> get_Range(This,p) ) 
-
-#define ICDXNode_put_Range(This,p)	\
-    ( (This)->lpVtbl -> put_Range(This,p) ) 
-
 #define ICDXNode_get_Tag(This,p)	\
     ( (This)->lpVtbl -> get_Tag(This,p) ) 
 
@@ -1389,8 +1372,8 @@ EXTERN_C const IID IID_ICDXNode;
 #define ICDXNode_GetBuffer(This,id,p)	\
     ( (This)->lpVtbl -> GetBuffer(This,id,p) ) 
 
-#define ICDXNode_SetBuffer(This,p)	\
-    ( (This)->lpVtbl -> SetBuffer(This,p) ) 
+#define ICDXNode_SetBuffer(This,id,p)	\
+    ( (This)->lpVtbl -> SetBuffer(This,id,p) ) 
 
 #define ICDXNode_GetBufferPtr(This,id,p,n)	\
     ( (This)->lpVtbl -> GetBufferPtr(This,id,p,n) ) 
@@ -1578,11 +1561,7 @@ EXTERN_C const IID IID_ICDXBuffer;
         virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_Tag( 
             /* [in] */ IUnknown *p) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetBytes( 
-            /* [optional][out][in] */ BYTE *p,
-            /* [retval][out] */ UINT *size) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetPtr( 
+        virtual HRESULT STDMETHODCALLTYPE GetBufferPtr( 
             /* [out][in] */ BYTE **p,
             /* [retval][out] */ UINT *size) = 0;
         
@@ -1631,12 +1610,7 @@ EXTERN_C const IID IID_ICDXBuffer;
             ICDXBuffer * This,
             /* [in] */ IUnknown *p);
         
-        HRESULT ( STDMETHODCALLTYPE *GetBytes )( 
-            ICDXBuffer * This,
-            /* [optional][out][in] */ BYTE *p,
-            /* [retval][out] */ UINT *size);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetPtr )( 
+        HRESULT ( STDMETHODCALLTYPE *GetBufferPtr )( 
             ICDXBuffer * This,
             /* [out][in] */ BYTE **p,
             /* [retval][out] */ UINT *size);
@@ -1684,11 +1658,8 @@ EXTERN_C const IID IID_ICDXBuffer;
 #define ICDXBuffer_put_Tag(This,p)	\
     ( (This)->lpVtbl -> put_Tag(This,p) ) 
 
-#define ICDXBuffer_GetBytes(This,p,size)	\
-    ( (This)->lpVtbl -> GetBytes(This,p,size) ) 
-
-#define ICDXBuffer_GetPtr(This,p,size)	\
-    ( (This)->lpVtbl -> GetPtr(This,p,size) ) 
+#define ICDXBuffer_GetBufferPtr(This,p,size)	\
+    ( (This)->lpVtbl -> GetBufferPtr(This,p,size) ) 
 
 #define ICDXBuffer_Update(This,p,n)	\
     ( (This)->lpVtbl -> Update(This,p,n) ) 

@@ -95,12 +95,7 @@ struct __declspec(novtable) CBuffer : ICDXBuffer
   {
     return E_NOTIMPL;
   }
-  HRESULT __stdcall GetBytes(BYTE* p, UINT* size)
-  {
-    if (p) memcpy(p, data.p, data.n);
-    *size = data.n; return 0;
-  }
-  HRESULT __stdcall GetPtr(BYTE** p, UINT* size)
+  HRESULT __stdcall GetBufferPtr(BYTE** p, UINT* size)
   {
     *p = data.p; *size = data.n; return 0;
   }
@@ -137,34 +132,17 @@ struct __declspec(novtable) CTexture : CCacheBuffer
 {
   CComBSTR name; UINT fl = 0; //1: error 2: A8
   CComPtr<ID3D11ShaderResourceView> srv;
-  void init(struct CView* view);
+  void init(struct CView* vextuteiew);
   HRESULT __stdcall get_Name(BSTR* p) { return name.CopyTo(p); }
   HRESULT __stdcall put_Name(BSTR p) { name = p; return 0; }
   HRESULT __stdcall Update(const BYTE* p, UINT n);
 };
-/*
-template <class T>
-struct CComClass2 : public T
+
+struct Range
 {
-  UINT refcount = 0;
-  virtual HRESULT __stdcall QueryInterface(REFIID riid, void** p)
-  {
-    if (*p = T::GetInterface(riid)) { refcount++; return 0; }
-    return E_NOINTERFACE;
-  }
-  ULONG __stdcall AddRef(void)
-  {
-    return InterlockedIncrement(&refcount);
-  }
-  ULONG __stdcall Release(void)
-  {
-    auto count = InterlockedDecrement(&refcount);
-    if (!count)
-      delete this;
-    return count;
-  }
+  UINT Start, Count;
+  UINT Color;
 };
-*/
 
 #define NODE_FL_SELECT    0x01
 #define NODE_FL_INSEL     0x02
@@ -185,8 +163,7 @@ struct __declspec(novtable) CNode : ICDXNode
     for (UINT i = 0; i < buffer.n; i++) buffer.p[i]->Release();
     if (lastchild.p) { lastchild.p->nextnode.Release(); lastchild.Release(); }
   }
-  CComBSTR name;
-  UINT flags = 0, bmask = 0, subi = 0, subn = 0, color = 0xff808080;
+  CComBSTR name; UINT flags = 0, bmask = 0, color = 0xff808080;
   CComPtr<CNode> lastchild, nextnode; IUnknown* parent = 0;
   XMFLOAT4X3 matrix;
   sarray<CBuffer*> buffer;
@@ -275,18 +252,6 @@ struct __declspec(novtable) CNode : ICDXNode
   }
   HRESULT __stdcall get_Texture(ICDXBuffer** p);
   HRESULT __stdcall put_Texture(ICDXBuffer* p);
-  HRESULT __stdcall get_Range(POINT* p)
-  {
-    p->x = subi >> 1;
-    p->y = subn >> 1;
-    return 0;
-  }
-  HRESULT __stdcall put_Range(POINT p)
-  {
-    subi = p.x << 1;
-    subn = p.y << 1;
-    return 0;
-  }
   HRESULT __stdcall GetTransform(ICDXNode* root, XMFLOAT4X3* p)
   {
     XMStoreFloat4x3(p, gettrans(root));
@@ -305,16 +270,15 @@ struct __declspec(novtable) CNode : ICDXNode
   }
   HRESULT __stdcall HasBuffer(CDX_BUFFER id, BOOL* p)
   {
-    *p = getbuffer(id) != 0; return 0;
+    *p = (bmask & (1 << id)) != 0; return 0;
+    //*p = getbuffer(id) != 0; return 0;
   }
   HRESULT __stdcall GetBuffer(CDX_BUFFER id, ICDXBuffer** p);
-  HRESULT __stdcall SetBuffer(ICDXBuffer* p);
+  HRESULT __stdcall SetBuffer(CDX_BUFFER id, ICDXBuffer* p);
   HRESULT __stdcall GetBufferPtr(CDX_BUFFER id, const BYTE** p, UINT* n);
   HRESULT __stdcall SetBufferPtr(CDX_BUFFER id, const BYTE* p, UINT n);
   HRESULT __stdcall GetBox(XMFLOAT3 box[2], const XMFLOAT4X3* pm);
-//HRESULT __stdcall CopyCoords(ICDXBuffer* bpp, ICDXBuffer* bii, float eps, ICDXBuffer** btt);
   HRESULT __stdcall get_Child(ICDXNode** p);
   HRESULT __stdcall get_Next(ICDXNode** p);
   HRESULT __stdcall NextSibling(ICDXNode* r, ICDXNode** p);
-
 };

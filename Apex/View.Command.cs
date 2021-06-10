@@ -177,9 +177,10 @@ namespace Apex
     static CSG.IMesh MeshFromNode(INode node)
     {
       var mesh = CSG.Factory.CreateMesh();
-      void* s; var n = node.GetBufferPtr(BUFFER.CSGMESH, &s);
-      if (s != null) { var str = COM.SHCreateMemStream(s, n); mesh.ReadFromStream(str); Marshal.ReleaseComObject(str); }
-      else node.CopyTo(mesh); return mesh;
+      //void* s; var n = node.GetBufferPtr(BUFFER.CSGMESH, &s);
+      //if (s != null) { var str = COM.SHCreateMemStream(s, n); mesh.ReadFromStream(str); Marshal.ReleaseComObject(str); }
+      //else
+      node.CopyTo(mesh); return mesh;
     }
     static byte[] MeshToBytes(CSG.IMesh mesh)
     {
@@ -219,6 +220,7 @@ namespace Apex
       if (scene.SelectionCount != 2) return 0;
       var n1 = scene.GetSelection(0); if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
       var n2 = scene.GetSelection(1); if (!n2.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      if (n1.HasBuffer(BUFFER.RANGES)) return 0;
       if (test != null) return 1;
       Cursor = Cursors.WaitCursor;
       var r1 = MeshFromNode(n1);
@@ -244,7 +246,8 @@ namespace Apex
     int OnPlaneCut(object test)
     {
       if (scene.SelectionCount != 2) return 0;
-      var n1 = scene.GetSelection(0); if (!n1.HasBuffer(CDX.BUFFER.POINTBUFFER)) return 0;
+      var n1 = scene.GetSelection(0); if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
+      if (n1.HasBuffer(BUFFER.RANGES)) return 0;
       if (test != null) return 1;
       Cursor = Cursors.WaitCursor;
       var n2 = scene.GetSelection(1);

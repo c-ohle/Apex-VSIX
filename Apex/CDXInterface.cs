@@ -38,17 +38,24 @@ namespace Apex
       void CopyCoords(float3* app, ushort* aii, int ani, float2* att, float3* bpp, ushort* bii, int bni, float2* btt, float eps = 0);
     }
 
+    internal struct Range
+    { 
+      internal int Start, Count;
+      internal uint Color;
+      //internal fixed int dummy[32-3];
+    }
+
     public enum BUFFER
     {
       POINTBUFFER = 0,
       INDEXBUFFER = 1,
       TEXCOORDS = 2,
-      TEXTURE = 3,
+      RANGES = 4,
       CAMERA = 7,
       LIGHT = 8,
-      SCRIPT = 20,
-      SCRIPTDATA = 21,
-      CSGMESH = 22,
+      SCRIPT = 10,
+      SCRIPTDATA = 11,
+      TEXTURE = 16,
     }
 
     [ComImport, Guid("A21FB8D8-33B3-4F8E-8740-8EB4B1FD4153"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]
@@ -57,8 +64,7 @@ namespace Apex
       BUFFER Id { get; }
       string Name { get; set; }
       object Tag { [return: MarshalAs(UnmanagedType.IUnknown)] get; [param: MarshalAs(UnmanagedType.IUnknown)] set; }
-      int GetBytes(void* data);
-      int GetPtr(void** p);
+      int GetBufferPtr(void** p);
       void Update(byte* p, int n);
     }
 
@@ -189,17 +195,15 @@ namespace Apex
       float4x3 Transform { get; set; }
       uint Color { get; set; }
       IBuffer Texture { get; set; }
-      CharacterRange Range { get; set; }
       object Tag { [return: MarshalAs(UnmanagedType.IUnknown)] get; [param: MarshalAs(UnmanagedType.IUnknown)] set; }
       INode NextSibling(INode p = null);
       float4x3 GetTransform(INode p = null);
       bool HasBuffer(BUFFER id);
       IBuffer GetBuffer(BUFFER id);
-      void SetBuffer(IBuffer p);
+      void SetBuffer(BUFFER id, IBuffer p);
       int GetBufferPtr(BUFFER id, void** p);
       void SetBufferPtr(BUFFER id, void* p, int n);
       void GetBox(ref float3box box, float4x3* pm);
-      //IBuffer CopyCoords(IBuffer bp, IBuffer bi, float eps = 1e-6f);
       float4x3 GetTypeTransform(int typ);
       void SetTypeTransform(int typ, in float4x3 m);
     }
@@ -270,10 +274,10 @@ namespace Apex
       }
       return box;
     }
-    public static byte[] ToBytes(this IBuffer p)
+    public static byte[] ToBytes(this IBuffer b)
     {
-      var a = new byte[p.GetBytes(null)];
-      fixed (byte* t = a) p.GetBytes(t); return a;
+      void* p; int n = b.GetBufferPtr(&p);
+      var a = new byte[n]; fixed (void* d = a) Native.memcpy(d, p, (void*)n); return a;
     }
     public static byte[] GetBytes(this INode p, BUFFER id) => p.GetArray<byte>(id);
     public static void SetBytes(this INode node, BUFFER id, byte[] data) => node.SetArray(id, data);

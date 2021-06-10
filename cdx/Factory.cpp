@@ -456,7 +456,7 @@ void CView::Pick(const short* pt)
       SetMatrix(MM_WORLD, p->gettrans(scene.p));
       SetColor(VV_DIFFUSE, i << 16); SetBuffers();
       SetVertexBuffer(p->vb.p->p.p); SetIndexBuffer(p->ib.p->p.p);
-      context->DrawIndexed(p->subn ? p->subn : p->ib.p->ni, p->subi, 0);
+      context->DrawIndexed(p->ib.p->ni, 0, 0);
       //if (p->flags & NODE_FL_SELECT && flags & (CDX_RENDER_COORDINATES | CDX_RENDER_BOUNDINGBOX))
       //{
       //  if (p == camera.p) continue;

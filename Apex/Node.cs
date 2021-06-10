@@ -354,22 +354,25 @@ namespace Apex
         var s = node.Name; e.DisplayName("Name"); if (e.Exchange(".n", ref s)) { node.Name = s != string.Empty ? s : null; Invalidate(Inval.Tree); }
         var b = node.IsStatic; e.DisplayName("Static"); if (e.Exchange(".f", ref b)) node.IsStatic = b;
       }
-      if (node.HasBuffer(BUFFER.POINTBUFFER) && e.Category("Material"))
+      if (node.HasBuffer(BUFFER.POINTBUFFER))
       {
-        var c = System.Drawing.Color.FromArgb(unchecked((int)node.Color));
-        e.DisplayName("Color"); if (e.Exchange(".c", ref c)) node.Color = (uint)c.ToArgb();
-        var t = node.GetBuffer(BUFFER.TEXTURE);
-        e.TypeConverter(typeof(TexturConverter));
-        e.DisplayName("Texture"); if (e.Exchange(".t", ref t))
+        if (e.Category("Material"))
         {
-          if (t != null) node.SetBuffer(t);
-          else node.RemoveBuffer(BUFFER.TEXTURE); Invalidate(Inval.PropertySet);
+          //Range* rr; var nr = node.GetBufferPtr(BUFFER.RANGES, (void**)&rr) / sizeof(Range);
+          //if (nr != 0) { e.Exchange("Ranges", ref nr); }
+
+          var c = System.Drawing.Color.FromArgb(unchecked((int)node.Color));
+          e.DisplayName("Color"); if (e.Exchange(".c", ref c)) node.Color = (uint)c.ToArgb();
+          var t = node.GetBuffer(BUFFER.TEXTURE);
+          e.TypeConverter(typeof(TexturConverter));
+          e.DisplayName("Texture"); if (e.Exchange(".t", ref t))
+          {
+            if (node.HasBuffer(BUFFER.TEXTURE) != (t != null)) Invalidate(Inval.PropertySet);
+            node.SetBuffer(BUFFER.TEXTURE, t);
+          }
         }
       }
-      if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera"))
-      {
-        excam(e, node);
-      }
+      if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera")) excam(e, node); 
       if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
       {
         BUFFERLIGHT* t; node.GetBufferPtr(BUFFER.LIGHT, (void**)&t); var ld = *t;
@@ -421,8 +424,10 @@ namespace Apex
     }
     class ComponentEditor : System.ComponentModel.ComponentEditor
     {
-      public override bool EditComponent(ITypeDescriptorContext context, object component) { 
-        ((Node)component).view.OnCommand(2305, null); return false; }
+      public override bool EditComponent(ITypeDescriptorContext context, object component)
+      {
+        ((Node)component).view.OnCommand(2305, null); return false;
+      }
     }
     PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
     {

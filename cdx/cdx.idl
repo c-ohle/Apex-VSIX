@@ -146,11 +146,12 @@ typedef enum CDX_BUFFER
   CDX_BUFFER_POINTBUFFER = 0,
   CDX_BUFFER_INDEXBUFFER = 1,
   CDX_BUFFER_TEXCOORDS = 2,
-  CDX_BUFFER_TEXTURE = 3,
+  CDX_BUFFER_RANGES = 4,
   CDX_BUFFER_CAMERA = 7,
   CDX_BUFFER_LIGHT = 8,
-  CDX_BUFFER_SCRIPT = 20,
-  CDX_BUFFER_SCRIPTDATA = 21,
+  CDX_BUFFER_SCRIPT = 10,
+  CDX_BUFFER_SCRIPTDATA = 11,
+  CDX_BUFFER_TEXTURE = 16, 
 } CDX_BUFFER;
 
 [object, uuid(2BB87169-81D3-405E-9C16-E4C22177BBAA), pointer_default(unique)]
@@ -175,15 +176,13 @@ interface ICDXNode : ICDXRoot
   [propput] HRESULT Color([in] UINT p);
   [propget] HRESULT Texture([out, retval] ICDXBuffer** p);
   [propput] HRESULT Texture([in] ICDXBuffer* p);
-  [propget] HRESULT Range([out, retval] POINT* p);
-  [propput] HRESULT Range([in] POINT p);
   [propget] HRESULT Tag([out, retval] IUnknown** p);
   [propput] HRESULT Tag([in] IUnknown* p);
   HRESULT NextSibling([in] ICDXNode* root, [out, retval] ICDXNode** p);
   HRESULT GetTransform([in] ICDXNode* root, [out, retval] XMFLOAT4X3* p);
   HRESULT HasBuffer([in] CDX_BUFFER id, [out, retval] BOOL* p);
   HRESULT GetBuffer([in] CDX_BUFFER id, [out, retval] ICDXBuffer** p);
-  HRESULT SetBuffer([in] ICDXBuffer* p);
+  HRESULT SetBuffer([in] CDX_BUFFER id, [in] ICDXBuffer* p);
   HRESULT GetBufferPtr([in] CDX_BUFFER id, [in] const BYTE** p, [out, retval] UINT* n);
   HRESULT SetBufferPtr([in] CDX_BUFFER id, [in] const BYTE* p, [in] UINT n);
   HRESULT GetBox([in, out] XMFLOAT3 box[2], [in] const XMFLOAT4X3* pm);
@@ -210,8 +209,7 @@ interface ICDXBuffer : IUnknown
   [propput] HRESULT Name([in] BSTR p);
   [propget] HRESULT Tag([out, retval] IUnknown** p);
   [propput] HRESULT Tag([in] IUnknown* p);
-  HRESULT GetBytes([in, out, optional] BYTE* p, [out, retval] UINT* size);
-  HRESULT GetPtr([in, out] BYTE** p, [out, retval] UINT* size);
+  HRESULT GetBufferPtr([in, out] BYTE** p, [out, retval] UINT* size);
   HRESULT Update([in] const BYTE* p, [in] UINT n);
 };
 

@@ -237,10 +237,10 @@ namespace Apex
       if (b.Length == 1) return b[0];
       return () => { for (int i = 0; i < b.Length; i++) b[i](); Array.Reverse(b); };
     }
-    internal static Action undo(INode n, BUFFER id, IBuffer p) => () =>
-    {
-      var t = n.GetBuffer(id); if (p != null) n.SetBuffer(p); else n.RemoveBuffer(id); p = t;
-    };
+    //internal static Action undo(INode n, BUFFER id, IBuffer p) => () =>
+    //{
+    //  var t = n.GetBuffer(id); if (p != null) n.SetBuffer(p); else n.RemoveBuffer(id); p = t;
+    //};
     //internal static Action undo(INode node, BUFFER id, byte[] b)
     //{
     //  return () => { var t = node.GetBytes(id); node.SetBytes(id, b); b = t; };

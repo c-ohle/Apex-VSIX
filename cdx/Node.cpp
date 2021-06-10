@@ -293,14 +293,14 @@ void CNode::update(CScene* scene, UINT i)
   update((XMFLOAT3*)pp->data.p, pp->data.n / sizeof(XMFLOAT3),
     (USHORT*)ii->data.p, ii->data.n >> 1, 0.2f,
     tt ? tt->data.p : 0, tt ? 2 : 0);
-  if (!subn) return;
-  for (auto sub = next(); sub; sub = sub->next())
-  {
-    if (!sub->subn) break;
-    if (sub->getbuffer(CDX_BUFFER_POINTBUFFER) != pp) break;
-    if (sub->getbuffer(CDX_BUFFER_INDEXBUFFER) != ii) break;
-    sub->vb = vb.p; sub->ib = ib.p; sub->flags |= NODE_FL_MASHOK;
-  }
+  //if (!subn) return;
+  //for (auto sub = next(); sub; sub = sub->next())
+  //{
+  //  if (!sub->subn) break;
+  //  if (sub->getbuffer(CDX_BUFFER_POINTBUFFER) != pp) break;
+  //  if (sub->getbuffer(CDX_BUFFER_INDEXBUFFER) != ii) break;
+  //  sub->vb = vb.p; sub->ib = ib.p; sub->flags |= NODE_FL_MASHOK;
+  //}
 }
 
 static XMFLOAT2 _angle(float a)
@@ -519,7 +519,7 @@ CBuffer* CNode::getbuffer(CDX_BUFFER id) const
 
 void CNode::setbuffer(CDX_BUFFER id, CBuffer* p)
 {
-  XMASSERT(!p || p->id == id);
+  //XMASSERT(!p || (p->id == id || (p->id == CDX_BUFFER_TEXTURE && id >= CDX_BUFFER_TEXTURE)));
   UINT m = 1 << id, x = __popcnt(bmask & (m - 1));
   if ((bmask & m) != 0)
   {
@@ -577,15 +577,18 @@ HRESULT CNode::GetBuffer(CDX_BUFFER id, ICDXBuffer** p)
     (*p)->AddRef();
   return 0;
 }
-HRESULT CNode::SetBuffer(ICDXBuffer* p)
+HRESULT CNode::SetBuffer(CDX_BUFFER id, ICDXBuffer* p)
 {
-  auto pb = static_cast<CBuffer*>(p);
-  setbuffer(pb->id, pb);
+  //(!p || (p->id == id || (p->id == CDX_BUFFER_TEXTURE && id >= CDX_BUFFER_TEXTURE)))
+  auto pb = static_cast<CBuffer*>(p); 
+  if (p && !(id == pb->id || (pb->id == CDX_BUFFER_TEXTURE && id >= CDX_BUFFER_TEXTURE)))
+    return E_INVALIDARG;
+  setbuffer(id, pb);
   return 0;
 }
 HRESULT CNode::GetBufferPtr(CDX_BUFFER id, const BYTE** p, UINT* n)
 {
-  auto t = getbuffer(id); if (!t) return 1; 
+  auto t = getbuffer(id); if (!t) return 1;
   *p = t->data.p; *n = t->data.n; return 0;
 }
 HRESULT CNode::SetBufferPtr(CDX_BUFFER id, const BYTE* p, UINT n)

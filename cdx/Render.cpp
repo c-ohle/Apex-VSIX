@@ -11,11 +11,10 @@ void SetMode(UINT mode);
 void SetVertexBuffer(ID3D11Buffer* p);
 extern CComPtr<ID3D11DeviceContext> context;
 
-
 void CView::setproject()
 {
   camdat = *(const cameradata*)camera.p->getbuffer(CDX_BUFFER_CAMERA)->data.p;
-  auto f = camdat.znear * camdat.fov * (0.00025f / 45) * 
+  auto f = camdat.znear * camdat.fov * (0.00025f / 45) *
     (dpiscale ? dpiscale : (dpiscale = 120.0f / GetDpiForWindow(hwnd)));
   auto vpx = viewport.Width * f;
   auto vpy = viewport.Height * f;
@@ -118,8 +117,35 @@ recurs(scene->lastchild.p, recurs);
 
 __declspec(align(16)) struct REC
 {
-  XMMATRIX wm; CNode* node; CTexture* tex; UINT itrans;
+  XMMATRIX wm; CNode* node; CTexture* tex; const CBuffer* ranges; UINT itrans;
 };
+
+static void render(CView& v, REC& r, UINT mode)
+{
+  auto& node = *r.node;
+  if (r.ranges)
+  {
+    auto rr = (const Range*)r.ranges->data.p; auto n = r.ranges->data.n / sizeof(Range);
+    for (UINT k = 0, c = 0; k < n; k++)
+    {
+      if (((rr[k].Color >> 24) != 0xff)) continue;
+      if (!c++) { v.SetMatrix(MM_WORLD, r.wm); SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); }
+      v.SetColor(VV_DIFFUSE, rr[k].Color);
+      auto tex = (CTexture*)node.getbuffer((CDX_BUFFER)((UINT)CDX_BUFFER_TEXTURE + k));
+      if (tex) SetTexture(tex->srv.p); v.SetBuffers();
+      SetMode(mode| (tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
+      context->DrawIndexed(rr[k].Count << 1, rr[k].Start << 1, 0);
+    }
+  }
+  else
+  {
+    if (((node.color >> 24) != 0xff)) return;
+    v.SetMatrix(MM_WORLD, r.wm); if (r.tex) SetTexture(r.tex->srv.p);
+    v.SetColor(VV_DIFFUSE, node.color); SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); v.SetBuffers();
+    SetMode(mode | (r.tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
+    context->DrawIndexed(node.ib.p->ni, 0, 0);
+  }
+}
 
 void CView::RenderScene()
 {
@@ -144,9 +170,24 @@ void CView::RenderScene()
       auto& rec = recs[nrecs++]; stackptr = recs + nrecs;
       rec.node = node; nflags |= node->flags;
       rec.wm = node->gettrans(scene);
-      rec.tex = static_cast<CTexture*>(node->getbuffer(CDX_BUFFER_TEXTURE));
-      if (rec.tex && !rec.tex->srv.p)
-        rec.tex->init(this);
+      rec.ranges = static_cast<CBuffer*>(node->getbuffer(CDX_BUFFER_RANGES));
+      if (rec.ranges)
+      {
+        auto rr = (const Range*)rec.ranges->data.p;
+        auto nr = rec.ranges->data.n / sizeof(Range);
+        for (UINT k = 0; k < nr; k++)
+        {
+          auto tex = (CTexture*)node->getbuffer((CDX_BUFFER)((UINT)CDX_BUFFER_TEXTURE + k));
+          if (tex && !tex->srv.p)
+            tex->init(this);
+        }
+      }
+      else
+      {
+        rec.tex = static_cast<CTexture*>(node->getbuffer(CDX_BUFFER_TEXTURE));
+        if (rec.tex && !rec.tex->srv.p)
+          rec.tex->init(this);
+      }
       if ((node->color >> 24) != 0xff) recs[transp++].itrans = nrecs - 1;
     }
   }
@@ -159,15 +200,8 @@ void CView::RenderScene()
     XMVectorSetW(XMVectorMultiply(light, XMVectorSet(0.3f, 0.3f, 0.3f, 0)), camdat.minwz) : light;
   SetVector(VV_LIGHTDIR, lightdir);
   for (UINT i = 0; i < nrecs; i++)
-  {
-    auto& r = recs[i]; auto& node = *r.node;
-    if ((node.color >> 24) != 0xff) continue;
-    SetMatrix(MM_WORLD, r.wm);
-    if (r.tex) SetTexture(r.tex->srv.p);
-    SetColor(VV_DIFFUSE, node.color); SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); SetBuffers();
-    SetMode(MO_TOPO_TRIANGLELISTADJ | MO_DEPTHSTENCIL_ZWRITE | MO_VSSHADER_LIGHT | (r.tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
-    context->DrawIndexed(node.subn ? node.subn : node.ib.p->ni, node.subn ? node.subi : 0, 0);
-  }
+    render(*this, recs[i], MO_TOPO_TRIANGLELISTADJ | MO_DEPTHSTENCIL_ZWRITE | MO_VSSHADER_LIGHT);
+ 
   if (nflags & NODE_FL_INSEL)
   {
     if (flags & CDX_RENDER_WIREFRAME)
@@ -179,7 +213,7 @@ void CView::RenderScene()
         auto& r = recs[i]; auto& node = *r.node; if (!(node.flags & NODE_FL_INSEL)) continue;
         SetMatrix(MM_WORLD, r.wm);
         SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); SetBuffers();
-        context->DrawIndexed(node.subn ? node.subn : node.ib.p->ni, node.subi, 0);
+        context->DrawIndexed(node.ib.p->ni, 0, 0);
       }
     }
     if (flags & CDX_RENDER_OUTLINES)
@@ -191,7 +225,7 @@ void CView::RenderScene()
         auto& r = recs[i]; auto& node = *r.node; if (!(node.flags & NODE_FL_INSEL)) continue;
         SetMatrix(MM_WORLD, r.wm);
         SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); SetBuffers();
-        context->DrawIndexed(node.subn ? node.subn : node.ib.p->ni, node.subi, 0);
+        context->DrawIndexed(node.ib.p->ni, 0, 0);
       }
     }
     if (flags & (CDX_RENDER_COORDINATES | CDX_RENDER_BOUNDINGBOX))
@@ -200,7 +234,6 @@ void CView::RenderScene()
       for (UINT j = 0; j < scene->selection.n; j++)
       {
         auto main = scene->selection.p[j];
-
         if (!(main->flags & NODE_FL_SELECT))
         {
           scene->selection.removeat(j--);
@@ -226,7 +259,7 @@ void CView::RenderScene()
       SetColor(VV_DIFFUSE, node.color); SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p);
       SetMatrix(MM_WORLD, r.wm); SetBuffers();
       SetMode(MO_TOPO_TRIANGLELISTADJ | MO_BLENDSTATE_ALPHA | MO_VSSHADER_LIGHT | (r.tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
-      context->DrawIndexed(node.subn ? node.subn : node.ib.p->ni, node.subi, 0);
+      context->DrawIndexed(node.ib.p->ni, 0, 0);
     }
   }
   if (flags & CDX_RENDER_SHADOWS)
@@ -250,19 +283,11 @@ void CView::RenderScene()
       if ((node.color >> 24) != 0xff) continue;
       SetMatrix(MM_WORLD, r.wm);
       SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); SetBuffers();
-      context->DrawIndexed(node.subn ? node.subn : node.ib.p->ni, node.subi, 0);
+      context->DrawIndexed(node.ib.p->ni, 0, 0);
     }
     SetColor(VV_AMBIENT, 0); SetVector(VV_LIGHTDIR, XMVectorMultiply(light, XMVectorReplicate(0.7f)));
     for (UINT i = 0; i < nrecs; i++)
-    {
-      auto& r = recs[i]; auto& node = *r.node;
-      if ((node.color >> 24) != 0xff) continue;
-      SetMatrix(MM_WORLD, r.wm);
-      if (r.tex) SetTexture(r.tex->srv.p);
-      SetColor(VV_DIFFUSE, node.color); SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); SetBuffers();
-      SetMode(MO_TOPO_TRIANGLELISTADJ | MO_BLENDSTATE_ALPHAADD | MO_VSSHADER_LIGHT | (r.tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
-      context->DrawIndexed(node.subn ? node.subn : node.ib.p->ni, node.subi, 0);
-    }
+      render(*this, recs[i], MO_TOPO_TRIANGLELISTADJ | MO_BLENDSTATE_ALPHAADD | MO_VSSHADER_LIGHT);
     if (flags & CDX_RENDER_ZPLANESHADOWS)
     {
       SetMatrix(MM_WORLD, XMMatrixTranslation(0, 0, 0));

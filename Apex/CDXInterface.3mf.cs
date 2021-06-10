@@ -43,11 +43,11 @@ namespace Apex
       {
         var obj = new XElement(ns + "object"); obj.SetAttributeValue("id", 0);
         if (!string.IsNullOrEmpty(group.Name)) obj.SetAttributeValue("name", group.Name);
-        var desc = group.Nodes().ToArray();
-        var sub = desc.Length != 0 && issubset(desc); //if (sub) { }
-        var mgroup = sub ? desc[0] : group;
-        var components = !sub && desc.Length != 0 ? new XElement(ns + "components") : null;
-        if (mgroup.HasBuffer(BUFFER.POINTBUFFER))
+        //var desc = group.Nodes().ToArray();
+        //var sub = desc.Length != 0 && issubset(desc); //if (sub) { }
+        //var mgroup = sub ? desc[0] : group;
+        var components = /*!sub && desc.Length != 0*/ group.Child != null ? new XElement(ns + "components") : null;
+        if (group.HasBuffer(BUFFER.POINTBUFFER))
         {
           var tag = obj;
           if (components != null)
@@ -57,7 +57,7 @@ namespace Apex
           }
           tag.SetAttributeValue("type", "model");
           tag.SetAttributeValue("pid", bmid);
-          var color = mgroup.Color; var dcolor = $"#{(color << 8) | (color >> 24):X8}";
+          var color = group.Color; var dcolor = $"#{(color << 8) | (color >> 24):X8}";
           var mat = basematerials.Elements().Select((p, i) => (p, i)).FirstOrDefault(p => (string)p.p.Attribute("displaycolor") == dcolor);
           if (mat.p == null)
           {
@@ -71,7 +71,7 @@ namespace Apex
           var mesh = new XElement(ns + "mesh"); tag.Add(mesh);
           var vertices = new XElement(ns + "vertices"); mesh.Add(vertices);
           var triangles = new XElement(ns + "triangles"); mesh.Add(triangles);
-          float3* vp; var np = mgroup.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&vp) / sizeof(float3);
+          float3* vp; var np = group.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&vp) / sizeof(float3);
           for (int i = 0; i < np; i++)
           {
             var vertex = new XElement(ns + "vertex"); vertices.Add(vertex);
@@ -79,10 +79,11 @@ namespace Apex
             vertex.SetAttributeValue("y", vp[i].y);
             vertex.SetAttributeValue("z", vp[i].z);
           }
-          for (int k = 0, nk = sub ? desc.Length : 1; k < nk; k++)
+          Range* pr; var nr = group.GetBufferPtr(BUFFER.RANGES, (void**)&pr) / sizeof(Range);
+          for (int k = 0, nk = nr != 0 ? nr : 1; k < nk; k++)
           {
-            var tg = sub ? desc[k] : group;
-            var texgid = 0; var ucolor = tg.Color; var itex = tg.GetBuffer(BUFFER.TEXTURE); var range = tg.Range;
+            //var tg = sub ? desc[k] : group;
+            var texgid = 0; var ucolor = nr != 0 ? pr[k].Color : group.Color; var itex = group.GetBuffer(BUFFER.TEXTURE + k);
             if (itex != null)
             {
               var tex = itex;
@@ -94,8 +95,8 @@ namespace Apex
                 var texture2d = new XElement(ms + "texture2d"); resources.Add(texture2d);
                 texture2d.SetAttributeValue("id", texid);
                 texture2d.SetAttributeValue("name", itex.Name);
-                byte* kbp; itex.GetPtr((void**)&kbp);
-                string typ; switch (*kbp) { case 0x89: typ = "png"; break; case 0xff: typ = "jpeg"; break; default: typ = "bmp"; break; }
+                byte* kbp; itex.GetBufferPtr((void**)&kbp);
+                string typ = *kbp == 0x89 ? "png" : "jpeg"; //switch (*kbp) { case 0x89: typ = "png"; break; case 0xff: typ = "jpeg"; break; case 0x47: typ = "gif"; break; default: typ = "bmp"; break; }
                 texture2d.SetAttributeValue("path", $"/3D/Textures/{texid}.{typ}");
                 texture2d.SetAttributeValue("contenttype", $"image/{typ}");
                 textures.Add((tex, texid, texture2d));
@@ -103,7 +104,7 @@ namespace Apex
               var texture2dgroup = new XElement(ms + "texture2dgroup"); resources.Add(texture2dgroup);
               texture2dgroup.SetAttributeValue("id", texgid = uid++);
               texture2dgroup.SetAttributeValue("texid", texid);
-              float2* tt; var nt = tg.GetBufferPtr(BUFFER.TEXCOORDS, (void**)&tt) / sizeof(float2);
+              float2* tt; var nt = group.GetBufferPtr(BUFFER.TEXCOORDS, (void**)&tt) / sizeof(float2);
               for (int j = 0; j < nt; j++)
               {
                 var tex2coord = new XElement(ms + "tex2coord"); texture2dgroup.Add(tex2coord);
@@ -111,8 +112,9 @@ namespace Apex
                 tex2coord.SetAttributeValue("v", -tt[j].y);
               }
             }
-            ushort* ii; var ni = tg.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
-            if (range.Length == 0) range = new CharacterRange(0, ni);
+            ushort* ii; var ni = group.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
+            (int First, int Length) range = nr != 0 ? (pr[k].Start, pr[k].Count) : (0, ni);
+            //if (range.Length == 0) range = new CharacterRange(0, ni);
             for (int i = 0; i < range.Length; i += 3)
             {
               var triangle = new XElement(ns + "triangle"); triangles.Add(triangle);
@@ -124,7 +126,7 @@ namespace Apex
             }
           }
         }
-        if (components != null) { obj.Add(components); for (int i = 0; i < desc.Length; i++) add(desc[i], components); }
+        if (components != null) { obj.Add(components); for (var p = group.Child; p != null; p = p.Next) add(p, components); }
         resources.Add(obj);
         var item = new XElement(ns + (dest.Name.LocalName == "build" ? "item" : "component"));
         var objectid = uid++; obj.SetAttributeValue("id", objectid);
@@ -157,7 +159,7 @@ namespace Apex
           var pack = package.CreatePart(new Uri((string)e.Attribute("path"), UriKind.Relative), (string)e.Attribute("contenttype"));
           using (var str = pack.GetStream())
           {
-            byte* pp; var nb = tex.GetPtr((void**)&pp);
+            byte* pp; var nb = tex.GetBufferPtr((void**)&pp);
             new UnmanagedMemoryStream(pp, nb).CopyTo(str);
             //bin.Seek(0); for (int nr; ;) { fixed (byte* p = buff) bin.Read(p, 4096, &nr); str.Write(buff, 0, nr); if (nr < 4096) break; }
           }
@@ -177,17 +179,19 @@ namespace Apex
       File.WriteAllBytes(path, memstr.ToArray()); return null;
     }
 
-    static bool issubset(INode[] desc)
-    {
-      for (int i = 0; i < desc.Length; i++)
-      {
-        var p = desc[i]; if (p.Range.Length == 0 || p.Transform != 1) return false;
-        if (i == 0) continue;
-        if (p.GetBuffer(BUFFER.POINTBUFFER) != desc[0].GetBuffer(BUFFER.POINTBUFFER)) return false;
-        if (p.GetBuffer(BUFFER.INDEXBUFFER) != desc[0].GetBuffer(BUFFER.INDEXBUFFER)) return false;
-      }
-      return true;
-    }
+    //static bool issubset(INode[] desc)
+    //{
+    //  return false;/*
+    //  for (int i = 0; i < desc.Length; i++)
+    //  {
+    //    var p = desc[i]; if (p.Range.Length == 0 || p.Transform != 1) return false;
+    //    if (i == 0) continue;
+    //    if (p.GetBuffer(BUFFER.POINTBUFFER) != desc[0].GetBuffer(BUFFER.POINTBUFFER)) return false;
+    //    if (p.GetBuffer(BUFFER.INDEXBUFFER) != desc[0].GetBuffer(BUFFER.INDEXBUFFER)) return false;
+    //  }      
+    //  return true;
+    //*/
+    //}
 
     public static IScene Import3MF(object data, out float3 dragpt)
     {
@@ -253,8 +257,10 @@ namespace Apex
             var triangles = mesh.Element(ns + "triangles").Elements(ns + "triangle");
             var kk = triangles.OrderBy(p => p.Attribute("pid")?.Value).ToArray();
             var mm = kk.Select(p => p.Attribute("pid")?.Value).Distinct().ToArray();
-            var subs = mm.Length > 1 ? mm.Select(p => node.AddNode(null)).ToArray() : null;
-            var main = subs != null ? subs[0] : node;
+            //if (mm.Length > 1) { }
+            var rr = mm.Length > 1 ? new Range[mm.Length] : null;
+            //var subs = (INode[])null;//mm.Length > 1 ? mm.Select(p => node.AddNode(null)).ToArray() : null;
+            //var main = subs != null ? subs[0] : node;
             {
               var np = vertices.Count();
               var ni = kk.Count() * 3;
@@ -263,7 +269,7 @@ namespace Apex
               {
                 var ip = 0; var vp = (float3*)pp.ToPointer();
                 foreach (var p in vertices.Select(v => new float3((float)v.Attribute("x"), (float)v.Attribute("y"), (float)v.Attribute("z")))) vp[ip++] = p;
-                main.SetBufferPtr(BUFFER.POINTBUFFER, (byte*)vp, np * sizeof(float3));
+                node.SetBufferPtr(BUFFER.POINTBUFFER, (byte*)vp, np * sizeof(float3));
                 var vi = (ushort*)vp; ip = 0;
                 foreach (var p in kk)
                 {
@@ -271,7 +277,7 @@ namespace Apex
                   vi[ip++] = (ushort)(int)p.Attribute("v2");
                   vi[ip++] = (ushort)(int)p.Attribute("v3");
                 }
-                main.SetBufferPtr(BUFFER.INDEXBUFFER, (byte*)vi, ni * sizeof(ushort));
+                node.SetBufferPtr(BUFFER.INDEXBUFFER, (byte*)vi, ni * sizeof(ushort));
               }
               finally { Marshal.FreeCoTaskMem(pp); }
             }
@@ -327,18 +333,17 @@ namespace Apex
                 }
               }
             addmat:
-              var sub = subs != null ? subs[i] : node;
-              sub.Color = color; if (tex != null) sub.SetBuffer(tex);
-              if (subs != null) sub.Range = new CharacterRange(ab * 3, (bis - ab) * 3);
-            }
-            if (tt != null) { fixed (float2* p = tt) main.SetBufferPtr(BUFFER.TEXCOORDS, p, tt.Length * sizeof(float2)); }
-            if (subs != null)
-              for (int i = 1; i < subs.Length; i++)
+              if (i == 0) node.Color = color;
+              if (rr != null)
               {
-                subs[i].SetBuffer(subs[0].GetBuffer(BUFFER.POINTBUFFER));
-                subs[i].SetBuffer(subs[0].GetBuffer(BUFFER.INDEXBUFFER));
-                if (tt != null) subs[i].SetBuffer(subs[0].GetBuffer(BUFFER.TEXCOORDS));
+                rr[i].Start = ab * 3;
+                rr[i].Count = (bis - ab) * 3;
+                rr[i].Color = color;
               }
+              if (tex != null && i < 16) node.SetBuffer(BUFFER.TEXTURE + i, tex);
+            }
+            if (tt != null) node.SetArray(BUFFER.TEXCOORDS, tt);
+            if (rr != null) node.SetArray(BUFFER.RANGES, rr);
           }
           var bb = (string)obj.Attribute(ax + "cs");
           if (bb != null)

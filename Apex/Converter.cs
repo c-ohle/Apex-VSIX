@@ -68,9 +68,9 @@ namespace Apex
     public override bool CanResetValue(object component) => false;
     public override bool ShouldSerializeValue(object component) => false;
     public override void ResetValue(object component) { }
-    public override object GetValue(object component) => fi.GetValue(component); 
+    public override object GetValue(object component) => fi.GetValue(component);
     public override void SetValue(object component, object value) => fi.SetValue(component, value);
-    public static PropertyDescriptorCollection GetProperties(object value) => 
+    public static PropertyDescriptorCollection GetProperties(object value) =>
       new PropertyDescriptorCollection(value.GetType().GetFields().Select(fi => new FieldPD(fi)).ToArray());
   }
   class FormatConverter : TypeConverter
@@ -188,10 +188,9 @@ namespace Apex
     }
     object Import(object context)
     {
-      var dlg = new System.Windows.Forms.OpenFileDialog() { Filter = "Image files|*.png;*.jpg;*.gif|All files|*.*" };
+      var dlg = new System.Windows.Forms.OpenFileDialog() { Filter = "Image files|*.png;*.jpg|All files|*.*" }; //;*.gif
       if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return null;
       var a = System.IO.File.ReadAllBytes(dlg.FileName);
-
       //https://media.freestocktextures.com/cache/d0/b6/d0b6a77c19dc713314e3e325d77d55c9.jpg
       var ic = Environment.GetFolderPath(Environment.SpecialFolder.InternetCache);
       if (dlg.FileName.StartsWith(ic, true, null))
@@ -209,7 +208,13 @@ namespace Apex
           a = str.ToArray();
         }
       }
-
+      if (!(a[0] == 0x89 || a[0] == 0xff)) // png, jpg
+      {
+        //((Node)context).view.MessageBox("Only PNG and JPEG supported in 3mf");
+        var str = new System.IO.MemoryStream();
+        using (var bmp = System.Drawing.Image.FromFile(dlg.FileName)) bmp.Save(str, System.Drawing.Imaging.ImageFormat.Png);
+        a = str.ToArray();
+      }
       IBuffer tex; fixed (byte* p = a) tex = Factory.GetBuffer(BUFFER.TEXTURE, p, a.Length);
       tex.Name = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName);
       svc = null; return tex;
@@ -218,8 +223,8 @@ namespace Apex
     {
       var tex = ((Node)context).node.GetBuffer(BUFFER.TEXTURE);
       var dlg = new System.Windows.Forms.SaveFileDialog() { FileName = tex.Name, DefaultExt = "png", Filter = "PNG file|*.png|JPEG file|*.jpg" };
-      if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return false;
-      byte* pp; var np = tex.GetPtr((void**)&pp);
+      if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return null;
+      byte* pp; var np = tex.GetBufferPtr((void**)&pp);
       using (var bmp = (System.Drawing.Bitmap)System.Drawing.Image.FromStream(new System.IO.UnmanagedMemoryStream(pp, np)))
         bmp.Save(dlg.FileName, dlg.FileName.EndsWith("jpg", true, null) ?
           System.Drawing.Imaging.ImageFormat.Jpeg : System.Drawing.Imaging.ImageFormat.Png);

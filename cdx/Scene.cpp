@@ -102,11 +102,12 @@ HRESULT CScene::put_Camera(ICDXNode* p) { camera = static_cast<CNode*>(p); retur
 
 void CNode::save(Archive& ar)
 {
-  UINT fl = 2 | (subn ? 8 : 0) | (this->flags & (NODE_FL_STATIC | NODE_FL_ACTIVE));
+  UINT fl = 2 | (this->flags & (NODE_FL_STATIC | NODE_FL_ACTIVE));
   ar.WriteCount(fl);
   ar.Serialize(name);
   ar.Write(&color);
   ar.Write(&matrix);
+  ar.Write(&bmask);
   ar.WriteCount(buffer.n);
   for (UINT i = 0; i < buffer.n; i++)
   {
@@ -121,7 +122,6 @@ void CNode::save(Archive& ar)
         ar.Serialize(static_cast<CTexture*>(pb)->name);
     }
   }
-  if (fl & 8) { ar.WriteCount(subi >> 1); ar.WriteCount(subn >> 1); }
   for (auto p = child(); p; p = p->next())
     p->save(ar);
   ar.WriteCount(0);
@@ -135,14 +135,15 @@ CNode* CNode::load(Archive& ar)
   ar.Serialize(p->name);
   ar.Read(&p->color);
   ar.Read(&p->matrix);
+  ar.Read(&p->bmask);
   UINT n = ar.ReadCount(); p->buffer.setsize(n);
   for (UINT i = 0; i < n; i++)
   {
     UINT x = ar.ReadCount();
     if (x == 0)
     {
-      CDX_BUFFER id = (CDX_BUFFER)ar.ReadCount();
-      UINT size = ar.ReadCount(); ar.Read((BYTE*)stackptr, size);
+      auto id = (CDX_BUFFER)ar.ReadCount();
+      auto size = ar.ReadCount(); ar.Read((BYTE*)stackptr, size);
       Critical crit; auto t = CCacheBuffer::getbuffer(id, (const BYTE*)stackptr, size);
       if (id == CDX_BUFFER_TEXTURE)
       {
@@ -157,10 +158,7 @@ CNode* CNode::load(Archive& ar)
     {
       (p->buffer.p[i] = (CBuffer*)ar.map.p[x - 1])->AddRef();
     }
-    auto id = p->buffer.p[i]->id;
-    if (id < 32) p->bmask |= 1 << id;
   }
-  if (fl & 8) { p->subi = ar.ReadCount() << 1; p->subn = ar.ReadCount() << 1; }
   for (UINT i = 0;;)
   {
     auto t = load(ar); if (!t) break;
