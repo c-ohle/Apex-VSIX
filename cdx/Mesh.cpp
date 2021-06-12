@@ -257,7 +257,7 @@ HRESULT CNode::SetProp(LPCWSTR s, const BYTE* p, UINT n, UINT typ)
 
   if (flags & NODE_FL_MASHOK)
   {
-    if (!strcmp("@flatt", sb))
+    if (!strcmp("@flat", sb))
       flags &= ~NODE_FL_MASHOK;
   }
 

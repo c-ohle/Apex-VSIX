@@ -309,7 +309,7 @@ namespace Apex
     {
       if (scene.SelectionCount == 0) return 0;
       if (test != null) return 1;
-      foreach (var p in scene.Selection().SelectMany(p => p.Descendants(true))) p.FetchBuffer();
+      //foreach (var p in scene.Selection().SelectMany(p => p.Descendants(true))) p.FetchBuffer();
       var str = COM.SHCreateMemStream();
       scene.SaveToStream(str, null); //long l1; str.Seek(0, 1, &l1); 
       var data = new DataObject();
@@ -482,7 +482,7 @@ namespace Apex
         ni += p.GetBufferPtr(BUFFER.INDEXBUFFER, &t) / sizeof(ushort);
         var mesh = CSG.Factory.CreateMesh(); p.CopyTo(mesh); mesh.InitPlanes();
         var check = mesh.Check(); if (check == 0) { /*mesh.InitPlanes();*/ pl += mesh.PlaneCount; }
-        checks |= check; Marshal.ReleaseComObject(mesh); if (check == 0) { vol += p.GetVolume(); surf += p.GetSurface(); }
+        checks |= check; Marshal.ReleaseComObject(mesh); if (check == 0) { vol += p.GetVolume(); surf += p.GetSurfaceArea(); }
       }
       ss += '\n'; ss += $"Properties: {string.Join(", ", (node.GetProps() ?? string.Empty).Split('\n'))}";
       //ss += '\n'; ss += $"ScriptData: {node.GetBufferPtr(BUFFER.SCRIPTDATA, &t)} Props: {node.GetBufferPtr(BUFFER.PROPS, &t)}";

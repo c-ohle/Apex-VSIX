@@ -142,7 +142,7 @@ namespace Apex
         if ((bb = group.GetBytes(BUFFER.LIGHT)) != null) obj.SetAttributeValue(ax + "li", Convert.ToBase64String(bb));
         if ((bb = group.GetBytes(BUFFER.SCRIPT)) != null)
         {
-          obj.SetAttributeValue(ax + "cs", Convert.ToBase64String(bb)); group.FetchBuffer();
+          obj.SetAttributeValue(ax + "cs", Convert.ToBase64String(bb)); //group.FetchBuffer();
           //if ((bb = group.GetBytes(BUFFER.SCRIPTDATA)) != null) obj.SetAttributeValue(ax + "cd", Convert.ToBase64String(bb));
         }
         if ((bb = group.GetBytes(BUFFER.PROPS)) != null)
@@ -193,7 +193,7 @@ namespace Apex
         var model = doc.Root; var ns = model.Name.Namespace;
         //var apex = model.GetPrefixOfNamespace(ax); if (apex == null) ax = string.Empty;
         var scene = Factory.CreateScene();
-        var pt = model.Attribute(ax + "pt") ?? model.Attribute(ax + "dragpt");
+        var pt = model.Attribute(ax + "pt");
         dragpt = pt != null ? (float3)pt.Value : float.NaN;
         if ((pt = model.Attribute(ax + "ct")) != null)
         {
@@ -245,8 +245,6 @@ namespace Apex
             var kk = triangles.OrderBy(p => p.Attribute("pid")?.Value).ToArray();
             var mm = kk.Select(p => p.Attribute("pid")?.Value).Distinct().ToArray();
             var rr = mm.Length > 1 ? new Range[mm.Length] : null;
-            //var subs = (INode[])null;//mm.Length > 1 ? mm.Select(p => node.AddNode(null)).ToArray() : null;
-            //var main = subs != null ? subs[0] : node;
             {
               var np = vertices.Count();
               var ni = kk.Count() * 3;
@@ -323,7 +321,7 @@ namespace Apex
               if (rr != null)
               {
                 ref var r = ref rr[i]; r.Start = ab * 3; r.Count = (bis - ab) * 3;
-                r.Color = color; //r.Flattness = 0.2f;
+                r.Color = color;
               }
               if (tex != null && i < 16) node.SetBuffer(BUFFER.TEXTURE + i, tex);
             }

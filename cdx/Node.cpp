@@ -284,37 +284,15 @@ void CNode::update(XMFLOAT3* pp, UINT np, USHORT* ii, UINT ni, float smooth, voi
   }
 }
 
-//static bool readprop(const CBuffer* pb, const char* name, float& v)
-//{
-//  auto c = strlen(name); auto x = sinf;
-//  auto s = (const char*)pb->data.p; auto n = pb->data.n;
-//  for (UINT i = 0, x = n - c - 3; i < x; i++)
-//  {
-//    if (s[i] != name[0]) continue;
-//    if (strncmp(s + i, name, c)) continue;
-//    auto r = sscanf_s(s + i + c + 1, "\"%f\"", &v);
-//    return r == 1;
-//  }
-//  return false;
-//}
-
 void CNode::update(CScene* scene, UINT i)
 {
   ib.Release(); vb.Release();
   auto pp = getbuffer(CDX_BUFFER_POINTBUFFER); if (!pp) return;
   auto ii = getbuffer(CDX_BUFFER_INDEXBUFFER); if (!ii || !ii->data.n) return;
-  auto tt = getbuffer(CDX_BUFFER_TEXCOORDS);
- 
-  float flattness = getprop("@flatt", 0.2f);
-  
-  //auto ss = getbuffer(CDX_BUFFER_SCRIPTDATA);
-  //if (ss)
-  //  if (readprop(ss, "flattness", flattness))
-  //    i = i;
-  
-  //auto rr = getbuffer(CDX_BUFFER_RANGES); auto flatness = rr ? ((XRANGE*)rr->data.p)[0].flatness : 0.2f;
+  auto tt = getbuffer(CDX_BUFFER_TEXCOORDS); 
+  float flatt = getprop("@flat", 0.2f);
   update((XMFLOAT3*)pp->data.p, pp->data.n / sizeof(XMFLOAT3),
-    (USHORT*)ii->data.p, ii->data.n >> 1, flattness,
+    (USHORT*)ii->data.p, ii->data.n >> 1, flatt,
     tt ? tt->data.p : 0, tt ? 2 : 0);
 }
 

@@ -223,13 +223,13 @@ namespace Apex
       float Height { get; }
     }
 
-    internal static double GetVolume(this INode p)
+    public static double GetVolume(this INode p)
     {
       float3* pp; p.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&pp); if (pp == null) return -1;
       ushort* ii; var ni = p.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
       var v = 0.0; for (int i = 0; i < ni; i += 3) v += pp[ii[i]] & (pp[ii[i + 1]] ^ pp[ii[i + 2]]); return v * (1.0 / 6);
     }
-    internal static double GetSurface(this INode p)
+    public static double GetSurfaceArea(this INode p)
     {
       float3* pp; p.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&pp); if (pp == null) return -1;
       ushort* ii; var ni = p.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
@@ -254,15 +254,6 @@ namespace Apex
     internal static float3[] GetPoints(this INode p) => p.GetArray<float3>(BUFFER.POINTBUFFER);
     internal static ushort[] GetIndices(this INode p) => p.GetArray<ushort>(BUFFER.INDEXBUFFER);
 
-    //public static bool Group(this IExchange p, string s) => p.Category(s);
-    //public static void Display(this IExchange p, string s) => p.DisplayName(s);
-    //public static bool HasTexture(this INode p) => p.HasBuffer(BUFFER.TEXTURE);
-    //public static IBuffer Texture(this INode p) => p.GetBuffer(BUFFER.TEXTURE);
-    //internal static bool IsInSelect(this INode p)
-    //{
-    //  for (; p != null; p = p.Parent) if (p.IsSelect) return true;
-    //  return false;
-    //}
     internal static string GetClassName(this INode node)
     {
       if (node.HasBuffer(BUFFER.CAMERA)) return "Camera";
@@ -287,12 +278,10 @@ namespace Apex
     public static byte[] GetBytes(this INode p, BUFFER id) => p.GetArray<byte>(id);
     public static void SetBytes(this INode node, BUFFER id, byte[] data) => node.SetArray(id, data);
     internal static void RemoveBuffer(this INode node, BUFFER id) => node.SetBufferPtr(id, null, 0);
-    internal static void FetchBuffer(this INode p)
+    public static void Update(this INode p)
     {
       if (!(p.Tag is Node node) || node.funcs == null) return;
-      Node.saveprops(p, node.GetMethod<Action<IExchange>>());
-      //var s = Node.GetData(node.GetMethod<Action<IExchange>>(), p);
-      //p.SetBytes(BUFFER.SCRIPTDATA, s != null ? System.Text.Encoding.UTF8.GetBytes(s) : null);
+      Node.SaveProps(p, node.GetMethod<Action<IExchange>>());
     }
     public static void CopyTo(this CSG.IMesh a, INode b, float2[] tt = null)
     {

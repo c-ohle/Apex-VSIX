@@ -65,7 +65,6 @@ namespace Apex
       void Stretch(IMesh a, Variant v);
       void Skeleton(IMesh a, Variant v);
       void ConvexHull(IMesh a);
-      //void Round(IMesh a, VarType t);
     }
 
     public enum JoinOp { Union = 0, Difference = 1, Intersection = 2 }

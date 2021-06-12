@@ -83,7 +83,7 @@ namespace Apex
       var str = COM.SHCreateMemStream();
       if (path.EndsWith(".b3mf", true, null))
       {
-        foreach (var p in scene.SelectNodes(BUFFER.SCRIPT)) p.FetchBuffer();
+        //foreach (var p in scene.SelectNodes(BUFFER.SCRIPT)) p.FetchBuffer();
         scene.SaveToStream(str, view.Camera);
         File.WriteAllBytes(path, str.ToArray());
         return;

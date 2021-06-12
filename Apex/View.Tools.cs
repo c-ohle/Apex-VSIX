@@ -753,7 +753,6 @@ namespace Apex
               {
                 if (bin == null)
                 {
-                  foreach (var p in scene.Selection().SelectMany(p => p.Descendants(true))) p.FetchBuffer();
                   var str = COM.SHCreateMemStream(); scene.SaveToStream(str, null);
                   var t = wp; str.Write(&t, sizeof(float3)); bin = str.ToArray(); Marshal.ReleaseComObject(str);
                 }

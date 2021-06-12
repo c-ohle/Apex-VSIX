@@ -1312,7 +1312,7 @@ namespace Apex
       }
       if(node.funcs != null && node.funcs.Length != 0)
       {
-        Node.saveprops(node.node, node.GetMethod<Action<IExchange>>());
+        Node.SaveProps(node.node, node.GetMethod<Action<IExchange>>());
         //var cd = Node.GetData(node.GetMethod<Action<IExchange>>(), node.node);
         //inode.SetBytes(CDX.BUFFER.SCRIPTDATA, cd != null ? Encoding.UTF8.GetBytes(cd) : null);
       }
