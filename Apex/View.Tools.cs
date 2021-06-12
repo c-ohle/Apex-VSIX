@@ -715,12 +715,11 @@ namespace Apex
         no.Transform = mb;
         if (ni.Points != null)
         {
-          no.Color = ni.Texture != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color; var ii = ni.Indices;
-          var vv = ni.Points.Select(t => new float3((float)t.x, (float)t.y, (float)t.z)).ToArray();
-          fixed (void* pv = vv) no.SetBufferPtr(BUFFER.POINTBUFFER, pv, vv.Length * sizeof(float3));
-          fixed (void* pv = ii) no.SetBufferPtr(BUFFER.INDEXBUFFER, pv, ii.Length * sizeof(ushort));
-          if (ni.Texcoords != null) fixed (void* pv = ni.Texcoords) no.SetBufferPtr(BUFFER.TEXCOORDS, pv, ni.Texcoords.Length * sizeof(float2));
-          if (ni.Texture != null) fixed (void* pv = ni.Texture) no.SetBufferPtr(BUFFER.TEXTURE, pv, ni.Texture.Length);
+          no.Color = ni.Texture != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color;
+          no.SetArray(BUFFER.POINTBUFFER, ni.Points.Select(t => new float3((float)t.x, (float)t.y, (float)t.z)).ToArray());
+          no.SetArray(BUFFER.INDEXBUFFER, ni.Indices);
+          no.SetArray(BUFFER.TEXCOORDS, ni.Texcoords);
+          no.SetArray(BUFFER.TEXTURE, ni.Texture);
           if (ni.IndexCount != 0) { }
         }
         for (int i = 0; i < ni.Count; i++) recu((IRoot)no, ni[i]);
@@ -756,7 +755,7 @@ namespace Apex
                 {
                   foreach (var p in scene.Selection().SelectMany(p => p.Descendants(true))) p.FetchBuffer();
                   var str = COM.SHCreateMemStream(); scene.SaveToStream(str, null);
-                  var t = wp; str.Write(&t, sizeof(float3)); bin = COM.Stream(str); Marshal.ReleaseComObject(str);
+                  var t = wp; str.Write(&t, sizeof(float3)); bin = str.ToArray(); Marshal.ReleaseComObject(str);
                 }
                 return bin;
               }

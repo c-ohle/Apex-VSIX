@@ -125,16 +125,16 @@ static void render(CView& v, REC& r, UINT mode)
   auto& node = *r.node;
   if (r.ranges)
   {
-    auto rr = (const Range*)r.ranges->data.p; auto n = r.ranges->data.n / sizeof(Range);
+    auto rr = (const XRANGE*)r.ranges->data.p; auto n = r.ranges->data.n / sizeof(XRANGE);
     for (UINT k = 0, c = 0; k < n; k++)
     {
-      if (((rr[k].Color >> 24) != 0xff)) continue;
+      if (((rr[k].color >> 24) != 0xff)) continue;
       if (!c++) { v.SetMatrix(MM_WORLD, r.wm); SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); }
-      v.SetColor(VV_DIFFUSE, rr[k].Color);
+      v.SetColor(VV_DIFFUSE, rr[k].color);
       auto tex = (CTexture*)node.getbuffer((CDX_BUFFER)((UINT)CDX_BUFFER_TEXTURE + k));
       if (tex) SetTexture(tex->srv.p); v.SetBuffers();
       SetMode(mode| (tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
-      context->DrawIndexed(rr[k].Count << 1, rr[k].Start << 1, 0);
+      context->DrawIndexed(rr[k].count << 1, rr[k].start << 1, 0);
     }
   }
   else
@@ -171,10 +171,11 @@ void CView::RenderScene()
       rec.node = node; nflags |= node->flags;
       rec.wm = node->gettrans(scene);
       rec.ranges = static_cast<CBuffer*>(node->getbuffer(CDX_BUFFER_RANGES));
+      //if (rec.ranges && rec.ranges->data.n <= sizeof(XRANGE)) rec.ranges = 0;
       if (rec.ranges)
       {
-        auto rr = (const Range*)rec.ranges->data.p;
-        auto nr = rec.ranges->data.n / sizeof(Range);
+        auto rr = (const XRANGE*)rec.ranges->data.p;
+        auto nr = rec.ranges->data.n / sizeof(XRANGE);
         for (UINT k = 0; k < nr; k++)
         {
           auto tex = (CTexture*)node->getbuffer((CDX_BUFFER)((UINT)CDX_BUFFER_TEXTURE + k));

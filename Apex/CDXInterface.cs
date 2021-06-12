@@ -39,10 +39,10 @@ namespace Apex
     }
 
     internal struct Range
-    { 
+    {
       internal int Start, Count;
       internal uint Color;
-      //internal fixed int dummy[32-3];
+      //internal float Flattness;
     }
 
     public enum BUFFER
@@ -50,11 +50,12 @@ namespace Apex
       POINTBUFFER = 0,
       INDEXBUFFER = 1,
       TEXCOORDS = 2,
+      PROPS = 3,
       RANGES = 4,
       CAMERA = 7,
       LIGHT = 8,
       SCRIPT = 10,
-      SCRIPTDATA = 11,
+      //SCRIPTDATA = 11,
       TEXTURE = 16,
     }
 
@@ -206,6 +207,9 @@ namespace Apex
       void GetBox(ref float3box box, float4x3* pm);
       float4x3 GetTypeTransform(int typ);
       void SetTypeTransform(int typ, in float4x3 m);
+      void SetProp(char* name, void* p, int n, int typ);
+      int GetProp(char* name, void** p, out int typ);
+      string GetProps();
     }
 
     [ComImport, Guid("F063C32D-59D1-4A0D-B209-323268059C12"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]
@@ -231,6 +235,12 @@ namespace Apex
       ushort* ii; var ni = p.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
       var v = 0.0; for (int i = 0; i < ni; i += 3)
         v += (pp[ii[i + 1]] - pp[ii[i]] ^ pp[ii[i + 2]] - pp[ii[i]]).Length; return v * 0.5;
+    }
+
+    internal static T[] GetArray<T>(this IBuffer p) where T : unmanaged
+    {
+      void* s; var n = p.GetBufferPtr(&s) / sizeof(T); if (s == null) return null;
+      var a = new T[n]; fixed (void* d = a) Native.memcpy(d, s, (void*)(n * sizeof(T))); return a;
     }
     internal static T[] GetArray<T>(this INode p, BUFFER id) where T : unmanaged
     {
@@ -274,32 +284,16 @@ namespace Apex
       }
       return box;
     }
-    public static byte[] ToBytes(this IBuffer b)
-    {
-      void* p; int n = b.GetBufferPtr(&p);
-      var a = new byte[n]; fixed (void* d = a) Native.memcpy(d, p, (void*)n); return a;
-    }
     public static byte[] GetBytes(this INode p, BUFFER id) => p.GetArray<byte>(id);
     public static void SetBytes(this INode node, BUFFER id, byte[] data) => node.SetArray(id, data);
     internal static void RemoveBuffer(this INode node, BUFFER id) => node.SetBufferPtr(id, null, 0);
     internal static void FetchBuffer(this INode p)
     {
       if (!(p.Tag is Node node) || node.funcs == null) return;
-      var s = Node.GetData(node.GetMethod<Action<IExchange>>());
-      p.SetBytes(BUFFER.SCRIPTDATA, s != null ? System.Text.Encoding.UTF8.GetBytes(s) : null);
-      //if (!(p.Tag is Node xn) || xn.funcs == null || xn.funcs.Length <= 1) return;
-      //if (p.HasBuffer(BUFFER.SCRIPTDATA)) return;
-      //var s = Node.GetData(xn.GetMethod<Action<IExchange>>()); if (s == null) return;
-      //p.SetBytes(BUFFER.SCRIPTDATA, System.Text.Encoding.UTF8.GetBytes(s));
+      Node.saveprops(p, node.GetMethod<Action<IExchange>>());
+      //var s = Node.GetData(node.GetMethod<Action<IExchange>>(), p);
+      //p.SetBytes(BUFFER.SCRIPTDATA, s != null ? System.Text.Encoding.UTF8.GetBytes(s) : null);
     }
-    //internal static (byte[] pp, byte[] ii) GetFloatBuffer(this CSG.IMesh a)
-    //{
-    //  var nv = a.VertexCount; var ni = a.IndexCount;
-    //  var pp = new byte[nv * sizeof(float3)]; fixed (void* p = pp) a.CopyBuffer(0, 0, new CSG.Variant((float* )p, 3, nv));
-    //  var ii = new byte[ni * sizeof(ushort)]; fixed (void* p = ii) a.CopyBuffer(1, 0, new CSG.Variant((ushort*)p, 1, ni));
-    //  return (pp, pp);
-    //}
-    
     public static void CopyTo(this CSG.IMesh a, INode b, float2[] tt = null)
     {
       var nv = a.VertexCount; var ni = a.IndexCount;
@@ -307,26 +301,26 @@ namespace Apex
       try
       {
         var vp = (float3*)pp.ToPointer(); a.CopyBuffer(0, 0, new CSG.Variant(&vp->x, 3, nv));
-        b.SetBufferPtr(CDX.BUFFER.POINTBUFFER, vp, nv * sizeof(float3));
+        b.SetBufferPtr(BUFFER.POINTBUFFER, vp, nv * sizeof(float3));
         var ip = (ushort*)pp.ToPointer(); a.CopyBuffer(1, 0, new CSG.Variant(ip, 1, ni));
-        b.SetBufferPtr(CDX.BUFFER.INDEXBUFFER, ip, ni * sizeof(ushort));
+        b.SetBufferPtr(BUFFER.INDEXBUFFER, ip, ni * sizeof(ushort));
       }
       finally { Marshal.FreeCoTaskMem(pp); }
-      fixed (float2* p = tt) b.SetBufferPtr(BUFFER.TEXCOORDS, p, tt != null ? tt.Length * sizeof(float2) : 0);
+      b.SetArray(BUFFER.TEXCOORDS, tt);
     }
-    public static void CopyTo(this CSG.IMesh a, out IBuffer pb, out IBuffer ib)
-    {
-      pb = ib = null; var nv = a.VertexCount; var ni = a.IndexCount;
-      var pp = Marshal.AllocCoTaskMem(Math.Max(nv * sizeof(float3), ni * sizeof(ushort)));
-      try
-      {
-        var vp = (float3*)pp.ToPointer(); a.CopyBuffer(0, 0, new CSG.Variant(&vp->x, 3, nv));
-        pb = Factory.GetBuffer(BUFFER.POINTBUFFER, vp, nv * sizeof(float3));
-        var ip = (ushort*)pp.ToPointer(); a.CopyBuffer(1, 0, new CSG.Variant(ip, 1, ni));
-        ib = Factory.GetBuffer(BUFFER.INDEXBUFFER, ip, ni * sizeof(ushort));
-      }
-      finally { Marshal.FreeCoTaskMem(pp); }
-    }
+    //public static void CopyTo(this CSG.IMesh a, out IBuffer pb, out IBuffer ib)
+    //{
+    //  pb = ib = null; var nv = a.VertexCount; var ni = a.IndexCount;
+    //  var pp = Marshal.AllocCoTaskMem(Math.Max(nv * sizeof(float3), ni * sizeof(ushort)));
+    //  try
+    //  {
+    //    var vp = (float3*)pp.ToPointer(); a.CopyBuffer(0, 0, new CSG.Variant(&vp->x, 3, nv));
+    //    pb = Factory.GetBuffer(BUFFER.POINTBUFFER, vp, nv * sizeof(float3));
+    //    var ip = (ushort*)pp.ToPointer(); a.CopyBuffer(1, 0, new CSG.Variant(ip, 1, ni));
+    //    ib = Factory.GetBuffer(BUFFER.INDEXBUFFER, ip, ni * sizeof(ushort));
+    //  }
+    //  finally { Marshal.FreeCoTaskMem(pp); }
+    //}
     public static void CopyTo(this INode a, CSG.IMesh b)
     {
       float3* pp; var np = a.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&pp) / sizeof(float3);
@@ -335,20 +329,16 @@ namespace Apex
     }
     public static void Copy(this CSG.IMesh b, float3[] pp, int[] ii)
     {
-      for (int i = 0; i < ii.Length; i++) if ((uint)ii[i] >= (uint)pp.Length) throw new Exception("invalid index buffer");
+      for (int i = 0; i < ii.Length; i++) if ((uint)ii[i] >= (uint)pp.Length) throw new Exception("Invalid index");
       fixed (float3* pt = pp) fixed (int* pi = ii)
         b.Update(new CSG.Variant(&pt->x, 3, pp.Length), new CSG.Variant(pi, 1, ii.Length));
     }
     public static void SetMesh(this INode a, float3[] pp, int[] ii, float2[] tt = null)
     {
-      for (int i = 0; i < ii.Length; i++) if ((uint)ii[i] >= (uint)pp.Length) throw new Exception("invalid index buffer");
-      fixed (float3* p = pp) a.SetBufferPtr(BUFFER.POINTBUFFER, p, pp != null ? pp.Length * sizeof(float3) : 0);
-      fixed (int* p = ii)
-      {
-        for (int i = 0, n = ii != null ? ii.Length : 0; i < n; i++) ((ushort*)p)[i] = (ushort)p[i];
-        a.SetBufferPtr(BUFFER.INDEXBUFFER, p, ii != null ? ii.Length * sizeof(ushort) : 0);
-      }
-      fixed (float2* p = tt) a.SetBufferPtr(BUFFER.TEXCOORDS, p, tt != null ? tt.Length * sizeof(float2) : 0);
+      if (ii != null) for (int i = 0, m = pp.Length; i < ii.Length; i++) if ((uint)ii[i] >= m) throw new Exception("Invalid index");
+      a.SetArray(BUFFER.POINTBUFFER, pp);
+      a.SetArray(BUFFER.INDEXBUFFER | (BUFFER)0x1000, ii);
+      a.SetArray(BUFFER.TEXCOORDS, tt);
     }
     public static IEnumerable<INode> Descendants(this IScene p)
     {

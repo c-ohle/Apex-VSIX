@@ -567,12 +567,25 @@ namespace Apex
     [DllImport("shlwapi.dll")]
     public static extern IStream SHCreateMemStream(void* p = null, int n = 0); //todo: check refcount 
     public static IStream Stream(byte[] a) { fixed (byte* p = a) return SHCreateMemStream(p, a.Length); }
-    public static byte[] Stream(IStream str)
+    public static byte[] ToArray(this IStream str)
     {
       long n; str.Seek(0, 2, &n); str.Seek(0); var nn = (int)n;
       var a = new byte[nn]; fixed (byte* p = a) str.Read(p, nn); return a;
     }
     //public static long Position(this IStream str) { long v; str.Seek(0, 1, &v); return v; }
+
+    //internal static void WriteCount(this IStream str, int c)
+    //{
+    //  long a; var b = (byte*)&a; int e = 0;
+    //  for (; c >= 0x80; b[e++] = (byte)(c | 0x80), c >>= 7) ; b[e++] = (byte)c;
+    //  str.Write(b, e);
+    //}
+    //internal static int ReadCount(this IStream str)
+    //{
+    //  int i = 0;
+    //  for (int s = 0; ; s += 7) { int b; str.Read(&b, 1); i |= (b & 0x7F) << s; if ((b & 0x80) == 0) break; }
+    //  return i;
+    //}
 
 #if (!DEBUG)
     internal const bool DEBUG = false;

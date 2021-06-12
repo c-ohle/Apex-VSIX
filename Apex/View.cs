@@ -85,7 +85,7 @@ namespace Apex
       {
         foreach (var p in scene.SelectNodes(BUFFER.SCRIPT)) p.FetchBuffer();
         scene.SaveToStream(str, view.Camera);
-        File.WriteAllBytes(path, COM.Stream(str));
+        File.WriteAllBytes(path, str.ToArray());
         return;
       }
       view.Thumbnail(256, 256, 4, 0x00ffffff, str);

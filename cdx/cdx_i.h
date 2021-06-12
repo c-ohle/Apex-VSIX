@@ -946,11 +946,11 @@ enum CDX_BUFFER
         CDX_BUFFER_POINTBUFFER	= 0,
         CDX_BUFFER_INDEXBUFFER	= 1,
         CDX_BUFFER_TEXCOORDS	= 2,
+        CDX_BUFFER_PROPS	= 3,
         CDX_BUFFER_RANGES	= 4,
         CDX_BUFFER_CAMERA	= 7,
         CDX_BUFFER_LIGHT	= 8,
         CDX_BUFFER_SCRIPT	= 10,
-        CDX_BUFFER_SCRIPTDATA	= 11,
         CDX_BUFFER_TEXTURE	= 16
     } 	CDX_BUFFER;
 
@@ -1078,6 +1078,21 @@ EXTERN_C const IID IID_ICDXNode;
         virtual HRESULT STDMETHODCALLTYPE SetTypeTransform( 
             /* [in] */ UINT typ,
             /* [in] */ const XMFLOAT4X3 *p) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetProp( 
+            /* [in] */ LPCWSTR s,
+            /* [in] */ const BYTE *p,
+            /* [in] */ UINT n,
+            /* [in] */ UINT typ) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetProp( 
+            /* [in] */ LPCWSTR s,
+            /* [in] */ BYTE **p,
+            /* [out] */ UINT *typ,
+            /* [retval][out] */ UINT *n) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetProps( 
+            /* [retval][out] */ BSTR *p) = 0;
         
     };
     
@@ -1258,6 +1273,24 @@ EXTERN_C const IID IID_ICDXNode;
             /* [in] */ UINT typ,
             /* [in] */ const XMFLOAT4X3 *p);
         
+        HRESULT ( STDMETHODCALLTYPE *SetProp )( 
+            ICDXNode * This,
+            /* [in] */ LPCWSTR s,
+            /* [in] */ const BYTE *p,
+            /* [in] */ UINT n,
+            /* [in] */ UINT typ);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetProp )( 
+            ICDXNode * This,
+            /* [in] */ LPCWSTR s,
+            /* [in] */ BYTE **p,
+            /* [out] */ UINT *typ,
+            /* [retval][out] */ UINT *n);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetProps )( 
+            ICDXNode * This,
+            /* [retval][out] */ BSTR *p);
+        
         END_INTERFACE
     } ICDXNodeVtbl;
 
@@ -1389,6 +1422,15 @@ EXTERN_C const IID IID_ICDXNode;
 
 #define ICDXNode_SetTypeTransform(This,typ,p)	\
     ( (This)->lpVtbl -> SetTypeTransform(This,typ,p) ) 
+
+#define ICDXNode_SetProp(This,s,p,n,typ)	\
+    ( (This)->lpVtbl -> SetProp(This,s,p,n,typ) ) 
+
+#define ICDXNode_GetProp(This,s,p,typ,n)	\
+    ( (This)->lpVtbl -> GetProp(This,s,p,typ,n) ) 
+
+#define ICDXNode_GetProps(This,p)	\
+    ( (This)->lpVtbl -> GetProps(This,p) ) 
 
 #endif /* COBJMACROS */
 

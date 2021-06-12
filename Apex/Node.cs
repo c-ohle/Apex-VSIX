@@ -43,23 +43,134 @@ namespace Apex
     {
       ex.todo = 2; ex.name = name; ex.value = value; Exchange(ex);
       if (ex.todo == 2) return false;
+      if (name.IndexOf('.', 0, 1) != 0 && this is Node n)
+      {
+        ex.todo = 3; ex.value = n.node; Exchange(ex); //save prop
+      }
       view.Invalidate(Inval.Properties);
       return true;
     }
-    internal static string GetData(Action<IExchange> func)
-    {
-      if (func == null) return null;
-      var e = new XElement("x"); ex.todo = 3; ex.value = e;
-      try { func(ex); } catch { }
-      return e.HasAttributes ? e.ToString() : null;
-    }
-    internal static void SetData(Action<IExchange> func, string s)
+    internal static void saveprops(INode node, Action<IExchange> func)
     {
       if (func == null) return;
-      var t1 = ex.todo; var t2 = ex.value;
-      try { ex.todo = 4; ex.value = XElement.Parse(s); func(ex); } catch { }
-      ex.todo = t1; ex.value = t2;
+      try { ex.todo = 3; ex.name = null; ex.value = node; func(ex); }
+      catch { }
     }
+    internal static void loadprops(INode node, Action<IExchange> func)
+    {
+      if (func == null) return;
+      var t1 = ex.todo; var t2 = ex.name; var t3 = ex.value;
+      try { ex.todo = 4; ex.name = null; ex.value = node; func(ex); }
+      catch { }
+      ex.todo = t1; ex.name = t2; ex.value = t3;
+    }
+    //internal static string GetData(Action<IExchange> func, INode node)
+    //{
+    //  if (func == null) return null;
+    //  //ex.todo = 6; ex.name = null; ex.value = node; func(ex);
+    //  var sw = new StringBuilder(); ex.todo = 3; ex.value = sw;
+    //  try { func(ex); } catch { }
+    //  return sw.Length != 0 ? sw.ToString() : null;
+    //}
+    //internal static void loadoldscriptdata(Action<IExchange> func, string s, INode node)
+    //{
+    //  if (func == null) return;
+    //  var t1 = ex.todo; var t2 = ex.value;
+    //  //ex.todo = 7; ex.name = null; ex.value = node; func(ex);
+    //  try { ex.todo = 4; ex.value = s; /*XElement.Parse(s);*/ func(ex); } catch { }
+    //  ex.todo = t1; ex.value = t2;
+    //}
+
+    internal static void CompactProps(INode node, Action<IExchange> func)
+    {
+      var l1 = new List<string>(); 
+      if (func != null) { ex.todo = 6; ex.value = l1; func(ex); }
+      var l2 = (node.GetProps() ?? string.Empty).Split('\n');
+      var l3 = l2.Except(l1).ToList();
+      foreach (var p in l3) fixed (char* s = p) node.SetProp(s, null, 0, 0);
+    }
+
+    //internal static List<string> getprops(INode node)
+    //{
+    //  var list = new List<string>();
+    //  byte* bb; var nb = node.GetBufferPtr(BUFFER.PROPS, (void**)&bb);
+    //  var str = (p: (IntPtr)bb, i: 0, n: nb);
+    //  for (; str.i < str.n;)
+    //  {
+    //    var c = readcount(ref str); list.Add(new string((sbyte*)str.p.ToPointer() + str.i, 0, c));
+    //    str.i += c; c = readcount(ref str); str.i += c + 1;
+    //  }
+    //  return list;
+    //}
+
+    static object readobj(ref (IntPtr p, int i, int n) str, Type t)
+    {
+      if (t.IsArray)
+      {
+        var c = readcount(ref str); var e = t.GetElementType();
+        var a = Array.CreateInstance(e, c);
+        if (e.IsValueType)
+        {
+          var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
+          var p = (byte*)h.AddrOfPinnedObject(); read(ref str, p, a.Length * n); h.Free();
+        }
+        else
+        {
+          for (int i = 0; i < c; i++) a.SetValue(readobj(ref str, e), i);
+        }
+        return a;
+      }
+      var ns = readcount(ref str);
+      var ss = new string(' ', ns); fixed (char* p = ss) for (int i = 0; i < ns; i++) p[i] = (char)readcount(ref str);
+      var co = TypeDescriptor.GetConverter(t);
+      var po = co.ConvertFromInvariantString(ss);
+      return po;
+    }
+    static void read(ref (IntPtr p, int i, int n) str, byte* p, int n)
+    {
+      if (str.i + n > str.n) throw new Exception();
+      Native.memcpy(p, (byte*)str.p.ToPointer() + str.i, (void*)n); str.i += n;
+    }
+    static int readcount(ref (IntPtr p, int i, int n) str)
+    {
+      int i = 0; var pp = (byte*)str.p.ToPointer();
+      for (int s = 0; ; s += 7) { int b = pp[str.i++]; i |= (b & 0x7F) << s; if ((b & 0x80) == 0) break; }
+      return i;
+    }
+    static void write(ref (byte[] a, int i) str, void* p, int n)
+    {
+      while (str.a.Length < str.i + n) Array.Resize(ref str.a, str.a.Length << 1);
+      fixed (byte* t = str.a) Native.memcpy(t + str.i, p, (void*)n); str.i += n;
+    }
+    static void writecount(ref (byte[] a, int i) str, int c)
+    {
+      if (str.i + 5 > str.a.Length) Array.Resize(ref str.a, str.a.Length << 1);
+      for (; c >= 0x80; str.a[str.i++] = (byte)(c | 0x80), c >>= 7) ; str.a[str.i++] = (byte)c;
+    }
+    static void writeobj(ref (byte[] a, int i) str, object o)
+    {
+      if (o is Array a)
+      {
+        writecount(ref str, a.Length);
+        var e = a.GetType().GetElementType();
+        if (e.IsValueType)
+        {
+          var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
+          var p = (byte*)h.AddrOfPinnedObject(); write(ref str, p, a.Length * n); h.Free();
+        }
+        else
+        {
+          for (int i = 0; i < a.Length; i++) writeobj(ref str, a.GetValue(i));
+        }
+        return;
+      }
+      var co = TypeDescriptor.GetConverter(o.GetType());
+      var ss = co.ConvertToInvariantString(o);
+      writecount(ref str, ss.Length);
+      for (int i = 0; i < ss.Length; i++) writecount(ref str, ss[i]);
+      return;
+    }
+
     static readonly EX ex = new EX();
     class EX : IExchange
     {
@@ -101,12 +212,52 @@ namespace Apex
           case 0: create(name, typeof(T)); break;
           case 1: if (name == this.name) { this.value = value; todo = -1; } break;
           case 2: if (name == this.name) { value = (T)this.value; todo = -2; return true; } break;
-          case 3: save(name, value, typeof(T)); break;
-          case 4: if (load(name, typeof(T)) is T p) value = p; break;
+          case 3: save(name, value); break;
+          case 4: load(name, ref value); break;
           case 5: todo = 3; break;
+          case 6: ((List<string>)this.value).Add(name); break;
         }
         return false;
       }
+
+      void save<T>(string name, T v)
+      {
+        if (this.name != null) { if (name != this.name) return; todo = -1; }
+        var node = (INode)this.value; var t = typeof(T);
+        if (t.IsValueType)
+        {
+          var n = Marshal.SizeOf(t); var r = __makeref(v);
+          fixed (char* ss = name) node.SetProp(ss, *(void**)&r, n, (int)Type.GetTypeCode(t));
+        }
+        else
+        {
+          var a = (p: new byte[128], i: 0); writeobj(ref a, v);
+          fixed (void* aa = a.p) fixed (char* ss = name)
+            node.SetProp(ss, aa, a.i, (int)Type.GetTypeCode(t));
+        }
+      }
+      void load<T>(string name, ref T v)
+      {
+        //if (this.name != null && name != this.name) return;
+        var node = (INode)this.value;
+        void* p; int n, typ; fixed (char* ss = name) n = node.GetProp(ss, &p, out typ);
+        if (p == null) return;
+        var t = typeof(T);
+        if (t.IsValueType)
+        {
+          if (n == Marshal.SizeOf(t) && typ == (int)Type.GetTypeCode(t))
+          {
+            var h = default(T); var r = __makeref(h);
+            Native.memcpy(*(void**)&r, p, (void*)n); v = h;
+          }
+        }
+        else
+        {
+          var str = (p: (IntPtr)p, i: 0, n: n);
+          if (readobj(ref str, t) is T x) v = x;
+        }
+      }
+
       bool IExchange.Modified { get => todo == -2; }
       void create(string name, Type t)
       {
@@ -119,6 +270,7 @@ namespace Apex
         ((PropertyDescriptorCollection)value).Add(new PD(name, attris.ToArray()) { type = t });
         attris.RemoveAll(p => !(p is CategoryAttribute));
       }
+#if(false)
       static string savea(object value, Type t)
       {
         if (!t.IsArray) return TypeDescriptor.GetConverter(t).ConvertToInvariantString(value);
@@ -148,23 +300,37 @@ namespace Apex
           var c = TypeDescriptor.GetConverter(t); if (!c.CanConvertFrom(typeof(string))) return;
           value = c.ConvertToInvariantString(value);
         }
-        name = name.Replace(' ', '_'); //name = System.Xml.XmlConvert.EncodeName(name);
-        ((XElement)this.value).SetAttributeValue(name, value);
+        var sb = (StringBuilder)this.value; sb.Append(name); sb.Append("=\""); sb.Append(value); sb.Append("\" ");
+        //((XElement)this.value).SetAttributeValue(encode(name), value);
       }
       object load(string name, Type t)
       {
-        name = name.Replace(' ', '_'); //name = System.Xml.XmlConvert.EncodeName(name);
-        var a = ((XElement)value).Attribute(name); if (a == null) return null;
-        if (t.IsArray)
-        {
-          var p = loada(a.Value.AsSpan(), t); return p;
-        }
-        else
-        {
-          var c = TypeDescriptor.GetConverter(t);
-          var p = c.ConvertFromInvariantString(a.Value); return p;
-        }
+        var s = (string)value;
+        var x = s.IndexOf(name); if (x == -1) return null;
+        var a = x + name.Length + 2; var b = s.IndexOf('"', a);
+        var v = s.AsSpan().Slice(a, b - a);
+        return loada(v, t);
+
+        //name = name.Replace(' ', '_'); //name = System.Xml.XmlConvert.EncodeName(name);
+        //var a = ((XElement)value).Attribute(encode(name)); if (a == null) return null;
+        //if (t.IsArray)
+        //{
+        //  var p = loada(a.Value.AsSpan(), t); return p;
+        //}
+        //else
+        //{
+        //  var c = TypeDescriptor.GetConverter(t);
+        //  var p = c.ConvertFromInvariantString(a.Value); return p;
+        //}
       }
+      //static string encode(string s)
+      //{
+      //  s = s.Replace(' ', '_');
+      //  int i = 0; for (; i < s.Length && (i == 0 ? System.Xml.XmlConvert.IsStartNCNameChar(s[i]) : System.Xml.XmlConvert.IsNCNameChar(s[i])); i++) ;
+      //  if (i == s.Length) return s;
+      //  s = System.Xml.XmlConvert.EncodeName(s); return s;
+      //}
+#endif
       class PD : PropertyDescriptor
       {
         internal Type type;
@@ -225,7 +391,7 @@ namespace Apex
     internal string getcode()
     {
       var bs = node.GetBuffer(CDX.BUFFER.SCRIPT);
-      return bs != null ? Encoding.UTF8.GetString(bs.ToBytes()) : string.Empty;
+      return bs != null ? Encoding.UTF8.GetString(bs.GetArray<byte>()) : string.Empty;
     }
     object[] getfuncs()
     {
@@ -240,17 +406,22 @@ namespace Apex
           var ctor = !debug ? bs.Tag as Func<Node, object[]> : null;
           if (ctor == null)
           {
-            var code = Encoding.UTF8.GetString(bs.ToBytes());
+            var code = Encoding.UTF8.GetString(bs.GetArray<byte>());
             var expr = Script.Compile(GetType(), code);
             ctor = expr.Compile(); if (!debug) bs.Tag = ctor;
           }
           funcs = ctor(this); if (debug) funcs[0] = null;
-          var bd = node.GetBytes(BUFFER.SCRIPTDATA);
-          if (bd != null)
-          {
-            var code = Encoding.UTF8.GetString(bd);
-            SetData(GetMethod<Action<IExchange>>(), code);
-          }
+
+          //var bd = node.GetBytes(BUFFER.SCRIPTDATA);
+          //if (bd != null)
+          //{
+          //  var data = Encoding.UTF8.GetString(bd);
+          //  loadoldscriptdata(GetMethod<Action<IExchange>>(), data, node);
+          //  saveprops(node, GetMethod<Action<IExchange>>());
+          //  node.RemoveBuffer(BUFFER.SCRIPTDATA);
+          //}
+
+          loadprops(node, GetMethod<Action<IExchange>>());
           return funcs;
         }
         catch (Exception e) { Debug.WriteLine(e.Message); }
@@ -268,6 +439,7 @@ namespace Apex
     {
       GetMethod<Action<IExchange>>()?.Invoke(e);
       var node = this.node;
+      //if(e.Modified) { var t = node.GetBuffer(BUFFER.SCRIPTDATA);  }
       if (e.Category("General"))
       {
         var s = node.Name; e.DisplayName("Name"); if (e.Exchange(".n", ref s)) { node.Name = s != string.Empty ? s : null; Invalidate(Inval.Tree); }
@@ -278,7 +450,14 @@ namespace Apex
         if (e.Category("Material"))
         {
           Range* rr; var nr = node.GetBufferPtr(BUFFER.RANGES, (void**)&rr) / sizeof(Range);
-          if (nr != 0)
+
+          //if(node.HasBuffer(BUFFER.SCRIPT))
+          //{
+          //  var flat = 0.2f; e.DisplayName("Flatness"); 
+          //  if (e.Exchange(".fl", ref flat)) {  }
+          //}
+
+          if (nr > 1)
           {
             for (int i = 0; i < nr; i++)
             {

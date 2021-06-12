@@ -44,6 +44,7 @@ namespace Apex
         case 2039: return OnRetess(test);
         case 2300: return OnCenter(test);
         case 2305: return OnCheck(test);
+        case 2306: return OnRangeSplit(test);
         case 2210: //Select Box
         case 2211: //Select Pivot
         case 2212: //Select Normals
@@ -184,7 +185,7 @@ namespace Apex
     }
     static byte[] MeshToBytes(CSG.IMesh mesh)
     {
-      var str = COM.SHCreateMemStream(); mesh.WriteToStream(str); return COM.Stream(str);
+      var str = COM.SHCreateMemStream(); mesh.WriteToStream(str); return str.ToArray();
     }
 
     static void MeshRound(ref float3[] pp, ref ushort[] ii)
@@ -312,7 +313,7 @@ namespace Apex
       var str = COM.SHCreateMemStream();
       scene.SaveToStream(str, null); //long l1; str.Seek(0, 1, &l1); 
       var data = new DataObject();
-      data.SetData("csg3mf", false, COM.Stream(str));
+      data.SetData("csg3mf", false, str.ToArray());
       Clipboard.SetDataObject(data, true);
       return 1;
     }
@@ -427,6 +428,15 @@ namespace Apex
         undosel(true, a.SelectMany(c => c.Nodes()).ToArray())));
       return 1;
     }
+    int OnRangeSplit(object test)
+    {
+      if (scene.SelectionCount != 1) return 0;
+      var node = scene.GetSelection(0);
+      Range* rr; var nr = node.GetBufferPtr(BUFFER.RANGES, (void**)&rr) / sizeof(Range);
+      if (nr <= 1) return 0;
+      if (test != null) return 1;
+      return 1;
+    }
     int OnNormalize(object test)
     {
       if (scene.SelectionCount == 0) return 0;
@@ -462,11 +472,11 @@ namespace Apex
       if (test != null) return 1; Cursor = Cursors.WaitCursor;
       var node = scene.GetSelection(0);
       var box = GetBox(scene.Selection(), node.Parent);
-      var ss = $"Size: {box.max - box.min} {(ShortUnit)node.Scene.Unit}";
+      var ss = $"Size: {box.max - box.min} {(ShortUnit)node.Scene.Unit}"; void* t;
       int nc = 0, np = 0, ni = 0, pl = 0, eg = 0; CSG.MeshCheck checks = 0; double vol = 0, surf = 0;
       foreach (var p in node.Descendants(true))
       {
-        nc++; void* t;
+        nc++; 
         if (!p.HasBuffer(BUFFER.POINTBUFFER)) { if (p.Child == null) eg++; continue; }
         np += p.GetBufferPtr(BUFFER.POINTBUFFER, &t) / sizeof(float3);
         ni += p.GetBufferPtr(BUFFER.INDEXBUFFER, &t) / sizeof(ushort);
@@ -474,6 +484,8 @@ namespace Apex
         var check = mesh.Check(); if (check == 0) { /*mesh.InitPlanes();*/ pl += mesh.PlaneCount; }
         checks |= check; Marshal.ReleaseComObject(mesh); if (check == 0) { vol += p.GetVolume(); surf += p.GetSurface(); }
       }
+      ss += '\n'; ss += $"Properties: {string.Join(", ", (node.GetProps() ?? string.Empty).Split('\n'))}";
+      //ss += '\n'; ss += $"ScriptData: {node.GetBufferPtr(BUFFER.SCRIPTDATA, &t)} Props: {node.GetBufferPtr(BUFFER.PROPS, &t)}";
       ss += '\n'; ss += $"{np} Vertices {ni / 3} Polygones {pl} Planes in {nc} Models.";
       if (checks != 0) { ss += '\n'; ss += $"Errors: {checks}"; }
       if (vol != 0) { ss += '\n'; ss += $"Volume: {vol} {(ShortUnit)scene.Unit}³ Surface: {surf} {(ShortUnit)scene.Unit}²"; }
@@ -483,7 +495,6 @@ namespace Apex
       return 1;
     }
     public enum ShortUnit { m = 1, cm = 2, mm = 3, μm = 4, ft = 5, @in = 6, }
-
 
     //static double scaling(Unit u)
     //{

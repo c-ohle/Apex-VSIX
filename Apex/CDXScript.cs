@@ -1307,13 +1307,14 @@ namespace Apex
       {
         node.funcs = null;
         inode.RemoveBuffer(CDX.BUFFER.SCRIPT);
-        inode.RemoveBuffer(CDX.BUFFER.SCRIPTDATA);
+        //inode.RemoveBuffer(CDX.BUFFER.SCRIPTDATA);
         node.Invalidate(Inval.PropertySet); return;
       }
       if(node.funcs != null && node.funcs.Length != 0)
-      { 
-        var cd = Node.GetData(node.GetMethod<Action<IExchange>>());
-        inode.SetBytes(CDX.BUFFER.SCRIPTDATA, cd != null ? Encoding.UTF8.GetBytes(cd) : null);
+      {
+        Node.saveprops(node.node, node.GetMethod<Action<IExchange>>());
+        //var cd = Node.GetData(node.GetMethod<Action<IExchange>>(), node.node);
+        //inode.SetBytes(CDX.BUFFER.SCRIPTDATA, cd != null ? Encoding.UTF8.GetBytes(cd) : null);
       }
       node.funcs = null;
       inode.SetBytes(CDX.BUFFER.SCRIPT, Encoding.UTF8.GetBytes(code));
@@ -1322,7 +1323,8 @@ namespace Apex
         Script.bps = map.Where(p => p.v == 0x1A).Select(p => p.i).ToArray();
         Script.dbg = DebugStep; (Script.map = map).Clear(); sp = null; state = 0;
         node.GetMethod<Action<IExchange>>();
-      }
+      } 
+      Node.CompactProps(node.node, node.GetMethod<Action<IExchange>>());
       node.Invalidate(Inval.PropertySet); hccode = code.GetHashCode();
       //////////
     }

@@ -19,7 +19,91 @@ using static Apex.CDX;
 
 namespace Apex
 {
-#if(false)
+
+#if (false)
+  unsafe class MiniStream
+  {
+    byte[] pp; int ip, np;
+
+    internal MiniStream(int cap) { pp = new byte[cap]; }
+    internal int Length { get => np; }
+    internal int Position { get => ip; set => ip = value; }
+    internal void Read(void* p, int n)
+    {
+      if (ip + n > np) throw new Exception();
+      fixed (byte* t = pp) Native.memcpy(p, t + ip, (void*)n); ip += n;
+      //for (int i = 0; i < n; i++) ((byte*)p)[i] = pp[ip++];
+    }
+    internal void Write(void* p, int n)
+    {
+      while (ip + n > pp.Length) Array.Resize(ref pp, pp.Length << 1);
+      fixed (byte* t = pp) Native.memcpy(t + ip, p, (void*)n); ip += n; np = ip;
+      //for (int i = 0; i < n; i++) pp[ip++] = ((byte*)p)[i]; np = ip;
+    }
+    internal int ReadCount()
+    {
+      int i = 0; for (int s = 0; ; s += 7) { int b = pp[ip++]; i |= (b & 0x7F) << s; if ((b & 0x80) == 0) break; }
+      return i;
+    }
+    internal void WriteCount(int c)
+    {
+      if (ip + 5 > pp.Length) Array.Resize(ref pp, pp.Length << 1);
+      for (; c >= 0x80; pp[ip++] = (byte)(c | 0x80), c >>= 7) ; pp[ip++] = (byte)c; np = ip;
+    }
+    internal void WriteString(string s)
+    {
+      WriteCount(s.Length); 
+      for (int i = 0; i < s.Length; i++) WriteCount(s[i]);
+    }
+    internal bool ReadString(string s)
+    {
+      var n = ReadCount(); var ok = n == s.Length;
+      for (int i = 0, k = 0; i < n; i++) { var c = ReadCount(); if (ok && c != s[k++]) ok = false; }
+      return ok;
+    }
+    internal void WriteObject(object value)
+    {
+      var t = value.GetType();
+      if (t.IsArray)
+      {
+        var a = value as Array; WriteCount(a.Length);
+        var e = t.GetElementType();
+        if (e.IsValueType)
+        {
+          var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
+          var p = (byte*)h.AddrOfPinnedObject(); Write(p, a.Length * n); h.Free();
+        }
+        else
+        {
+          for (int i = 0; i < a.Length; i++) WriteObject(a.GetValue(i));
+        }
+        return;
+      }
+      return;
+    }
+    internal object ReadObject(Type t)
+    {
+      if (t.IsArray)
+      {
+        var c = ReadCount(); var e = t.GetElementType();
+        var a = Array.CreateInstance(e, c);
+        if (e.IsValueType)
+        {
+          var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
+          var p = (byte*)h.AddrOfPinnedObject(); Read(p, a.Length * n); h.Free();
+        }
+        else
+        {
+          for (int i = 0; i < c; i++) a.SetValue(ReadObject(e), i);
+        }
+        return a;
+      }
+      return null;
+    }
+  }
+
+#endif
+#if (false)
     static int[] caladj(ushort[] a)
     {
       var b = new int[a.Length];

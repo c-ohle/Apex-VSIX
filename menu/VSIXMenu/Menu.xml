@@ -98,6 +98,7 @@
     <MenuItem text="Check..." id="2305" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/> 
     <MenuItem text="Normalize" id="2038" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/>
     <MenuItem text="Retess" id="2039" fl="DefaultInvisible|DynamicVisibility"/>
+    <MenuItem text="Rangesplit" id="2306" fl="DefaultInvisible|DynamicVisibility"/>
     <Seperator/>
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />
@@ -141,12 +142,17 @@
     <MenuItem text="Center" id="2300" />
   </ContextMenu>
   <ContextMenu name="Script" id="0x2101" >
-    <MenuItem id="cmdidStart" />
+    <MenuItem id="cmdidToggleBreakpoint" />
+    <Seperator/>
+    <!--<MenuItem id="cmdidStart" />-->
     <MenuItem id="cmdidStepOver" />
     <MenuItem id="cmdidStepInto" />
     <MenuItem id="cmdidStepOut" />
-    <MenuItem id="cmdidToggleBreakpoint" />
-    <MenuItem id="cmdidStop" />
+    <!--<MenuItem id="cmdidStop" />-->
+    <Seperator/>
+    <MenuItem id="cmdidFindSelectedNext" />
+    <MenuItem id="cmdidFindNext" />
+    <MenuItem id="cmdidFindPrev" />
     <Seperator/>
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />

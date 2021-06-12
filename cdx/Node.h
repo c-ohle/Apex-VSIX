@@ -138,10 +138,11 @@ struct __declspec(novtable) CTexture : CCacheBuffer
   HRESULT __stdcall Update(const BYTE* p, UINT n);
 };
 
-struct Range
+struct XRANGE
 {
-  UINT Start, Count;
-  UINT Color;
+  UINT start, count;
+  UINT color;
+//  float flatness;
 };
 
 #define NODE_FL_SELECT    0x01
@@ -179,6 +180,7 @@ struct __declspec(novtable) CNode : ICDXNode
   HRESULT __stdcall GetTypeTransform(UINT typ, XMFLOAT4X3* p);
   HRESULT __stdcall SetTypeTransform(UINT typ, const XMFLOAT4X3* p);
 
+  float getprop(const char* s, float def);
   CBuffer* getbuffer(CDX_BUFFER id) const;
   void setbuffer(CDX_BUFFER id, CBuffer* p);
   void inval(CDX_BUFFER id);
@@ -281,4 +283,7 @@ struct __declspec(novtable) CNode : ICDXNode
   HRESULT __stdcall get_Child(ICDXNode** p);
   HRESULT __stdcall get_Next(ICDXNode** p);
   HRESULT __stdcall NextSibling(ICDXNode* r, ICDXNode** p);
+  HRESULT __stdcall SetProp(LPCWSTR s, const BYTE* p, UINT n, UINT typ);
+  HRESULT __stdcall GetProp(LPCWSTR s, BYTE** p, UINT* typ, UINT* pn);
+  HRESULT __stdcall GetProps(BSTR* p);
 };

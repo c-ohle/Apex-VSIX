@@ -114,7 +114,6 @@ namespace Apex
             }
             ushort* ii; var ni = group.GetBufferPtr(BUFFER.INDEXBUFFER, (void**)&ii) / sizeof(ushort);
             (int First, int Length) range = nr != 0 ? (pr[k].Start, pr[k].Count) : (0, ni);
-            //if (range.Length == 0) range = new CharacterRange(0, ni);
             for (int i = 0; i < range.Length; i += 3)
             {
               var triangle = new XElement(ns + "triangle"); triangles.Add(triangle);
@@ -144,8 +143,10 @@ namespace Apex
         if ((bb = group.GetBytes(BUFFER.SCRIPT)) != null)
         {
           obj.SetAttributeValue(ax + "cs", Convert.ToBase64String(bb)); group.FetchBuffer();
-          if ((bb = group.GetBytes(BUFFER.SCRIPTDATA)) != null) obj.SetAttributeValue(ax + "cd", Convert.ToBase64String(bb));
+          //if ((bb = group.GetBytes(BUFFER.SCRIPTDATA)) != null) obj.SetAttributeValue(ax + "cd", Convert.ToBase64String(bb));
         }
+        if ((bb = group.GetBytes(BUFFER.PROPS)) != null)
+          obj.SetAttributeValue(ax + "pr", Convert.ToBase64String(bb));
       };
       if (path == null) return doc;//doc.Save("C:\\Users\\cohle\\Desktop\\test2.xml");
       var memstr = new MemoryStream();
@@ -178,20 +179,6 @@ namespace Apex
       }
       File.WriteAllBytes(path, memstr.ToArray()); return null;
     }
-
-    //static bool issubset(INode[] desc)
-    //{
-    //  return false;/*
-    //  for (int i = 0; i < desc.Length; i++)
-    //  {
-    //    var p = desc[i]; if (p.Range.Length == 0 || p.Transform != 1) return false;
-    //    if (i == 0) continue;
-    //    if (p.GetBuffer(BUFFER.POINTBUFFER) != desc[0].GetBuffer(BUFFER.POINTBUFFER)) return false;
-    //    if (p.GetBuffer(BUFFER.INDEXBUFFER) != desc[0].GetBuffer(BUFFER.INDEXBUFFER)) return false;
-    //  }      
-    //  return true;
-    //*/
-    //}
 
     public static IScene Import3MF(object data, out float3 dragpt)
     {
@@ -257,7 +244,6 @@ namespace Apex
             var triangles = mesh.Element(ns + "triangles").Elements(ns + "triangle");
             var kk = triangles.OrderBy(p => p.Attribute("pid")?.Value).ToArray();
             var mm = kk.Select(p => p.Attribute("pid")?.Value).Distinct().ToArray();
-            //if (mm.Length > 1) { }
             var rr = mm.Length > 1 ? new Range[mm.Length] : null;
             //var subs = (INode[])null;//mm.Length > 1 ? mm.Select(p => node.AddNode(null)).ToArray() : null;
             //var main = subs != null ? subs[0] : node;
@@ -336,9 +322,8 @@ namespace Apex
               if (i == 0) node.Color = color;
               if (rr != null)
               {
-                rr[i].Start = ab * 3;
-                rr[i].Count = (bis - ab) * 3;
-                rr[i].Color = color;
+                ref var r = ref rr[i]; r.Start = ab * 3; r.Count = (bis - ab) * 3;
+                r.Color = color; //r.Flattness = 0.2f;
               }
               if (tex != null && i < 16) node.SetBuffer(BUFFER.TEXTURE + i, tex);
             }
@@ -349,8 +334,10 @@ namespace Apex
           if (bb != null)
           {
             node.SetBytes(BUFFER.SCRIPT, Convert.FromBase64String(bb)); //apex = "x"; //todo: remove, detect old apex docs without x namespace
-            if ((bb = (string)obj.Attribute(ax + "cd")) != null) node.SetBytes(BUFFER.SCRIPTDATA, Convert.FromBase64String(bb));
+            //if ((bb = (string)obj.Attribute(ax + "cd")) != null) node.SetBytes(BUFFER.SCRIPTDATA, Convert.FromBase64String(bb));
           }
+          if ((bb = (string)obj.Attribute(ax + "pr")) != null)
+            node.SetBytes(BUFFER.PROPS, Convert.FromBase64String(bb));
           if ((bb = (string)obj.Attribute(ax + "ca")) != null)
           {
             node.SetBytes(BUFFER.CAMERA, Convert.FromBase64String(bb));
