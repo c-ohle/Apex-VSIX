@@ -288,14 +288,14 @@ namespace Apex
         case ToolEnum.SelectRect: return tool_select();
         case ToolEnum.CameraMoveHorizontal: return camera_movxy();
         case ToolEnum.CameraMoveVertical: return camera_movz();
-        case ToolEnum.CameraRotateHorizontal: return camera_rotz(null);
+        case ToolEnum.CameraRotateHorizontal: return camera_rotz(0);
         case ToolEnum.CameraRotateVerical: return camera_rotx();
         case ToolEnum.CameraRotateDirectional: return camera_free2();
         case ToolEnum.CameraMoveXAxis: return camera_movxy2(1);
         case ToolEnum.CameraMoveYAxis: return camera_movxy2(2);
         case ToolEnum.CameraMoveZAxis: return camera_movz();  //CameraMoveVertical
-        case ToolEnum.CameraSelectionRotateHorizontal: return camera_rotz(mainselect());
-        case ToolEnum.CameraSelectionRotateVertical: break;
+        case ToolEnum.CameraSelectionRotateHorizontal: return camera_rotz(1);
+        case ToolEnum.CameraSelectionRotateVertical: return camera_rotx(1);
         case ToolEnum.ObjectMoveHorizontal: return obj_movxy(main);
         case ToolEnum.ObjectMoveVertical: return obj_movz(main);
         case ToolEnum.ObjectDragDrop: return obj_drag(main);
@@ -415,35 +415,95 @@ namespace Apex
         }
       };
     }
-    Action<int> camera_rotz(INode prot)
+    Action<int> camera_rotz(int fl)
     {
-      var cam = view.Camera; var m = cam.Transform; Cursor = Cursors.SizeWE;
-      var rot = (prot ?? cam).GetTransform(null).mp;
+      var cam = view.Camera; var cm = cam.GetTransform(); Cursor = Cursors.SizeWE;
+      var rot = default(float3); 
+      if (fl == 0) rot = cm.mp;
+      else
+      {
+        var box = GetBox(scene.Selection());
+        if(box.IsEmpty) box = GetBox(mainover());
+        rot = box.IsEmpty ? cm.mp : box.mid;
+      }
       var wp = overwp(); var mp = new float3(rot.x, rot.y, wp.z);
       view.SetPlane(mp);
       var p1 = view.PickPlane(); var p2 = p1; var a1 = p1.Angel; //var mover = move(camera);
       return id =>
       {
-        if (id == 0) { p2 = view.PickPlane(); cam.Transform = m * -rot * RotationZ(a1 - view.PickPlane().Angel) * rot; }
-        if (id == 1) AddUndo(undo(cam, m));
+        if (id == 0) { p2 = view.PickPlane(); cam.Transform = cm * -rot * RotationZ(a1 - p2.Angel) * rot; }
+        if (id == 1) AddUndo(undo(cam, cm));
         if (id == 4)
         {
-          if (prot == null) return;
-          var dc = new DC(view); dc.Transform = mp;// dc.Plane;          
+          if (fl == 0) return;
+          var dc = new DC(view); dc.Transform = mp;          
           dc.Color = 0x800000ff; var r = p1.Length;
           dc.DrawLine(new float3(0, 0, -100), new float3(0, 0, +100));
           var pp = (new float3(), (float3)p1);
           dc.DrawPoints(&pp.Item1, 2);
           dc.DrawCirc(default, r); dc.Color = 0x080000ff;
           dc.FillCirc(default, r);
+        }
+      };
+    }
 
+    //mp = !LookAtLH(ps, m.mp, new float3(0, 0, 1));
+    //(debuginfo ?? (debuginfo = new System.Collections.Generic.List<string>())).Clear();
+    //debuginfo.Add($"vs: {vs}");
+
+    Action<int> camera_rotx(int fl)
+    {
+      var cam = view.Camera; var cm = cam.GetTransform(); Cursor = Cursors.SizeNS;
+      var rot = default(float3);
+      if (fl == 0) rot = cm.mp;
+      else
+      {
+        var box = GetBox(scene.Selection());
+        if (box.IsEmpty) box = GetBox(mainover());
+        if (box.IsEmpty) return camera_rotx(); rot = box.mid;
+      }
+      var mrot = (float4x3)(rot * !cm);
+      var wp = overwp();
+      var e = PlaneFromPointNormal(wp, cm.mx);
+      var ps = PlaneIntersect(e, rot, rot + cm.mx);
+      var e2 = PlaneFromPoints(cm.mp, rot, rot + cm.mx);
+      var vs = e.xyz ^ e2.xyz;
+      var le = (wp - ps).Length;
+      var dir = (cm.mp - wp).LengthSq < (cm.mp - ps).LengthSq ? -1f : +1f; vs *= dir;
+      var me = cm; me.mp = ps + vs * le;
+      if (dir < 0) me = RotationZ(Math.PI) * me;
+      view.SetPlane(me);
+      var p1 = view.PickPlane(); var p2 = p1; var w1 = Math.Asin(Math.Max(-1, Math.Min(+1, p2.y / le)));
+      return id =>
+      {
+        if (id == 0)
+        {
+          p2 = view.PickPlane();
+          var w2 = Math.Asin(Math.Max(-1, Math.Min(+1, p2.y / le)));
+          cam.Transform = !mrot * RotationX(w2 - w1) * mrot * cm;
+        }
+        if (id == 1) AddUndo(undo(cam, cm));
+        if (id == 4)
+        {
+        // //if (flags==0) 
+        //   //return;
+        // var dc = new DC(view);
+        // //dc.Transform = me; dc.Color = 0x80808080; dc.FillRect(0, 0, 40, 20);
+        // dc.Transform = 1;
+        // dc.Color = 0xff0000ff; dc.DrawLine(rot, ps);
+        // //dc.Color = 0xffff0000; dc.DrawLine(wp, ps);
+        // //dc.Color = 0xffffff00; dc.DrawLine(ps, ps + vs * le);
+        // //dc.Color = 0xffff0000;
+        // //dc.Transform = !LookAtLH(ps, ps + cm.mx, new float3(0, 0, 1));
+        // //dc.DrawCirc(default, (ps - wp).Length); dc.Color = 0x080000ff;
+        // //wp = wp;vs = vs;
         }
       };
     }
     Action<int> camera_rotx()
     {
       var camera = view.Camera; var m = camera.GetTransform(); Cursor = Cursors.SizeNS;
-      view.SetPlane(m * m.mz); var p1 = view.PickPlane(); var p2 = p1; //var mover = move(camera);
+      view.SetPlane(m * m.mz); var p1 = view.PickPlane(); var p2 = p1;
       return id =>
       {
         if (id == 0) { p2 = view.PickPlane(); camera.Transform = RotationX(Math.Atan(p2.y) - Math.Atan(p1.y)) * m; }

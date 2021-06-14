@@ -261,6 +261,10 @@ namespace Apex
       if (node.HasBuffer(BUFFER.POINTBUFFER)) return "Model";
       return "Group";
     }
+    public static float3box GetBox(INode node, object root = null)
+    {
+      return GetBox(Enumerable.Repeat(node, node != null ? 1 : 0), root);
+    }
     public static float3box GetBox(IEnumerable<INode> nodes, object root = null)
     {
       var box = float3box.Empty;
@@ -886,6 +890,13 @@ namespace Apex
     public static float4 PlaneFromPoints(float3 a, float3 b, float3 c) => PlaneFromPointNormal(a, (b - a ^ c - a).Normalize());
     public static float4 PlaneFromPointNormal(float3 p, float3 n) => new float4(n.x, n.y, n.z, -(p.x * n.x + p.y * n.y + p.z * n.z));
     public static float DotCoord(float4 e, float3 p) => e.x * p.x + e.y * p.y + e.z * p.z + e.w;
+    public static float3 PlaneIntersect(float4 e, float3 a, float3 b)
+    {
+      var u = e.xyz & a;
+      var v = e.xyz & b;
+      var w = (u + e.w) / (u - v);
+      return a + (b - a) * w;
+    }
 
     public struct float3box
     {

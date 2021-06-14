@@ -9,13 +9,13 @@ using System.Runtime.InteropServices;
 
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
+//todo: tool rot vert um obj
 //todo: mesh flat angel
 //todo: ranges as/in buffer 
 //todo: refresh after load
 //todo: camera dpi
 //todo: F1
 //todo: multisel undo 
-//todo: tool rot vert um obj
 //todo: VS for 2D
 //todo: texture names, io bin...
 //todo: collision

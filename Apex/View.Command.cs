@@ -215,7 +215,7 @@ namespace Apex
       fixed (float2* bt = btt ?? (btt = new float2[bii.Length]))
         Factory.CopyCoords(app, aii, ani, att, bp, bi, bii.Length, bt);
     }
-    
+
     int OnJoin(object test, int id)
     {
       if (scene.SelectionCount != 2) return 0;
@@ -240,7 +240,7 @@ namespace Apex
         //undo(n1, BUFFER.CSGMESH, ro),
         undo(n1, BUFFER.POINTBUFFER, vv),
         undo(n1, BUFFER.INDEXBUFFER, ii),
-        undo(n1, BUFFER.TEXCOORDS, tt),  
+        undo(n1, BUFFER.TEXCOORDS, tt),
         undodel(n2), undosel(true, n1)));
       return 1;
     }
@@ -259,7 +259,7 @@ namespace Apex
       var vv = r1.GetVertices();
       var ii = r1.GetIndices(); MeshRound(ref vv, ref ii);
       var tt = (float2[])null; if (n1.HasBuffer(BUFFER.TEXCOORDS)) CopyCoords(n1, vv, ii, ref tt);
-      Marshal.ReleaseComObject(r1); 
+      Marshal.ReleaseComObject(r1);
       Execute(undo(
         //undo(n1, BUFFER.CSGMESH, ro),
         undo(n1, BUFFER.POINTBUFFER, vv),
@@ -435,6 +435,30 @@ namespace Apex
       Range* rr; var nr = node.GetBufferPtr(BUFFER.RANGES, (void**)&rr) / sizeof(Range);
       if (nr <= 1) return 0;
       if (test != null) return 1;
+      var pp = node.GetArray<float3>(BUFFER.POINTBUFFER);
+      var ii = node.GetArray<ushort>(BUFFER.INDEXBUFFER);
+      var tt = node.GetArray<float2>(BUFFER.TEXCOORDS);
+      var dict = new Dictionary<float3, ushort>(pp.Length);
+      var nodes = new INode[nr];
+      for (int i = 0; i < nr; i++)
+      {
+        var pn = Factory.CreateNode(); nodes[i] = pn; var r = rr[i];
+        pn.Transform = node.Transform; pn.Color = rr[i].Color;
+        pn.Texture = node.GetBuffer(BUFFER.TEXTURE + i);
+        var pii = new ushort[r.Count];
+        for (int k = 0, a = r.Start; k < pii.Length; k++)
+        {
+          var pt = pp[ii[a + k]]; if (!dict.TryGetValue(pt, out var ip)) dict.Add(pt, ip = (ushort)dict.Count);
+          pii[k] = ip;
+        }
+        pn.SetArray(BUFFER.POINTBUFFER, dict.Keys.ToArray()); dict.Clear();
+        pn.SetArray(BUFFER.INDEXBUFFER, pii);
+        if (pn.Texture!=null && tt != null) pn.SetArray(BUFFER.TEXCOORDS, tt.Skip(r.Start).Take(r.Count).ToArray());
+      }
+      Execute(undo(
+        undosel(false, node), undodel(node),
+        undo(nodes.Select((p, i) => undodel(p, node.Parent, node.Index + i)).ToArray()),
+        undosel(true, nodes)));
       return 1;
     }
     int OnNormalize(object test)
@@ -476,7 +500,7 @@ namespace Apex
       int nc = 0, np = 0, ni = 0, pl = 0, eg = 0; CSG.MeshCheck checks = 0; double vol = 0, surf = 0;
       foreach (var p in node.Descendants(true))
       {
-        nc++; 
+        nc++;
         if (!p.HasBuffer(BUFFER.POINTBUFFER)) { if (p.Child == null) eg++; continue; }
         np += p.GetBufferPtr(BUFFER.POINTBUFFER, &t) / sizeof(float3);
         ni += p.GetBufferPtr(BUFFER.INDEXBUFFER, &t) / sizeof(ushort);

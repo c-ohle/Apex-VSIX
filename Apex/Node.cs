@@ -137,7 +137,7 @@ namespace Apex
       {
         if (this.name != null) { if (name != this.name) return; todo = -1; }
         var node = (INode)this.value; var t = typeof(T);
-        if (t.IsValueType)
+        if (blittable(t))
         {
           var n = Marshal.SizeOf(t); var r = __makeref(v);
           fixed (char* ss = name) node.SetProp(ss, *(void**)&r, n, (int)Type.GetTypeCode(t));
@@ -150,7 +150,7 @@ namespace Apex
         void* p; int n, typ; fixed (char* ss = name) n = node.GetProp(ss, &p, out typ);
         if (p == null) return;
         var t = typeof(T);
-        if (t.IsValueType)
+        if (blittable(t))
         {
           if (n == Marshal.SizeOf(t) && typ == (int)Type.GetTypeCode(t))
           {
@@ -164,14 +164,14 @@ namespace Apex
           if (readobj(ref str, t) is T x) v = x;
         }
       }
-
+      static bool blittable(Type t) => t.IsValueType && t.IsLayoutSequential; //t.IsLayoutSequential || t.IsExplicitLayout
       static object readobj(ref (IntPtr p, int i, int n) str, Type t)
       {
         if (t.IsArray)
         {
           var c = readcount(ref str); var e = t.GetElementType();
           var a = Array.CreateInstance(e, c);
-          if (e.IsValueType)
+          if (blittable(e))
           {
             var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
             var p = (byte*)h.AddrOfPinnedObject(); read(ref str, p, a.Length * n); h.Free();
@@ -215,7 +215,7 @@ namespace Apex
         {
           writecount(ref str, a.Length);
           var e = a.GetType().GetElementType();
-          if (e.IsValueType)
+          if (blittable(e))
           {
             var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
             var p = (byte*)h.AddrOfPinnedObject(); write(ref str, p, a.Length * n); h.Free();
