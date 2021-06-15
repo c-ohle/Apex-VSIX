@@ -446,13 +446,11 @@ namespace Apex
         }
       };
     }
-
-    //mp = !LookAtLH(ps, m.mp, new float3(0, 0, 1));
-    //(debuginfo ?? (debuginfo = new System.Collections.Generic.List<string>())).Clear();
-    //debuginfo.Add($"vs: {vs}");
-
     Action<int> camera_rotx(int fl)
     {
+      //mp = !LookAtLH(ps, m.mp, new float3(0, 0, 1));
+      //(debuginfo ?? (debuginfo = new System.Collections.Generic.List<string>())).Clear();
+      //debuginfo.Add($"vs: {vs}");
       var cam = view.Camera; var cm = cam.GetTransform(); Cursor = Cursors.SizeNS;
       var rot = default(float3);
       if (fl == 0) rot = cm.mp;
@@ -467,7 +465,7 @@ namespace Apex
       var e = PlaneFromPointNormal(wp, cm.mx);
       var ps = PlaneIntersect(e, rot, rot + cm.mx);
       var e2 = PlaneFromPoints(cm.mp, rot, rot + cm.mx);
-      var vs = e.xyz ^ e2.xyz;
+      var vs = e.xyz ^ e2.xyz; //Debug.WriteLine(vs.Length);
       var le = (wp - ps).Length;
       var dir = (cm.mp - wp).LengthSq < (cm.mp - ps).LengthSq ? -1f : +1f; vs *= dir;
       var me = cm; me.mp = ps + vs * le;

@@ -64,9 +64,9 @@ namespace Apex
         case 2330://Collision
           if (test != null) return (flags & 2) != 0 ? 3 : 1;
           flags ^= 2; return 1;
-        case 2221: //Tooltips
-          if (test != null) return (flags & 4) != 0 ? 3 : 1;
-          flags ^= 4; return 1;
+        case 2221: //ToolAssist
+          if (test != null) return (sflags & 2) != 0 ? 3 : 1;
+          sflags ^= 2; Application.UserAppDataRegistry.SetValue("sfl", sflags); return 1;
         //case 2340: return OnTools(test);
         case 5100: //BringForward:
         case 5101: //SendBackward:
@@ -320,15 +320,22 @@ namespace Apex
     int OnPaste(object test)
     {
       var data = Clipboard.GetDataObject();// as DataObject;
-      if (data == null) return 0; int i = 0; string[] ss = null;
+      if (data == null) return 0; int i = 0; string path = null;
       if (data.GetDataPresent("csg3mf")) i = 1;
       if (i == 0 && data.GetDataPresent("System.Drawing.Bitmap"))//DeviceIndependentBitmap"))
         if (scene.SelectionCount == 1 && scene.GetSelection(0).HasBuffer(BUFFER.POINTBUFFER))
           i = 2;
       if (i == 0)
       {
-        ss = data.GetData("FileName") as string[];
-        if (ss != null && ss.Length == 1 && ss[0].EndsWith(".3mf", true, null)) i = 3;
+        if (data.GetData("FileName") is string[] ss && ss.Length == 1) path = ss[0];
+        if (path != null)
+        {
+          if (path.EndsWith(".3mf", true, null)) i = 3;
+          else if (
+            path.EndsWith(".3ds", true, null) ||
+            path.EndsWith(".obj", true, null) ||
+            path.EndsWith(".fbx", true, null)) i = 4;
+        }
       }
       if (i == 0)
       {
@@ -356,12 +363,17 @@ namespace Apex
       }
       else if (i == 3)
       {
-        paste(Import3MF(ss[0], out _), (IRoot)scene);
+        paste(Import3MF(path, out _), (IRoot)scene);
+      }
+      else if (i == 4)
+      {
+        paste(Import(path, out _), (IRoot)scene);
       }
       return 1;
     }
     void paste(IScene drop, IRoot root)
     {
+      if (drop == null) return;
       var pp = drop.Nodes().ToArray(); drop.Clear();
       Execute(undo(undo(
         pp.Select((p, x) => undodel(p, root, root.Count + x)).ToArray()),
@@ -453,7 +465,7 @@ namespace Apex
         }
         pn.SetArray(BUFFER.POINTBUFFER, dict.Keys.ToArray()); dict.Clear();
         pn.SetArray(BUFFER.INDEXBUFFER, pii);
-        if (pn.Texture!=null && tt != null) pn.SetArray(BUFFER.TEXCOORDS, tt.Skip(r.Start).Take(r.Count).ToArray());
+        if (pn.Texture != null && tt != null) pn.SetArray(BUFFER.TEXCOORDS, tt.Skip(r.Start).Take(r.Count).ToArray());
       }
       Execute(undo(
         undosel(false, node), undodel(node),

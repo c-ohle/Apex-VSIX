@@ -33,14 +33,47 @@ namespace Apex
 
     internal CDXWindowPane pane;
     IScene scene; IView view; static long drvsettings = 0x400000000;
-    int flags = 1 | 4; // | 2; //1:Checkboard 2:Collisions 4:Tooltips
+    static int sflags = 2; //1:Init 2:ToolsAssist 
+    int flags = 1; //1:Checkboard 2:Collisions
 
-    static CDXView()
+    void initview()
     {
       var reg = Application.UserAppDataRegistry;
-      var drv = reg.GetValue("drv"); if (drv is long v) drvsettings = v;
-      Factory.SetDevice((uint)drvsettings);
-      Debug.Listeners.Add(new Listner());
+      if ((sflags & 1) == 0)
+      {
+        if (reg.GetValue("sfl") is int i) sflags = i; sflags |= 1;
+        if (reg.GetValue("drv") is long v) drvsettings = v;
+        Factory.SetDevice((uint)drvsettings);
+        Debug.Listeners.Add(new Listner());
+      }
+      view = Factory.CreateView(Handle, this, (uint)(drvsettings >> 32));
+      view.BkColor = 0xffcccccc;
+      view.Render = (RenderFlags)reg.GetValue("fl",
+        (int)(RenderFlags.BoundingBox | RenderFlags.Coordinates | RenderFlags.Wireframe | RenderFlags.Shadows))
+        | RenderFlags.ZPlaneShadows;
+      view.Scene = scene; var defcam = scene.Camera;
+      if (defcam == null)
+      {
+        defcam = Factory.CreateNode(); defcam.Name = "(default)";
+        defcam.Transform = !LookAtLH(new float3(-3, -6, 3), default, new float3(0, 0, 1));
+        var c1 = new BUFFERCAMERA { fov = 50, near = 1, far = 10000, minz = -1 };
+        defcam.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(BUFFERCAMERA));
+        view.Camera = defcam; scene.Camera = defcam;
+        var c2 = new BUFFERCAMERA { fov = 100, near = 1 }; view.Command(Cmd.Center, &c2);
+        if (c2.near < c1.near || c2.far > c1.far)
+        {
+          var box = GetBox(scene.Nodes());
+          var m = Translation(-box.mid.x, -box.mid.y, -box.min.z) * Scaling(500 / box.size.Length);
+          foreach (var p in scene.Nodes()) p.Transform *= m;
+          box = GetBox(scene.Nodes());
+          c2 = new BUFFERCAMERA { fov = 100, near = 1 }; view.Command(Cmd.Center, &c2);
+        }
+      }
+      else
+      {
+        view.Camera = scene.Tag as INode ?? defcam; scene.Tag = null;
+      }
+      inval |= Inval.Tree | Inval.Select; //-> PropertyGrid
     }
 
     class Listner : TraceListener
@@ -60,8 +93,7 @@ namespace Apex
         //if (wnd is IVsWindowPane sv) { }
         var guid = Microsoft.VisualStudio.VSConstants.GUID_OutWindowDebugPane;
         wnd.GetPane(ref guid, out var pane);
-        pane.Activate();
-        pane.OutputStringThreadSafe(s);
+        pane.Activate(); pane.OutputStringThreadSafe(s);
       }
     }
 
@@ -106,47 +138,7 @@ namespace Apex
     {
       //if (view != null) System.Diagnostics.Debug.WriteLine("OnSizeChanged with view " + Size);
       if (view == null) initview();
-      //if (view != null) return;
-      //if (!IsWindowVisible(Handle)) return;
-      //initview(); 
     }
-    protected override void OnPaint(PaintEventArgs e)
-    {
-      //if (view == null) initview(); Invalidate();
-      //base.OnPaint(e);
-    }
-    private void initview()
-    {
-      view = Factory.CreateView(Handle, this, (uint)(drvsettings >> 32));
-      view.BkColor = 0xffcccccc;
-      view.Render = (RenderFlags)Application.UserAppDataRegistry.GetValue("fl",
-        (int)(RenderFlags.BoundingBox | RenderFlags.Coordinates | RenderFlags.Wireframe | RenderFlags.Shadows))
-        | RenderFlags.ZPlaneShadows;
-      view.Scene = scene; var defcam = scene.Camera;
-      if (defcam == null)
-      {
-        defcam = Factory.CreateNode(); defcam.Name = "(default)";
-        defcam.Transform = !LookAtLH(new float3(-3, -6, 3), default, new float3(0, 0, 1));
-        var c1 = new BUFFERCAMERA { fov = 50, near = 1, far = 10000, minz = -1 };
-        defcam.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(BUFFERCAMERA));
-        view.Camera = defcam; scene.Camera = defcam;
-        var c2 = new BUFFERCAMERA { fov = 100, near = 1 }; view.Command(Cmd.Center, &c2); 
-        if(c2.near < c1.near || c2.far > c1.far) 
-        {
-          var box = GetBox(scene.Nodes());
-          var m = Translation(-box.mid.x, -box.mid.y, -box.min.z) * Scaling(500 / box.size.Length);
-          foreach (var p in scene.Nodes()) p.Transform *= m;
-          box = GetBox(scene.Nodes());
-          c2 = new BUFFERCAMERA { fov = 100, near = 1 }; view.Command(Cmd.Center, &c2);
-        }
-      }
-      else
-      {
-        view.Camera = scene.Tag as INode ?? defcam; scene.Tag = null;
-      }
-      inval |= Inval.Tree | Inval.Select; //-> PropertyGrid
-    }
-
     protected override void WndProc(ref Message m)
     {
       switch (m.Msg)

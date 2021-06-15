@@ -42,7 +42,6 @@ namespace Apex
     {
       internal int Start, Count;
       internal uint Color;
-      //internal float Flattness;
     }
 
     public enum BUFFER
@@ -55,7 +54,6 @@ namespace Apex
       CAMERA = 7,
       LIGHT = 8,
       SCRIPT = 10,
-      //SCRIPTDATA = 11,
       TEXTURE = 16,
     }
 
@@ -89,8 +87,6 @@ namespace Apex
     {
       Center = 1, //in float border, zoom out camdat
       CenterSel = 2, //in float border, zoom out camdat
-      //GetBox = 3, //in float4x3, out float4[2] 
-      //GetBoxSel = 4, //in float4x3, out float4[2] 
       SetPlane = 5, //in float4x3
       PickPlane = 6, //in float2, out float2
       SelectRect = 7, //in float2[2] 
@@ -157,7 +153,6 @@ namespace Apex
       void InsertAt(int i, INode p);
       void RemoveAt(int i);
     }
-
 
     [ComImport, Guid("98068F4F-7768-484B-A2F8-21D4F7B5D811"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]
     public interface IScene //: IRoot

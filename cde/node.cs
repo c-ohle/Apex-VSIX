@@ -138,13 +138,12 @@ namespace cde
       }
       foreach (var c in this) c.Unscale();
     }
-    //public static string ImportFmts => "3MF|*.3mf|3DS|*.3ds|Wavefront obj|*.obj|IFC|*.ifc|BTL|*.btl|BTLX|*.btlx";
-    //public static string ExportFmts => "3MF|*.3mf|3DS|*.3ds|Wavefront obj|*.obj|IFC|*.ifc";
     public static Node Import(string path)
     {
-      //if (path.EndsWith(".3mf", true, null)) return fmt3mf.import(path);
       if (path.EndsWith(".3ds", true, null)) return fmt3ds.import(path);
       if (path.EndsWith(".obj", true, null)) return fmtobj.import(path);
+      if (path.EndsWith(".fbx", true, null)) return fmtfbx.import(path);
+      //if (path.EndsWith(".3mf", true, null)) return fmt3mf.import(path);
       //if (path.EndsWith(".ifc", true, null)) return fmtifc.import(path);
       //if (path.EndsWith(".ifczip", true, null)) return fmtifc.import(path);
       //if (path.EndsWith(".ifcxml", true, null)) return fmtifc.import(path);
@@ -154,9 +153,9 @@ namespace cde
     }
     public void Export(string path, Func<int, int, Bitmap> preview = null)
     {
-      //if (path.EndsWith(".3mf", true, null)) { fmt3mf.export(this, path, preview); return; }
       if (path.EndsWith(".3ds", true, null)) { fmt3ds.export(this, path); return; }
       if (path.EndsWith(".obj", true, null)) { fmtobj.export(this, path); return; }
+      //if (path.EndsWith(".3mf", true, null)) { fmt3mf.export(this, path, preview); return; }
       //if (path.EndsWith(".ifc", true, null)) { fmtifc.export(this, path); return; }
       //if (path.EndsWith(".btl", true, null)) { fmtbtl.export_btl(this, path); return; }
       //if (path.EndsWith(".btlx", true, null)) { fmtbtl.export_btlx(this, path); return; }

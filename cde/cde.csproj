@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="f3ds.cs" />
+    <Compile Include="ffbx.cs" />
     <Compile Include="fobj.cs" />
     <Compile Include="ftga.cs" />
     <Compile Include="native.cs" />

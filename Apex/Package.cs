@@ -4,14 +4,10 @@ using System;
 using System.Runtime.InteropServices;
 #pragma warning disable VSTHRD010
 
-// kreatinin wert 16. 10:50 röntgen anmeldung
-// 0261 281 28888
 
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
-//todo: tool rot vert um obj
-//todo: mesh flat angel
-//todo: ranges as/in buffer 
+
 //todo: refresh after load
 //todo: camera dpi
 //todo: F1
