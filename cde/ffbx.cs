@@ -38,12 +38,17 @@ namespace cde
 #endif
       var objects = root["Objects"];
       var conns = root["Connections"];
-      var par = (object)(long)0;
+
+      //var t1 = conns.Select(p => p.props[1]).ToArray();
+      //var t2 = conns.Select(p => p.props[2]).ToArray();
+      //var t3 = t2.Except(t1).Where(p => p.Split('|').[1]=="Model").ToArray();
+      //var par = t4;// (object)(long)0;
+
+      var par = conns.Select(p => p.props[2]).Except(conns.Select(p => p.props[1])).FirstOrDefault();
       var thenode = new Node();
-      build(conns, objects, par, thenode);
+      build((path, conns, objects), par, thenode);
       return thenode;
     }
-
     [DebuggerDisplay("{name}")]
     class FBXNode : List<FBXNode>
     {
@@ -53,7 +58,7 @@ namespace cde
       {
         get { for (int i = 0; i < Count; i++) if (this[i].name == s) return this[i]; return null; }
       }
-      internal object[] GetProps(string name, int ip, object val)
+      internal object[] GetProp(string name, int ip, object val)
       {
         for (int i = 0; i < Count; i++)
         {
@@ -146,6 +151,7 @@ namespace cde
     }
     static void readfbx(FBXNode root, string s, int i, int n, List<object> list)
     {
+      var nf = NumberFormatInfo.InvariantInfo;
       for (int k, j, c; i < n; i++)
       {
         if (s[i] <= ' ') continue;
@@ -170,18 +176,26 @@ namespace cde
           {
             var o = s.IndexOf("::", k + 1, e - k - 2);
             if (o == -1) list.Add(s.Substring(k + 1, e - k - 2));
-            else list.Add(s.Substring(o + 2, e - (o + 2)) + '|' + s.Substring(k + 1, o - k + 1));
+            else list.Add(s.Substring(o + 2, e - o - 3) + '|' + s.Substring(k + 1, o - k - 1));
           }
           else if (s[k] == '*')
           {
             var a = k + 1; //for (; s[a] != '{'; a++) ; //var len = int.Parse(s.Substring(k + 1, a - (k + 1)));
             for (; s[a - 1] != ':'; a++) ;
             var b = a; for (; s[b] != '}'; b++) ;
-            var su = s.Substring(a, b - a);
-            if (name == "Vertices" || su.IndexOf('.') != -1)
-              list.Add(su.Split(',').Select(p => double.Parse(p)).ToArray());
+            var su = s.Substring(a, b - a); var uu = su.Split(',');
+            if (name == "Vertices" || name == "UV" || su.IndexOf('.') != -1)
+            {
+              var aa = new double[uu.Length]; list.Add(aa); //NumberFormatInfo.CurrentInfo
+              for (int t = 0; t < aa.Length; t++) aa[t] = double.Parse(uu[t], nf);
+            }
             else
-              list.Add(su.Split(',').Select(p => int.Parse(p)).ToArray());
+            {
+              var aa = new int[uu.Length]; //list.Add(aa);
+              int t = 0; for (; t < aa.Length && int.TryParse(uu[t], out aa[t]); t++) ;
+              if (t == aa.Length) list.Add(aa);
+              else { var bb = new long[uu.Length]; for (t = 0; t < bb.Length; t++) bb[t] = long.Parse(uu[t], nf); list.Add(bb); }
+            }
             node.props = list.ToArray(); i = b; break;
           }
           else
@@ -189,10 +203,10 @@ namespace cde
             var v = s.Substring(k, e - k);
             if (char.IsDigit(v[0]) || v[0] == '-' || v[0] == '+')
             {
-              if (v.Contains('.')) list.Add(double.Parse(v));
+              if (v.Contains('.')) list.Add(double.Parse(v, nf));
               else
               {
-                var l = long.Parse(v);
+                var l = long.Parse(v, nf);
                 if (l == (int)l) list.Add((int)l); else list.Add(l);
               }
             }
@@ -208,34 +222,35 @@ namespace cde
         }
       }
     }
-    static void build(FBXNode conns, FBXNode objs, object par, Node root)
+    static void build(in (string path, FBXNode conns, FBXNode objs) _, object par, Node root)
     {
-      for (int i = 0, k; i < conns.Count; i++)
+      for (int i = 0, k; i < _.conns.Count; i++)
       {
-        var pp = conns[i].props; if (!pp[2].Equals(par)) continue;
-        for (k = 0; k < objs.Count && !objs[k].props[0].Equals(pp[1]); k++) ;
-        var obj = objs[k]; var objpp = obj.props;
-        var ss = ((string)objpp[1]).Split('|');
+        var pp = _.conns[i].props; if (!pp[2].Equals(par)) continue;
+        for (k = 0; k < _.objs.Count && !_.objs[k].props[0].Equals(pp[1]); k++) ;
+        if (k == _.objs.Count) continue;
+        var obj = _.objs[k]; var objpp = obj.props;
+        var ss = ((string)objpp[par is string ? 0 : 1]).Split('|');
         switch (ss[1])
         {
           case "Model":
             {
-              var no = new Node { Name = ss[0] }; root.Add(no);
+              var no = new Node { Name = ss[0], Color = 0xffffffff }; root.Add(no);
               var t1 = obj["Properties70"];
               if (t1 != null)
               {
-                var t2 = t1.GetProps("P", 0, "Lcl Rotation");
+                var t2 = t1.GetProp("P", 0, "Lcl Rotation");
                 if (t2 != null)
                   no.Transform =
-                    double3x4.Rotation(0, todbl(t2[4]) * (Math.PI / 180)) *
-                    double3x4.Rotation(1, todbl(t2[5]) * (Math.PI / 180)) *
-                    double3x4.Rotation(2, todbl(t2[6]) * (Math.PI / 180));
-                var t4 = t1.GetProps("P", 0, "Lcl Scaling");
+                    double4x3.Rotation(0, todbl(t2[4]) * (Math.PI / 180)) *
+                    double4x3.Rotation(1, todbl(t2[5]) * (Math.PI / 180)) *
+                    double4x3.Rotation(2, todbl(t2[6]) * (Math.PI / 180));
+                var t4 = t1.GetProp("P", 0, "Lcl Scaling");
                 if (t4 != null)
                 {
-                  no.Transform *= double3x4.Scaling(todbl(t4[4]), todbl(t4[5]), todbl(t4[6]));
+                  no.Transform *= double4x3.Scaling(todbl(t4[4]), todbl(t4[5]), todbl(t4[6]));
                 }
-                var t3 = t1.GetProps("P", 0, "Lcl Translation");
+                var t3 = t1.GetProp("P", 0, "Lcl Translation");
                 if (t3 != null)
                 {
                   no.Transform._41 = todbl(t3[4]);
@@ -243,7 +258,45 @@ namespace cde
                   no.Transform._43 = todbl(t3[6]);
                 }
               }
-              build(conns, objs, pp[1], no); continue;
+              else
+              {
+                var t5 = obj["Vertices"];
+                if (t5 != null)
+                {
+                  var t6 = obj["PolygonVertexIndex"];
+                  if (t6 != null)
+                  {
+                    var pv = no.Points = new double3[t5.props.Length / 3];
+                    for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(todbl(t5.props[s]), todbl(t5.props[s + 1]), todbl(t5.props[s + 2]));
+                    var ii = t6.props; var iii = new List<ushort>(ii.Length);
+                    for (int t = 0, j; t < ii.Length;)
+                      for (j = t + 1; ; j++)
+                      {
+                        iii.Add((ushort)toint(ii[t])); iii.Add((ushort)toint(ii[j]));
+                        var l = toint(ii[j + 1]); iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
+                      }
+                    no.Indices = iii.ToArray();
+                  }
+                }
+              }
+              build(_, pp[1], no); continue;
+            }
+          case "Texture":
+            {
+              var s = obj["RelativeFilename"];
+              if (s != null)
+              {
+                try
+                {
+                  var ts = (string)s.props[0];
+                  ts = Path.Combine(Path.GetDirectoryName(_.path), ts);
+                  root.Texture = File.ReadAllBytes(ts);
+                }
+                catch { }
+              }
+              //<ModelUVTranslation p="0,0" />
+              //<ModelUVScaling p = "1,1" />
+              continue;
             }
           case "Geometry":
             {
@@ -260,15 +313,26 @@ namespace cde
                   var l = ii[j + 1]; iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
                 }
               root.Indices = iii.ToArray();
+              var t1 = obj["LayerElementUV"];
+              if (t1 != null)
+              {
+                var t2 = t1["UV"]; var t3 = t1["UVIndex"];
+                var aa = (double[])t2.props[0]; var bb = (int[])t3.props[0];
+                if (bb.Length == root.Indices.Length) //PolygonVertexIndex fans
+                {
+                  var tt = root.Texcoords = new float2[bb.Length];
+                  for (int t = 0, x; t < tt.Length; t++)
+                    tt[t] = new float2((float)aa[x=bb[t] << 1], (float)aa[x + 1]);
+                }
+              }
               continue;
             }
           case "Material":
             {
-              root.Color = 0xffffffff;
               var t1 = obj["Properties70"];
               if (t1 != null)
               {
-                var t2 = t1.GetProps("P", 0, "MaterialDiffuse");
+                var t2 = t1.GetProp("P", 0, "MaterialDiffuse");
                 if (t2 != null)
                   root.Color =
                     (((uint)(todbl(t2[4]) * 0xff) & 0xff) << 24) |
@@ -276,8 +340,12 @@ namespace cde
                     (((uint)(todbl(t2[6]) * 0xff) & 0xff) << 8) |
                     (((uint)(todbl(t2[5]) * 0xff) & 0xff));
               }
-              continue;
+              build(_, pp[1], root); continue;
             }
+          case "Deformer": continue;
+          case "Constraint": continue;
+          case "NodeAttribute": continue;
+          case "AnimCurveNode": continue;
           default: { continue; }
         }
       }
@@ -286,15 +354,20 @@ namespace cde
     static double todbl(object p)
     {
       if (p is double d) return d;
+      if (p is int i) return i;
       throw new Exception();
     }
-
+    static double toint(object p)
+    {
+      if (p is int d) return d;
+      throw new Exception();
+    }
 #if (DEBUG)
     static void fbx2xml(XElement doc, FBXNode node, StringBuilder sb)
     {
       for (int i = 0; i < node.Count; i++)
       {
-        var no = node[i]; var e = new XElement(no.name); doc.Add(e);
+        var no = node[i]; var e = new XElement(XmlConvert.EncodeName(no.name)); doc.Add(e);
         var a = no.props; sb.Clear();
         for (int t = 0, n = a != null ? a.Length : 0; t < n; t++)
         {

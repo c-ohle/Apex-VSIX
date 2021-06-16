@@ -19,7 +19,7 @@ namespace cde
       var points = new List<double3>(); var texpts = new List<float2>(); var gr = string.Empty; var mt = string.Empty;
       var indice = new List<int>(); var ppts = new List<float2>(); var ptl = new Dictionary<double3, int>(); //bool bnorm = false; int inorm = 0; var norm = new double3();
       //var root = new Node { Transform = double3x4.Identity }; 
-      var root = new Node { Transform = double3x4.Rotation(0, Math.PI / 2) }; //studio max default orient
+      var root = new Node { Transform = double4x3.Rotation(0, Math.PI / 2) }; //studio max default orient
       for (var s = sss; s;)
       {
         var l = s.Split('\n'); if (l[0] == '#') continue;
@@ -145,7 +145,7 @@ namespace cde
         }
         lib.WriteLine();
 
-        var m = g.GetTransform(node) * double3x4.Rotation(0, -Math.PI / 2); //studio max default orient
+        var m = g.GetTransform(node) * double4x3.Rotation(0, -Math.PI / 2); //studio max default orient
         var pp = g.Points.Select(p => p * m).ToArray();
 
         var sb = g.IndexCount != 0 && g.IndexCount < g.Indices.Length;

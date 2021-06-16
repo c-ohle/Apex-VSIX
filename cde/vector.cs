@@ -249,7 +249,7 @@ namespace cde
     public double3 center => (max + min) * 0.5;
   }
 
-  public struct double3x4
+  public struct double4x3
   {
     public double _11, _12, _13;
     public double _21, _22, _23;
@@ -261,14 +261,14 @@ namespace cde
     }
     public override bool Equals(object p)
     {
-      return p is double3x4 && !((double3x4)p != this);
+      return p is double4x3 && !((double4x3)p != this);
     }
-    public static double3x4 Identity { get { return Scaling(1); } }
-    public static bool operator ==(in double3x4 a, in double3x4 b)
+    public static double4x3 Identity { get { return Scaling(1); } }
+    public static bool operator ==(in double4x3 a, in double4x3 b)
     {
       return !(a != b);
     }
-    public static bool operator !=(in double3x4 a, in double3x4 b)
+    public static bool operator !=(in double4x3 a, in double4x3 b)
     {
       return a._11 != b._11 || a._12 != b._12 || a._13 != b._13 ||
              a._21 != b._21 || a._22 != b._22 || a._23 != b._23 ||
@@ -282,7 +282,7 @@ namespace cde
         _12 * (_21 * _33 - _23 * _31) +
         _13 * (_21 * _32 - _22 * _31);
     }
-    public static double3x4 operator !(in double3x4 p)
+    public static double4x3 operator !(in double4x3 p)
     {
       var b0 = p._31 * p._42 - p._32 * p._41;
       var b1 = p._31 * p._43 - p._33 * p._41;
@@ -300,16 +300,16 @@ namespace cde
       var d8 = p._11 * b3 + p._12 * -b1 + p._13 * b0;
       var d9 = p._41 * a3 + p._42 * -a1 + p._43 * a0;
       var d4 = p._21 * b3 + p._22 * -b1 + p._23 * b0;
-      double3x4 r;
+      double4x3 r;
       r._11 = +d1 * de; r._12 = -d5 * de; r._13 = +a3 * de;
       r._21 = -d2 * de; r._22 = +d6 * de; r._23 = -a1 * de;
       r._31 = +d3 * de; r._32 = -d7 * de; r._33 = +a0 * de;
       r._41 = -d4 * de; r._42 = +d8 * de; r._43 = -d9 * de;
       return r;
     }
-    public static double3x4 operator *(in double3x4 a, double v)
+    public static double4x3 operator *(in double4x3 a, double v)
     {
-      double3x4 b;
+      double4x3 b;
       b._11 = a._11 * v;
       b._12 = a._12 * v;
       b._13 = a._13 * v;
@@ -324,9 +324,9 @@ namespace cde
       b._43 = a._43 * v;
       return b;
     }
-    public static double3x4 operator *(in double3x4 a, in double3x4 b)
+    public static double4x3 operator *(in double4x3 a, in double4x3 b)
     {
-      double x = a._11, y = a._12, z = a._13; double3x4 r;
+      double x = a._11, y = a._12, z = a._13; double4x3 r;
       r._11 = b._11 * x + b._21 * y + b._31 * z;
       r._12 = b._12 * x + b._22 * y + b._32 * z;
       r._13 = b._13 * x + b._23 * y + b._33 * z; x = a._21; y = a._22; z = a._23;
@@ -340,7 +340,7 @@ namespace cde
       r._42 = b._12 * x + b._22 * y + b._32 * z + b._42;
       r._43 = b._13 * x + b._23 * y + b._33 * z + b._43; return r;
     }
-    public static double3 operator *(in double3 a, in double3x4 b)
+    public static double3 operator *(in double3 a, in double4x3 b)
     {
       double3 c;
       c.x = b._11 * a.x + b._21 * a.y + b._31 * a.z + b._41;
@@ -348,25 +348,25 @@ namespace cde
       c.z = b._13 * a.x + b._23 * a.y + b._33 * a.z + b._43;
       return c;
     }
-    public static double3x4 Translation(double x, double y, double z)
+    public static double4x3 Translation(double x, double y, double z)
     {
       return Translation(new double3(x, y, z));
     }
-    public static double3x4 Translation(in double3 p)
+    public static double4x3 Translation(in double3 p)
     {
-      return new double3x4 { _11 = 1, _22 = 1, _33 = 1, _41 = p.x, _42 = p.y, _43 = p.z };
+      return new double4x3 { _11 = 1, _22 = 1, _33 = 1, _41 = p.x, _42 = p.y, _43 = p.z };
     }
-    public static double3x4 Scaling(double s)
+    public static double4x3 Scaling(double s)
     {
-      return new double3x4 { _11 = s, _22 = s, _33 = s };
+      return new double4x3 { _11 = s, _22 = s, _33 = s };
     }
-    public static double3x4 Scaling(double x, double y, double z)
+    public static double4x3 Scaling(double x, double y, double z)
     {
-      return new double3x4 { _11 = x, _22 = y, _33 = z };
+      return new double4x3 { _11 = x, _22 = y, _33 = z };
     }
-    public static double3x4 Rotation(int xyz, double a)
+    public static double4x3 Rotation(int xyz, double a)
     {
-      var m = new double3x4();
+      var m = new double4x3();
       var sc = new double2(a);
       switch (xyz)
       {
@@ -376,7 +376,7 @@ namespace cde
       }
       return m;
     }
-    public static double3x4 Rotation(in double4 q)
+    public static double4x3 Rotation(in double4 q)
     {
       var lq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
       var ss = Math.Abs(lq) < 1e-12 ? 1.0 : 2.0 / lq;
@@ -384,7 +384,7 @@ namespace cde
       var wx = q.w * xs; var wy = q.w * ys; var wz = q.w * zs;
       var xx = q.x * xs; var xy = q.x * ys; var xz = q.x * zs;
       var yy = q.y * ys; var yz = q.y * zs; var zz = q.z * zs;
-      double3x4 m;
+      double4x3 m;
       m._11 = 1.0f - (yy + zz);
       m._21 = xy - wz;
       m._31 = xz + wy;
@@ -397,7 +397,7 @@ namespace cde
       m._41 = m._42 = m._43 = 0.0;
       return m;
     }
-    public static double3x4 Rotation(in double3 axis, double angle)
+    public static double4x3 Rotation(in double3 axis, double angle)
     {
       var v = new double2(angle);
       var a = axis.x * axis.x;
@@ -406,7 +406,7 @@ namespace cde
       var d = axis.x * axis.y;
       var e = axis.x * axis.z;
       var f = axis.y * axis.z;
-      double3x4 m;
+      double4x3 m;
       m._11 = a + v.x * (1f - a);
       m._12 = d - v.x * d + v.y * axis.z;
       m._13 = e - v.x * e - v.y * axis.y;

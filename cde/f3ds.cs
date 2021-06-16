@@ -20,7 +20,7 @@ namespace cde
       internal void next() { var l = *(int*)&p[2]; p += l; n -= l; }
       internal chunk inner(int e = 0) => new chunk { p = p + 6 + e, n = len - e };
     }
-    class NodeTag { public int id; public double3x4 meshmat, locmat; }
+    class NodeTag { public int id; public double4x3 meshmat, locmat; }
 
     internal static Node import(string path)
     {
@@ -137,10 +137,10 @@ namespace cde
                                   default: continue; //???
                                   case 0x4160: //MESH_MATRIX
                                     {
-                                      double3x4 m; var v = (double*)&m;
+                                      double4x3 m; var v = (double*)&m;
                                       for (int t = 0; t < 12; t++) v[t] = ((float*)tobj.ptr)[t];
                                       var d = m.GetDeterminant();
-                                      if (d < 0) { invmesh = true; var t = !m * double3x4.Scaling(-1, 1, 1) * m; for (int i = 0; i < points.Length; i++) points[i] *= t; } //m[0] *= -1;                                                                                                                                    //if (meshmat == null) meshmat = new Dictionary<Node, double3x4>(); meshmat[node] = m;
+                                      if (d < 0) { invmesh = true; var t = !m * double4x3.Scaling(-1, 1, 1) * m; for (int i = 0; i < points.Length; i++) points[i] *= t; } //m[0] *= -1;                                                                                                                                    //if (meshmat == null) meshmat = new Dictionary<Node, double3x4>(); meshmat[node] = m;
                                       var nodetag = (NodeTag)node.Tag; nodetag.meshmat = m;
                                     }
                                     continue;
@@ -271,9 +271,9 @@ namespace cde
                         }
 
                       var locmat =
-                        double3x4.Scaling(sca[0].x, sca[0].y, sca[0].z) * //double3x4.Rotation(double4.QuatAxisAngel(new double3(rot[0].y, rot[0].z, rot[0].w), rot[0].x)) *
-                        double3x4.Rotation(new double3(rot[0].y, rot[0].z, rot[0].w), -rot[0].x) *
-                        double3x4.Translation(pos[0].x, pos[0].y, pos[0].z);
+                        double4x3.Scaling(sca[0].x, sca[0].y, sca[0].z) * //double3x4.Rotation(double4.QuatAxisAngel(new double3(rot[0].y, rot[0].z, rot[0].w), rot[0].x)) *
+                        double4x3.Rotation(new double3(rot[0].y, rot[0].z, rot[0].w), -rot[0].x) *
+                        double4x3.Translation(pos[0].x, pos[0].y, pos[0].z);
                       if (parentid != 0xffff)
                       {
                         var parent = root.FirstOrDefault(t => t.Tag != null && ((NodeTag)t.Tag).id == parentid); if (parent == null) continue; //???
@@ -285,7 +285,7 @@ namespace cde
                       var node = root.FirstOrDefault(t => t.Name == name); if (node == null) continue; //???
                       var nodetag = (NodeTag)node.Tag;
                       nodetag.locmat = locmat;
-                      var m = !nodetag.meshmat * double3x4.Translation(-pivot.x, -pivot.y, -pivot.z) * locmat;
+                      var m = !nodetag.meshmat * double4x3.Translation(-pivot.x, -pivot.y, -pivot.z) * locmat;
                       if (instance == null) node.Transform = m;
                       else { node = node.Clone(); node.Name = instance; node.Transform = m; root.Add(node); }
                       nodetag.id = nodeid;

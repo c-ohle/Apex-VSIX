@@ -9,9 +9,9 @@ namespace cde
   [DebuggerDisplay("{Name}")]
   public class Node : List<Node>
   {
-    public Node() { Transform = double3x4.Identity; }
+    public Node() { Transform = double4x3.Identity; }
     public string Name;
-    public double3x4 Transform;
+    public double4x3 Transform;
     public double3[] Points;
     public ushort[] Indices;
     public byte[] Texture;
@@ -70,7 +70,7 @@ namespace cde
         if (node.Texcoords != null) { }
       }
     }
-    public void GetBox(in double3x4 m, ref double3box box)
+    public void GetBox(in double4x3 m, ref double3box box)
     {
       var wm = Transform * m;
       if (Points != null)
@@ -85,7 +85,7 @@ namespace cde
     public double3box GetBox()
     {
       var box = new double3box { min = new double3(+double.MaxValue, +double.MaxValue, +double.MaxValue), max = new double3(-double.MaxValue, -double.MaxValue, -double.MaxValue) };
-      GetBox(double3x4.Identity, ref box); return box;
+      GetBox(double4x3.Identity, ref box); return box;
     }
     public new void Add(Node p)
     {
@@ -102,9 +102,9 @@ namespace cde
         foreach (var p in this[i].Descendants(true))
           yield return p;
     }
-    public double3x4 GetTransform(Node root = null)
+    public double4x3 GetTransform(Node root = null)
     {
-      if (root == this) return double3x4.Identity;
+      if (root == this) return double4x3.Identity;
       if (root == Parent) return Transform;
       return Transform * Parent.GetTransform(root);
     }

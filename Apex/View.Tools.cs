@@ -760,7 +760,7 @@ namespace Apex
       if (box.min.z != 0)
       {
         if (node.Points != null) { var t = new cde.Node(); t.AddRange(node); node = t; }
-        node.Transform *= cde.double3x4.Translation(0, 0, -box.min.z);
+        node.Transform *= cde.double4x3.Translation(0, 0, -box.min.z);
       }
       if (node.Name == null) node.Name = Path.GetFileNameWithoutExtension(path);
       var scene = Factory.CreateScene();
@@ -861,7 +861,8 @@ namespace Apex
           var s = files[0]; typ =
             s.EndsWith(".3mf", true, null) ? 1 :
             s.EndsWith(".obj", true, null) ? 2 :
-            s.EndsWith(".3ds", true, null) ? 3 : 0;
+            s.EndsWith(".3ds", true, null) ? 3 :
+            s.EndsWith(".fbx", true, null) ? 4 : 0;
           if (typ == 0) return;
           data = s;
         }
