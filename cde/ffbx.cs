@@ -38,15 +38,11 @@ namespace cde
 #endif
       var objects = root["Objects"];
       var conns = root["Connections"];
-
-      //var t1 = conns.Select(p => p.props[1]).ToArray();
-      //var t2 = conns.Select(p => p.props[2]).ToArray();
-      //var t3 = t2.Except(t1).Where(p => p.Split('|').[1]=="Model").ToArray();
-      //var par = t4;// (object)(long)0;
-
-      var par = conns.Select(p => p.props[2]).Except(conns.Select(p => p.props[1])).FirstOrDefault();
+      var docs = root["Documents"];
+      var par = docs != null ? docs["Document"]["RootNode"].props[0] :
+        conns != null ? conns[0].props[2] : 0;
       var thenode = new Node();
-      build((path, conns, objects), par, thenode);
+      build((path, conns, objects, new List<ushort>()), par, thenode);
       return thenode;
     }
     [DebuggerDisplay("{name}")]
@@ -58,18 +54,19 @@ namespace cde
       {
         get { for (int i = 0; i < Count; i++) if (this[i].name == s) return this[i]; return null; }
       }
-      internal object[] GetProp(string name, int ip, object val)
+      internal FBXNode GetNode(string name, int ip, object val)
       {
         for (int i = 0; i < Count; i++)
         {
           var p = this[i];
-          if (p.name == name)
+          if (name == null || p.name == name)
             if (p.props != null && p.props.Length > ip)
               if (p.props[ip].Equals(val))
-                return p.props;
+                return p;
         }
         return null;
       }
+      internal object[] GetProp(string name, int ip, object val) => GetNode(name, ip, val)?.props;
     }
     static void readfbx(FBXNode root, BinaryReader reader, int ver, List<object> list)
     {
@@ -222,43 +219,43 @@ namespace cde
         }
       }
     }
-    static void build(in (string path, FBXNode conns, FBXNode objs) _, object par, Node root)
+    static void build(in (string path, FBXNode conns, FBXNode objs, List<ushort> uus) _, object par, Node root)
     {
       for (int i = 0, k; i < _.conns.Count; i++)
       {
-        var pp = _.conns[i].props; if (!pp[2].Equals(par)) continue;
-        for (k = 0; k < _.objs.Count && !_.objs[k].props[0].Equals(pp[1]); k++) ;
-        if (k == _.objs.Count) continue;
-        var obj = _.objs[k]; var objpp = obj.props;
-        var ss = ((string)objpp[par is string ? 0 : 1]).Split('|');
+        var ppc = _.conns[i].props; if (!ppc[2].Equals(par)) continue;
+        var obj = _.objs.GetNode(null, 0, ppc[1]); if (obj == null) continue;
+        var ppo = obj.props;
+        var ss = ((string)ppo[par is string ? 0 : 1]).Split('|');
         switch (ss[1])
         {
           case "Model":
             {
               var no = new Node { Name = ss[0], Color = 0xffffffff }; root.Add(no);
-              var t1 = obj["Properties70"];
+              var t1 = obj["Properties70"]; var offs = 4;
+              if (t1 == null) { t1 = obj["Properties60"]; offs = 3; }
               if (t1 != null)
               {
-                var t2 = t1.GetProp("P", 0, "Lcl Rotation");
+                var t2 = t1.GetProp(null, 0, "Lcl Rotation");
                 if (t2 != null)
                   no.Transform =
-                    double4x3.Rotation(0, todbl(t2[4]) * (Math.PI / 180)) *
-                    double4x3.Rotation(1, todbl(t2[5]) * (Math.PI / 180)) *
-                    double4x3.Rotation(2, todbl(t2[6]) * (Math.PI / 180));
-                var t4 = t1.GetProp("P", 0, "Lcl Scaling");
+                    double4x3.Rotation(0, todbl(t2[offs + 0]) * (Math.PI / 180)) *
+                    double4x3.Rotation(1, todbl(t2[offs + 1]) * (Math.PI / 180)) *
+                    double4x3.Rotation(2, todbl(t2[offs + 2]) * (Math.PI / 180));
+                var t4 = t1.GetProp(null, 0, "Lcl Scaling");
                 if (t4 != null)
                 {
-                  no.Transform *= double4x3.Scaling(todbl(t4[4]), todbl(t4[5]), todbl(t4[6]));
+                  no.Transform *= double4x3.Scaling(todbl(t4[offs + 0]), todbl(t4[offs + 1]), todbl(t4[offs + 2]));
                 }
-                var t3 = t1.GetProp("P", 0, "Lcl Translation");
+                var t3 = t1.GetProp(null, 0, "Lcl Translation");
                 if (t3 != null)
                 {
-                  no.Transform._41 = todbl(t3[4]);
-                  no.Transform._42 = todbl(t3[5]);
-                  no.Transform._43 = todbl(t3[6]);
+                  no.Transform._41 = todbl(t3[offs + 0]);
+                  no.Transform._42 = todbl(t3[offs + 1]);
+                  no.Transform._43 = todbl(t3[offs + 2]);
                 }
               }
-              else
+              if (offs != 4)
               {
                 var t5 = obj["Vertices"];
                 if (t5 != null)
@@ -268,35 +265,41 @@ namespace cde
                   {
                     var pv = no.Points = new double3[t5.props.Length / 3];
                     for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(todbl(t5.props[s]), todbl(t5.props[s + 1]), todbl(t5.props[s + 2]));
-                    var ii = t6.props; var iii = new List<ushort>(ii.Length);
+                    var ii = t6.props; var iii = _.uus; iii.Clear();
                     for (int t = 0, j; t < ii.Length;)
                       for (j = t + 1; ; j++)
                       {
-                        iii.Add((ushort)toint(ii[t])); iii.Add((ushort)toint(ii[j]));
-                        var l = toint(ii[j + 1]); iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
+                        iii.Add((ushort)toint(ii[t])); 
+                        iii.Add((ushort)toint(ii[j])); var l = toint(ii[j + 1]); 
+                        iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
                       }
                     no.Indices = iii.ToArray();
+                    var t7 = obj["LayerElementUV"];
+                    if (t7 != null)
+                    {
+                      var aa = t7["UV"].props; var bb = t7["UVIndex"].props;
+                      if (bb.Length == ii.Length)
+                      {
+                        iii.Clear();
+                        for (int t = 0, j; t < ii.Length;)
+                          for (j = t + 1; ; j++)
+                          {
+                            iii.Add((ushort)toint(bb[t]));
+                            iii.Add((ushort)toint(bb[j]));
+                            iii.Add((ushort)toint(bb[j + 1])); if (toint(ii[j + 1]) < 0) { t = j + 2; break; }
+                          }
+                        var tt = no.Texcoords = new float2[iii.Count];
+                        for (int t = 0, x; t < tt.Length; t++)
+                          tt[t] = new float2((float)todbl(aa[x = iii[t] << 1]), (float)todbl(aa[x + 1]));
+                      }
+                    }
                   }
+
+
+
                 }
               }
-              build(_, pp[1], no); continue;
-            }
-          case "Texture":
-            {
-              var s = obj["RelativeFilename"];
-              if (s != null)
-              {
-                try
-                {
-                  var ts = (string)s.props[0];
-                  ts = Path.Combine(Path.GetDirectoryName(_.path), ts);
-                  root.Texture = File.ReadAllBytes(ts);
-                }
-                catch { }
-              }
-              //<ModelUVTranslation p="0,0" />
-              //<ModelUVScaling p = "1,1" />
-              continue;
+              build(_, ppc[1], no); continue;
             }
           case "Geometry":
             {
@@ -305,24 +308,32 @@ namespace cde
               var ii = (int[])obj["PolygonVertexIndex"].props[0];
               var pv = root.Points = new double3[vv.Length / 3];
               for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(vv[s], vv[s + 1], vv[s + 2]);
-              var iii = new List<ushort>(ii.Length);
+              var iii = _.uus; iii.Clear();
               for (int t = 0, j; t < ii.Length;)
                 for (j = t + 1; ; j++)
                 {
-                  iii.Add((ushort)ii[t]); iii.Add((ushort)ii[j]);
-                  var l = ii[j + 1]; iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
+                  iii.Add((ushort)ii[t]);
+                  iii.Add((ushort)ii[j]); var l = ii[j + 1];
+                  iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
                 }
               root.Indices = iii.ToArray();
               var t1 = obj["LayerElementUV"];
               if (t1 != null)
               {
-                var t2 = t1["UV"]; var t3 = t1["UVIndex"];
-                var aa = (double[])t2.props[0]; var bb = (int[])t3.props[0];
-                if (bb.Length == root.Indices.Length) //PolygonVertexIndex fans
+                var aa = (double[])t1["UV"].props[0]; var bb = (int[])t1["UVIndex"].props[0];
+                if (bb.Length == ii.Length)
                 {
-                  var tt = root.Texcoords = new float2[bb.Length];
+                  iii.Clear();
+                  for (int t = 0, j; t < ii.Length;)
+                    for (j = t + 1; ; j++)
+                    {
+                      iii.Add((ushort)bb[t]);
+                      iii.Add((ushort)bb[j]);
+                      iii.Add((ushort)bb[j + 1]); if (ii[j + 1] < 0) { t = j + 2; break; }
+                    }
+                  var tt = root.Texcoords = new float2[iii.Count];
                   for (int t = 0, x; t < tt.Length; t++)
-                    tt[t] = new float2((float)aa[x=bb[t] << 1], (float)aa[x + 1]);
+                    tt[t] = new float2((float)aa[x = iii[t] << 1], (float)aa[x + 1]);
                 }
               }
               continue;
@@ -332,7 +343,7 @@ namespace cde
               var t1 = obj["Properties70"];
               if (t1 != null)
               {
-                var t2 = t1.GetProp("P", 0, "MaterialDiffuse");
+                var t2 = t1.GetProp(null, 0, "MaterialDiffuse");
                 if (t2 != null)
                   root.Color =
                     (((uint)(todbl(t2[4]) * 0xff) & 0xff) << 24) |
@@ -340,13 +351,47 @@ namespace cde
                     (((uint)(todbl(t2[6]) * 0xff) & 0xff) << 8) |
                     (((uint)(todbl(t2[5]) * 0xff) & 0xff));
               }
-              build(_, pp[1], root); continue;
+              else if ((t1 = obj["Properties60"]) != null)
+              {
+                var t2 = t1.GetProp(null, 0, "DiffuseColor");
+                if (t2 != null)
+                  root.Color = (((uint)0xff) << 24) |
+                    (((uint)(todbl(t2[5]) * 0xff) & 0xff) << 16) |
+                    (((uint)(todbl(t2[4]) * 0xff) & 0xff) << 8) |
+                    (((uint)(todbl(t2[3]) * 0xff) & 0xff));
+              }
+              build(_, ppc[1], root); continue;
+            }
+          case "LayeredTexture":
+            {
+              build(_, ppc[1], root); continue;
+            }
+          case "Texture":
+            {
+              //
+              //var ts = (string)s.props[0];
+              //ts = Path.Combine(Path.GetDirectoryName(_.path), ts);
+              //root.Texture = File.ReadAllBytes(ts);
+              if (root.Texture != null) continue;
+              try
+              {
+                var s = (string)obj["RelativeFilename"].props[0];
+                if (!Path.IsPathRooted(s))
+                {
+                  var t = Path.Combine(Path.GetDirectoryName(_.path), s);
+                  if (File.Exists(t)) { root.Texture = File.ReadAllBytes(t); continue; }
+                }
+                s = Directory.EnumerateFiles(Path.GetDirectoryName(_.path), Path.GetFileName(s), SearchOption.AllDirectories).FirstOrDefault();
+                if (s != null) root.Texture = File.ReadAllBytes(s);
+              }
+              catch { }
+              continue;
             }
           case "Deformer": continue;
           case "Constraint": continue;
           case "NodeAttribute": continue;
           case "AnimCurveNode": continue;
-          default: { continue; }
+          default: continue;
         }
       }
 

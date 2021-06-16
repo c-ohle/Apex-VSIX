@@ -418,12 +418,12 @@ namespace Apex
     Action<int> camera_rotz(int fl)
     {
       var cam = view.Camera; var cm = cam.GetTransform(); Cursor = Cursors.SizeWE;
-      var rot = default(float3); 
+      var rot = default(float3);
       if (fl == 0) rot = cm.mp;
       else
       {
         var box = GetBox(scene.Selection());
-        if(box.IsEmpty) box = GetBox(mainover());
+        if (box.IsEmpty) box = GetBox(mainover());
         rot = box.IsEmpty ? cm.mp : box.mid;
       }
       var wp = overwp(); var mp = new float3(rot.x, rot.y, wp.z);
@@ -436,7 +436,7 @@ namespace Apex
         if (id == 4)
         {
           if (fl == 0) return;
-          var dc = new DC(view); dc.Transform = mp;          
+          var dc = new DC(view); dc.Transform = mp;
           dc.Color = 0x800000ff; var r = p1.Length;
           dc.DrawLine(new float3(0, 0, -100), new float3(0, 0, +100));
           var pp = (new float3(), (float3)p1);
@@ -483,18 +483,18 @@ namespace Apex
         if (id == 1) AddUndo(undo(cam, cm));
         if (id == 4)
         {
-        // //if (flags==0) 
-        //   //return;
-        // var dc = new DC(view);
-        // //dc.Transform = me; dc.Color = 0x80808080; dc.FillRect(0, 0, 40, 20);
-        // dc.Transform = 1;
-        // dc.Color = 0xff0000ff; dc.DrawLine(rot, ps);
-        // //dc.Color = 0xffff0000; dc.DrawLine(wp, ps);
-        // //dc.Color = 0xffffff00; dc.DrawLine(ps, ps + vs * le);
-        // //dc.Color = 0xffff0000;
-        // //dc.Transform = !LookAtLH(ps, ps + cm.mx, new float3(0, 0, 1));
-        // //dc.DrawCirc(default, (ps - wp).Length); dc.Color = 0x080000ff;
-        // //wp = wp;vs = vs;
+          // //if (flags==0) 
+          //   //return;
+          // var dc = new DC(view);
+          // //dc.Transform = me; dc.Color = 0x80808080; dc.FillRect(0, 0, 40, 20);
+          // dc.Transform = 1;
+          // dc.Color = 0xff0000ff; dc.DrawLine(rot, ps);
+          // //dc.Color = 0xffff0000; dc.DrawLine(wp, ps);
+          // //dc.Color = 0xffffff00; dc.DrawLine(ps, ps + vs * le);
+          // //dc.Color = 0xffff0000;
+          // //dc.Transform = !LookAtLH(ps, ps + cm.mx, new float3(0, 0, 1));
+          // //dc.DrawCirc(default, (ps - wp).Length); dc.Color = 0x080000ff;
+          // //wp = wp;vs = vs;
         }
       };
     }
@@ -755,14 +755,21 @@ namespace Apex
     static IScene Import(object data, out float3 wp)
     {
       var path = (string)data; wp = default;
-      var node = cde.Node.Import(path); node.MeshCompact();
+      var node = cde.Node.Import(path); //node.MeshCompact();
+      ///
+      if (path.EndsWith(".fbx", true, null))
+        node.Transform *= cde.double4x3.Rotation(0, Math.PI / 2);
       var box = node.GetBox(); if (box.max.x < box.min.x) return null;
-      if (box.min.z != 0)
+      var size = box.size; var max = Math.Max(size.x, Math.Max(size.y, size.z));
+      if (max > 100)
       {
-        if (node.Points != null) { var t = new cde.Node(); t.AddRange(node); node = t; }
-        node.Transform *= cde.double4x3.Translation(0, 0, -box.min.z);
+        var f = 1 / Math.Pow(10, Math.Ceiling(Math.Log10(max)) - 2);
+        node.Transform *= f; box.min *= f;
       }
+      if (node.Points != null) { var t = new cde.Node(); t.AddRange(node); node = t; }
+      node.Transform *= cde.double4x3.Translation(0, 0, -box.min.z);
       if (node.Name == null) node.Name = Path.GetFileNameWithoutExtension(path);
+      ///
       var scene = Factory.CreateScene();
       recu((IRoot)scene, node);
       void recu(IRoot par, cde.Node ni)

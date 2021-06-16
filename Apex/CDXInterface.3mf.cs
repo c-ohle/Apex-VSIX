@@ -351,8 +351,8 @@ namespace Apex
           var box = GetBox(scene.Nodes());
           if (!box.IsEmpty)
           {
-            var unit = scene.Unit;
-            var size = box.max - box.min; var max = Math.Max(size.x, Math.Max(size.y, size.z));
+            //var unit = scene.Unit;
+            var size = box.size; var max = Math.Max(size.x, Math.Max(size.y, size.z));
             var m = (float4x3)1;
             if (Math.Abs(box.min.z) != 0) m = new float3(0, 0, -box.min.z);
             if (max < 1) m *= Scaling(100 / max); //paint 3d crap to 100mm
