@@ -98,8 +98,8 @@ namespace cde
                                     try
                                     {
                                       var s1 = new string((sbyte*)col.ptr);
-                                      var s2 = Path.IsPathRooted(s1) ? s1 : Path.Combine(Path.GetDirectoryName(path), s1);
-                                      if (!File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(path), s1, SearchOption.AllDirectories).FirstOrDefault();
+                                      var s2 = !Path.IsPathRooted(s1) ? Path.Combine(Path.GetDirectoryName(path), s1) : null;
+                                      if (s2 == null || !File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(path), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
                                       if (s2 == null) continue;
                                       tex = File.ReadAllBytes(s2);
                                       if (s2.EndsWith(".tga", true, null)) tex = fmttga.tga2png(tex);

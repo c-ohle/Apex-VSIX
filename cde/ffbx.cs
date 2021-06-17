@@ -43,6 +43,14 @@ namespace cde
         conns != null ? conns[0].props[2] : 0;
       var thenode = new Node();
       build((path, conns, objects, new List<ushort>()), par, thenode);
+
+      var upaxis = 1; //Y
+      var p = root.GetProp(0, "GlobalSettings", "Properties70", "UpAxis");
+      if (p != null) upaxis = (int)p[4];
+      else if ((p = objects.GetProp(0, "GlobalSettings", "Properties60", "UpAxis")) != null) upaxis = (int)p[3];
+
+      if (upaxis == 1) thenode.Transform = double4x3.Rotation(0, Math.PI / 2);
+
       return thenode;
     }
     [DebuggerDisplay("{name}")]
@@ -67,6 +75,12 @@ namespace cde
         return null;
       }
       internal object[] GetProp(string name, int ip, object val) => GetNode(name, ip, val)?.props;
+      internal object[] GetProp(int ip, params string[] ss)
+      {
+        var p = this;
+        for (int i = 0; i < ss.Length - 1; i++) if ((p = p[ss[i]]) == null) return null;
+        return p.GetProp(null, ip, ss[ss.Length - 1]);
+      }
     }
     static void readfbx(FBXNode root, BinaryReader reader, int ver, List<object> list)
     {
@@ -95,6 +109,7 @@ namespace cde
             case 'f':
             case 'd':
             case 'i':
+            case 'b':
               {
                 var len = reader.ReadInt32();
                 var enc = reader.ReadInt32();
@@ -231,29 +246,28 @@ namespace cde
         {
           case "Model":
             {
+              if (ppc[0] as string == "OP") continue;
               var no = new Node { Name = ss[0], Color = 0xffffffff }; root.Add(no);
-              var t1 = obj["Properties70"]; var offs = 4;
+              var t1 = obj["Properties70"]; var offs = 4; object[] v;
               if (t1 == null) { t1 = obj["Properties60"]; offs = 3; }
               if (t1 != null)
               {
-                var t2 = t1.GetProp(null, 0, "Lcl Rotation");
-                if (t2 != null)
-                  no.Transform =
-                    double4x3.Rotation(0, todbl(t2[offs + 0]) * (Math.PI / 180)) *
-                    double4x3.Rotation(1, todbl(t2[offs + 1]) * (Math.PI / 180)) *
-                    double4x3.Rotation(2, todbl(t2[offs + 2]) * (Math.PI / 180));
-                var t4 = t1.GetProp(null, 0, "Lcl Scaling");
-                if (t4 != null)
-                {
-                  no.Transform *= double4x3.Scaling(todbl(t4[offs + 0]), todbl(t4[offs + 1]), todbl(t4[offs + 2]));
-                }
-                var t3 = t1.GetProp(null, 0, "Lcl Translation");
-                if (t3 != null)
-                {
-                  no.Transform._41 = todbl(t3[offs + 0]);
-                  no.Transform._42 = todbl(t3[offs + 1]);
-                  no.Transform._43 = todbl(t3[offs + 2]);
-                }
+                //GeometricScaling * GeometricRotation * GeometricTranslation *
+                //Lcl Scaling * Lcl Rotation * PreRotation * Lcl Translation
+                if ((v = t1.GetProp(null, 0, "GeometricScaling")) != null)
+                  no.Transform *= double4x3.Scaling(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+                if ((v = t1.GetProp(null, 0, "GeometricRotation")) != null)
+                  no.Transform *= double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180));
+                if ((v = t1.GetProp(null, 0, "GeometricTranslation")) != null)
+                  no.Transform *= double4x3.Translation(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+                if ((v = t1.GetProp(null, 0, "Lcl Scaling")) != null)
+                  no.Transform *= double4x3.Scaling(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+                if ((v = t1.GetProp(null, 0, "Lcl Rotation")) != null)
+                  no.Transform *= double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180));
+                if ((v = t1.GetProp(null, 0, "PreRotation")) != null)
+                  no.Transform *= (double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180)));
+                if ((v = t1.GetProp(null, 0, "Lcl Translation")) != null)
+                  no.Transform *= double4x3.Translation(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
               }
               if (offs != 4)
               {
@@ -269,8 +283,8 @@ namespace cde
                     for (int t = 0, j; t < ii.Length;)
                       for (j = t + 1; ; j++)
                       {
-                        iii.Add((ushort)toint(ii[t])); 
-                        iii.Add((ushort)toint(ii[j])); var l = toint(ii[j + 1]); 
+                        iii.Add((ushort)toint(ii[t]));
+                        iii.Add((ushort)toint(ii[j])); var l = toint(ii[j + 1]);
                         iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
                       }
                     no.Indices = iii.ToArray();
@@ -294,16 +308,13 @@ namespace cde
                       }
                     }
                   }
-
-
-
                 }
               }
               build(_, ppc[1], no); continue;
             }
           case "Geometry":
             {
-              var overt = obj["Vertices"]; if (overt == null) continue;
+              var overt = obj["Vertices"]; //if (overt == null) continue;
               var vv = (double[])overt.props[0];
               var ii = (int[])obj["PolygonVertexIndex"].props[0];
               var pv = root.Points = new double3[vv.Length / 3];
@@ -336,29 +347,41 @@ namespace cde
                     tt[t] = new float2((float)aa[x = iii[t] << 1], (float)aa[x + 1]);
                 }
               }
+              //if ((t1 = obj["Properties70"]) != null)
+              //{
+              //  var t2 = t1.GetProp(null, 0, "Color");
+              //  if (t2 != null) root.Color = 0xff000000 |
+              //          (((uint)(todbl(t2[6]) * 0xff) & 0xff) << 16) |
+              //          (((uint)(todbl(t2[5]) * 0xff) & 0xff) << 8) |
+              //          (((uint)(todbl(t2[4]) * 0xff) & 0xff));
+              //}
               continue;
             }
           case "Material":
             {
-              var t1 = obj["Properties70"];
-              if (t1 != null)
+              //if (root.Color == 0xffffffff)
               {
-                var t2 = t1.GetProp(null, 0, "MaterialDiffuse");
-                if (t2 != null)
-                  root.Color =
-                    (((uint)(todbl(t2[4]) * 0xff) & 0xff) << 24) |
-                    (((uint)(todbl(t2[7]) * 0xff) & 0xff) << 16) |
-                    (((uint)(todbl(t2[6]) * 0xff) & 0xff) << 8) |
-                    (((uint)(todbl(t2[5]) * 0xff) & 0xff));
-              }
-              else if ((t1 = obj["Properties60"]) != null)
-              {
-                var t2 = t1.GetProp(null, 0, "DiffuseColor");
-                if (t2 != null)
-                  root.Color = (((uint)0xff) << 24) |
-                    (((uint)(todbl(t2[5]) * 0xff) & 0xff) << 16) |
-                    (((uint)(todbl(t2[4]) * 0xff) & 0xff) << 8) |
-                    (((uint)(todbl(t2[3]) * 0xff) & 0xff));
+                var t1 = obj["Properties70"];
+                if (t1 != null)
+                {
+                  var t2 = t1.GetProp(null, 0, "DiffuseColor");// "MaterialDiffuse");
+                  if (t2 != null)
+                    root.Color = 0xff000000 |
+                       (((uint)(todbl(t2[6]) * 0xff) & 0xff) << 16) |
+                       (((uint)(todbl(t2[5]) * 0xff) & 0xff) << 8) |
+                       (((uint)(todbl(t2[4]) * 0xff) & 0xff));
+                  else { }
+                }
+                else if ((t1 = obj["Properties60"]) != null)
+                {
+                  var t2 = t1.GetProp(null, 0, "DiffuseColor");
+                  if (t2 != null)
+                    root.Color = 0xff000000 |
+                      (((uint)(todbl(t2[5]) * 0xff) & 0xff) << 16) |
+                      (((uint)(todbl(t2[4]) * 0xff) & 0xff) << 8) |
+                      (((uint)(todbl(t2[3]) * 0xff) & 0xff));
+                  else { }
+                }
               }
               build(_, ppc[1], root); continue;
             }
@@ -368,21 +391,18 @@ namespace cde
             }
           case "Texture":
             {
-              //
-              //var ts = (string)s.props[0];
-              //ts = Path.Combine(Path.GetDirectoryName(_.path), ts);
-              //root.Texture = File.ReadAllBytes(ts);
               if (root.Texture != null) continue;
               try
               {
-                var s = (string)obj["RelativeFilename"].props[0];
-                if (!Path.IsPathRooted(s))
-                {
-                  var t = Path.Combine(Path.GetDirectoryName(_.path), s);
-                  if (File.Exists(t)) { root.Texture = File.ReadAllBytes(t); continue; }
-                }
-                s = Directory.EnumerateFiles(Path.GetDirectoryName(_.path), Path.GetFileName(s), SearchOption.AllDirectories).FirstOrDefault();
-                if (s != null) root.Texture = File.ReadAllBytes(s);
+                var t1 = obj["RelativeFilename"].props;
+                if (t1[0] is byte[] a) { root.Texture = a; continue; }
+                var s1 = (string)t1[0];
+                var s2 = !Path.IsPathRooted(s1) ? Path.Combine(Path.GetDirectoryName(_.path), s1) : null;
+                if (s2 == null || !File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(_.path), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
+                if (s2 == null) continue;
+                var tex = File.ReadAllBytes(s2);
+                if (s2.EndsWith(".tga", true, null)) tex = fmttga.tga2png(tex);
+                t1[0] = root.Texture = tex;
               }
               catch { }
               continue;

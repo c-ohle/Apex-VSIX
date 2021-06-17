@@ -757,8 +757,6 @@ namespace Apex
       var path = (string)data; wp = default;
       var node = cde.Node.Import(path); //node.MeshCompact();
       ///
-      if (path.EndsWith(".fbx", true, null))
-        node.Transform *= cde.double4x3.Rotation(0, Math.PI / 2);
       var box = node.GetBox(); if (box.max.x < box.min.x) return null;
       var size = box.size; var max = Math.Max(size.x, Math.Max(size.y, size.z));
       if (max > 100)
