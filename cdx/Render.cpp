@@ -131,9 +131,9 @@ static void render(CView& v, REC& r, UINT mode)
       if (((rr[k].color >> 24) != 0xff)) continue;
       if (!c++) { v.SetMatrix(MM_WORLD, r.wm); SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); }
       v.SetColor(VV_DIFFUSE, rr[k].color);
-      auto tex = (CTexture*)node.getbuffer((CDX_BUFFER)((UINT)CDX_BUFFER_TEXTURE + k));
+      auto tex = k < 15 ? (CTexture*)node.getbuffer((CDX_BUFFER)((UINT)CDX_BUFFER_TEXTURE + k)) : 0;
       if (tex) SetTexture(tex->srv.p); v.SetBuffers();
-      SetMode(mode| (tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
+      SetMode(mode | (tex ? MO_PSSHADER_TEXTURE3D : MO_PSSHADER_COLOR3D));
       context->DrawIndexed(rr[k].count << 1, rr[k].start << 1, 0);
     }
   }
@@ -202,7 +202,7 @@ void CView::RenderScene()
   SetVector(VV_LIGHTDIR, lightdir);
   for (UINT i = 0; i < nrecs; i++)
     render(*this, recs[i], MO_TOPO_TRIANGLELISTADJ | MO_DEPTHSTENCIL_ZWRITE | MO_VSSHADER_LIGHT);
- 
+
   if (nflags & NODE_FL_INSEL)
   {
     if (flags & CDX_RENDER_WIREFRAME)

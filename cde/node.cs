@@ -17,10 +17,19 @@ namespace cde
     public byte[] Texture;
     public float2[] Texcoords;
     public uint Color;
+    public struct Range { internal int i, n; internal uint c; }
+    public Range[] Ranges;
     public Node Parent { get; private set; }
     public int IndexCount, StartIndex;
     public object Tag;
-
+#if (DEBUG)
+    internal void CheckMesh()
+    {
+      var ff = new bool[Points.Length];
+      for (int i = 0; i < Indices.Length; i++) ff[Indices[i]] = true;
+      var unused = ff.Count(p => !p); if (unused != 0) { }
+    }
+#endif
     public void MeshCompact()
     {
       var dict = new Dictionary<double3, ushort>(4096);
@@ -54,7 +63,7 @@ namespace cde
         if (node.Indices.Length == nii && node.Points.Length == nvv) return;
         if (nii != ni)
         {
-          if (ff == null || ff.Length < nii) ff = new ushort[((nii >> 12) + 1) << 12]; else Array.Clear(ff,0, nvv);
+          if (ff == null || ff.Length < nii) ff = new ushort[((nii >> 12) + 1) << 12]; else Array.Clear(ff, 0, nvv);
           if (vv == null || vv.Length < nvv) vv = new double3[((nvv >> 10) + 1) << 10];
           dict.Keys.CopyTo(vv, 0);
           for (int i = 0; i < nii; i++) ff[ii[i]] = 1; var t = 0;
@@ -62,7 +71,7 @@ namespace cde
           if (nvv != t) { for (int i = 0; i < nii; i++) ii[i] = ff[ii[i]]; nvv = t; }
           Array.Copy(vv, 0, node.Points = new double3[nvv], 0, nvv);
         }
-        else 
+        else
         {
           dict.Keys.CopyTo(node.Points = new double3[nvv], 0);
         }

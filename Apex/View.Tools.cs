@@ -783,6 +783,7 @@ namespace Apex
           no.SetArray(BUFFER.INDEXBUFFER, ni.Indices);
           no.SetArray(BUFFER.TEXCOORDS, ni.Texcoords);
           no.SetArray(BUFFER.TEXTURE, ni.Texture);
+          if (ni.Ranges != null) no.SetArray(BUFFER.RANGES, ni.Ranges);
           if (ni.IndexCount != 0) { }
         }
         for (int i = 0; i < ni.Count; i++) recu((IRoot)no, ni[i]);
