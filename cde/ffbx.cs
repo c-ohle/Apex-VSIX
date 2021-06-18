@@ -108,6 +108,7 @@ namespace cde
             case 'd':
             case 'i':
             case 'b':
+            case 'l':
               {
                 var len = reader.ReadInt32();
                 var enc = reader.ReadInt32();
@@ -194,7 +195,7 @@ namespace cde
             for (; s[a - 1] != ':'; a++) ;
             var b = a; for (; s[b] != '}'; b++) ;
             var su = s.Substring(a, b - a); var uu = su.Split(',');
-            if (name == "Vertices" || name == "UV" || su.IndexOf('.') != -1)
+            if (name == "Vertices" || name == "UV" || name == "Points" || su.IndexOf('.') != -1)
             {
               var aa = new double[uu.Length]; list.Add(aa); //NumberFormatInfo.CurrentInfo
               for (int t = 0; t < aa.Length; t++) aa[t] = double.Parse(uu[t], nf);
@@ -288,8 +289,9 @@ namespace cde
         var geo = getnodes(_, ppo[0], "Geometry").FirstOrDefault();
         if (geo != null)
         {
-          var vv = (double[])geo["Vertices"].props[0];
-          var ii = (int[])geo["PolygonVertexIndex"].props[0];
+          if ((t1 = geo["Vertices"]) == null) continue; //?? geo["Points"] ?? geo["PointsIndex"]
+          var vv = (double[])t1.props[0];
+          var ii = (int[])(geo["PolygonVertexIndex"]).props[0];
           var pv = node.Points = new double3[vv.Length / 3];
           for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(vv[s], vv[s + 1], vv[s + 2]);
           var iii = _.uus; iii.Clear();
@@ -300,8 +302,7 @@ namespace cde
               iii.Add((ushort)ii[j]); var l = ii[j + 1];
               iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
             }
-          node.Indices = iii.ToArray(); node.CheckMesh();
-
+          node.Indices = iii.ToArray();
           if ((t1 = geo["LayerElementMaterial"]) != null)
           {
             var tt = (int[])t1["Materials"].props[0];
@@ -313,7 +314,6 @@ namespace cde
               node.Ranges = rr;
             }
           }
-
           if ((t1 = geo["LayerElementUV"]) != null)
           {
             var aa = (double[])t1["UV"].props[0]; var bb = (int[])t1["UVIndex"].props[0];
@@ -359,7 +359,7 @@ namespace cde
               iii.Add((ushort)toint(ii[j])); var l = toint(ii[j + 1]);
               iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
             }
-          node.Indices = iii.ToArray(); node.CheckMesh();
+          node.Indices = iii.ToArray();
           var t7 = obj["LayerElementUV"];
           if (t7 != null)
           {
@@ -390,6 +390,7 @@ namespace cde
                 gettexture(_, node, t1);
           }
         }
+        node.CheckMesh();
         build(_, ppo[0], node);
       }
     }
@@ -412,7 +413,7 @@ namespace cde
           (((uint)(todbl(pp[pp.Length - 1]) * 0xff) & 0xff) << 16) |
           (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |
           (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff));
-      if (s != "ColorRGB" && s != "Vector3D") { }
+      if (s != "ColorRGB" && s != "Vector3D" && s != "Color") { }
       return 0xff000000 |
         (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff) << 16) |
         (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |

@@ -24,9 +24,12 @@ namespace cde
 
     internal static Node import(string path)
     {
+      var a = File.ReadAllBytes(path);
       var root = new Node { };
       var materials = new List<(string name, uint diffuse, byte[] tex, string texs)>(); //Dictionary<Node, double3x4> meshmat = null;
-      var a = File.ReadAllBytes(path);
+      var uslist = new List<ushort>();
+      var ralist = new List<Node.Range>();
+      var telist = new List<(string path, byte[] bin)>(); 
       fixed (byte* p = a)
       {
         chunk chunk; chunk.p = p; chunk.n = a.Length;
@@ -100,8 +103,8 @@ namespace cde
                                       var s1 = new string((sbyte*)col.ptr);
                                       var s2 = !Path.IsPathRooted(s1) ? Path.Combine(Path.GetDirectoryName(path), s1) : null;
                                       if (s2 == null || !File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(path), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
-                                      if (s2 == null) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(path) + "\\..", Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
-                                      if (s2 == null) continue;
+                                      if (s2 == null) s2 = Directory.EnumerateFiles(Path.Combine(Path.GetDirectoryName(path), ".."), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
+                                      if (s2 == null) continue; //Path.GetFullPath(
                                       tex = File.ReadAllBytes(s2);
                                       if (s2.EndsWith(".tga", true, null)) tex = fmttga.tga2png(tex); texs = s2;
                                     }
@@ -126,7 +129,8 @@ namespace cde
                     case 0x4000: //NAMED_OBJECT
                       {
                         var node = new Node { Name = new string((sbyte*)mdata.ptr), Color = 0xff808080, Tag = new NodeTag { id = -1 } }; root.Add(node);
-                        double3[] points = null; float2* ppt = null; var invmesh = false;
+                        double3[] points = null; float2* ppt = null; var invmesh = false; 
+                        ralist.Clear(); uslist.Clear(); telist.Clear();
                         for (var nobj = mdata.inner(node.Name.Length + 1); nobj.n != 0; nobj.next())
                           switch (nobj.id)
                           {
@@ -147,6 +151,7 @@ namespace cde
                                     continue;
                                   case 0x4110: //POINT_ARRAY
                                     {
+                                      if (points != null) { } //???
                                       int np = *(ushort*)tobj.ptr; var pp = (float3*)(tobj.ptr + 2);
                                       points = new double3[np]; for (int t = 0; t < np; t++) points[t] = pp[t];
                                     }
@@ -164,18 +169,32 @@ namespace cde
                                           case 0x4130: //MSH_MAT_GROUP
                                             {
                                               var name = new string((sbyte*)mats.ptr);
-                                              var nfaces = *(ushort*)(mats.ptr + name.Length + 1);
+                                              var nfaces = *(ushort*)(mats.ptr + name.Length + 1); if (nfaces == 0) continue;
                                               var pfaces = (ushort*)(mats.ptr + name.Length + 3);
-                                              var mat = materials.FirstOrDefault(x => x.name == name); if (mat.name == null) continue; //???
-                                              var ii = new ushort[nfaces * 3];
-                                              for (int t = 0, s = 0; t < nfaces; t++) { var up = (ushort*)&pp[pfaces[t]]; ii[s++] = up[0]; ii[s++] = up[invmesh ? 2 : 1]; ii[s++] = up[invmesh ? 1 : 2]; }
-                                              var pn = node.Points == null ? node : new Node { };
-                                              if (node.Points != null) node.Add(pn);
-                                              pn.Points = points; pn.Indices = ii; pn.Color = mat.diffuse;
-                                              if (mat.tex == null) continue;
-                                              pn.Textures = new[] { (mat.texs, mat.tex) };
-                                              if (ppt == null) continue; //??? 
-                                              pn.Texcoords = ii.Select(i => ppt[i]).ToArray();
+                                              var mat = materials.FirstOrDefault(x => x.name == name);
+                                              if (mat.name == null) { } //???
+                                              if (mat.tex != null)
+                                              {
+                                                for (; telist.Count < ralist.Count; telist.Add(default)) ;
+                                                telist.Add((mat.texs, mat.tex));
+                                              }
+                                              ralist.Add(new Node.Range { i = uslist.Count, n = nfaces * 3, c = mat.diffuse });
+                                              for (int t = 0; t < nfaces; t++)
+                                              {
+                                                var up = (ushort*)&pp[pfaces[t]];
+                                                uslist.Add(up[0]);
+                                                uslist.Add(up[invmesh ? 2 : 1]);
+                                                uslist.Add(up[invmesh ? 1 : 2]);
+                                              }
+                                              //var ii = new ushort[nfaces * 3];
+                                              //for (int t = 0, s = 0; t < nfaces; t++) { var up = (ushort*)&pp[pfaces[t]]; ii[s++] = up[0]; ii[s++] = up[invmesh ? 2 : 1]; ii[s++] = up[invmesh ? 1 : 2]; }
+                                              //var pn = node.Points == null ? node : new Node { };
+                                              //if (node.Points != null) node.Add(pn);
+                                              //pn.Points = points; pn.Indices = ii; pn.Color = mat.diffuse;
+                                              //if (mat.tex == null) continue;
+                                              //pn.Textures = new[] { (mat.texs, mat.tex) };
+                                              //if (ppt == null) continue; //??? 
+                                              //pn.Texcoords = ii.Select(i => ppt[i]).ToArray();
                                             }
                                             continue;
                                           case 0x4150: continue; //SMOOTH_GROUP
@@ -187,6 +206,23 @@ namespace cde
                               continue;
                           }
                         Debug.Assert(!invmesh);
+                        if (points != null)
+                        {
+                          node.Points = points;
+                          node.Indices = uslist.ToArray();
+                          if (ralist.Count > 1) node.Ranges = ralist.ToArray();
+                          else node.Color = ralist[0].c;
+                          if (telist.Count != 0)
+                          {
+                            node.Textures = telist.ToArray();
+                            if (ppt != null)
+                            {
+                              node.Texcoords = new float2[node.Indices.Length];
+                              for (int t = 0; t < node.Texcoords.Length; t++) node.Texcoords[t] = ppt[node.Indices[t]];
+                            }
+                          }
+                          node.CheckMesh();
+                        }
                       }
                       continue;
                   }
@@ -298,7 +334,7 @@ namespace cde
           }
       }
       for (int i = 0; i < root.Count; i++) { root[i].Tag = null; if (root[i].Name == "$$$DUMMY") root.RemoveAt(i--); }
-      root.MeshCompact();
+      //root.MeshCompact();
       return root;
     }
 

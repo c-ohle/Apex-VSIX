@@ -367,14 +367,15 @@ namespace Apex
             for (int i = 0; i < nr; i++)
             {
               var cc = System.Drawing.Color.FromArgb(unchecked((int)rr[i].Color));
-              e.DisplayName("Color" + (i + 1)); if (e.Exchange(".c" + i, ref cc))
+              e.DisplayName($"Color{(i + 1):00}"); if (e.Exchange(".c" + i, ref cc))
               {
                 var a = node.GetArray<Range>(BUFFER.RANGES); a[i].Color = (uint)cc.ToArgb();
                 node.SetArray(BUFFER.RANGES, a);
               }
+              if (i >= 15) continue;
               var t = node.GetBuffer(BUFFER.TEXTURE + i);
               e.TypeConverter(typeof(TexturConverter));
-              e.DisplayName("Texture" + (i + 1)); if (e.Exchange(".t" + i, ref t))
+              e.DisplayName($"Texture{(i + 1):00}"); if (e.Exchange(".t" + i, ref t))
               {
                 if (node.HasBuffer(BUFFER.TEXTURE + i) != (t != null)) Invalidate(Inval.PropertySet);
                 node.SetBuffer(BUFFER.TEXTURE + i, t);

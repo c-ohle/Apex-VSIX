@@ -289,7 +289,7 @@ void CNode::update(CScene* scene, UINT i)
   ib.Release(); vb.Release();
   auto pp = getbuffer(CDX_BUFFER_POINTBUFFER); if (!pp) return;
   auto ii = getbuffer(CDX_BUFFER_INDEXBUFFER); if (!ii || !ii->data.n) return;
-  auto tt = getbuffer(CDX_BUFFER_TEXCOORDS); 
+  auto tt = getbuffer(CDX_BUFFER_TEXCOORDS);
   float flatt = getprop("@flat", 0.2f);
   update((XMFLOAT3*)pp->data.p, pp->data.n / sizeof(XMFLOAT3),
     (USHORT*)ii->data.p, ii->data.n >> 1, flatt,
@@ -530,7 +530,6 @@ void CNode::setbuffer(CDX_BUFFER id, CBuffer* p)
   //buffer.Add(0);
   //for (UINT t = buffer.m_nSize - 1; t > x; t--) buffer.m_aT[t].p = buffer.m_aT[t - 1].p;
   //buffer.m_aT[x].p = 0; buffer.m_aT[x] = p; bmask |= m;
-
   //int i = 0;
   //for (; i < buffer.m_nSize; i++)
   //{
@@ -572,7 +571,7 @@ HRESULT CNode::GetBuffer(CDX_BUFFER id, ICDXBuffer** p)
 }
 HRESULT CNode::SetBuffer(CDX_BUFFER id, ICDXBuffer* p)
 {
-  //(!p || (p->id == id || (p->id == CDX_BUFFER_TEXTURE && id >= CDX_BUFFER_TEXTURE)))
+  if (id > 31) return E_INVALIDARG;
   auto pb = static_cast<CBuffer*>(p);
   if (p && !(id == pb->id || (pb->id == CDX_BUFFER_TEXTURE && id >= CDX_BUFFER_TEXTURE)))
     return E_INVALIDARG;
@@ -591,9 +590,10 @@ HRESULT CNode::SetBufferPtr(CDX_BUFFER id, const BYTE* p, UINT n)
     for (UINT i = 0, c = n >> 2; i < c; i++) ((USHORT*)stackptr)[i] = ((const UINT*)p)[i];
     return SetBufferPtr((CDX_BUFFER)(id & ~0x1000), (const BYTE*)stackptr, n >> 1);
   }
+  if (id > 31) return E_INVALIDARG;
   if (!p) { setbuffer(id, 0); return 0; }
   Critical crit;
-  setbuffer(id, CCacheBuffer::getbuffer(id, p, n));
+  setbuffer(id, CCacheBuffer::getbuffer(min(id, CDX_BUFFER_TEXTURE), p, n));
   return 0;
 }
 

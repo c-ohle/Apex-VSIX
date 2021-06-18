@@ -755,7 +755,7 @@ namespace Apex
     static IScene Import(object data, out float3 wp)
     {
       var path = (string)data; wp = default;
-      var node = cde.Node.Import(path); //node.MeshCompact();
+      var node = cde.Node.Import(path);// node.Repairs(0);
       ///
       var box = node.GetBox(); if (box.max.x < box.min.x) return null;
       var size = box.size; var max = Math.Max(size.x, Math.Max(size.y, size.z));
@@ -784,9 +784,10 @@ namespace Apex
           no.SetArray(BUFFER.TEXCOORDS, ni.Texcoords);
           for (int t = 0, n = ni.Textures != null ? Math.Min(15, ni.Textures.Length) : 0; t < n; t++)
           {
-            if (ni.Textures[t].bin == null) continue;
-            no.SetArray(BUFFER.TEXTURE + t, ni.Textures[t].bin);
-            var tb = no.GetBuffer(BUFFER.TEXTURE + t); if (tb.Name == null) tb.Name = Path.GetFileNameWithoutExtension(ni.Textures[t].path);
+            var a = ni.Textures[t].bin; if (a == null) continue; 
+            IBuffer tex; fixed (byte* p = a) tex = Factory.GetBuffer(BUFFER.TEXTURE, p, a.Length);
+            no.SetBuffer(BUFFER.TEXTURE + t, tex);
+            if (tex.Name == null) tex.Name = Path.GetFileNameWithoutExtension(ni.Textures[t].path);
           }
           if (ni.Ranges != null) no.SetArray(BUFFER.RANGES, ni.Ranges);
         }

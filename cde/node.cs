@@ -21,14 +21,25 @@ namespace cde
     public Range[] Ranges;
     public Node Parent { get; private set; }
     public object Tag;
-#if (DEBUG)
-    internal void CheckMesh()
+    internal unsafe void CheckMesh()
     {
+#if(DEBUG)
+      if (Points == null) return;
       var ff = new bool[Points.Length];
       for (int i = 0; i < Indices.Length; i++) ff[Indices[i]] = true;
-      var unused = ff.Count(p => !p); if (unused != 0) { }
-    }
+      var unused = ff.Count(p => !p); 
+      if (unused != 0) 
+      {
+        Debug.WriteLine("unused points " + unused);
+      }
+      if (Ranges != null)
+        for (int i = 0; i < Ranges.Length; i++)
+          if (Ranges[i].i + Ranges[i].n > Indices.Length)
+            throw new Exception();
 #endif
+    }
+
+#if(false)
     public void MeshCompact()
     {
       var dict = new Dictionary<double3, ushort>(4096);
@@ -78,6 +89,7 @@ namespace cde
         if (node.Texcoords != null) { }
       }
     }
+#endif
     public void GetBox(in double4x3 m, ref double3box box)
     {
       var wm = Transform * m;
