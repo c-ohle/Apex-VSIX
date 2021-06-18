@@ -25,7 +25,7 @@ namespace cde
     internal static Node import(string path)
     {
       var root = new Node { };
-      var materials = new List<(string name, uint diffuse, byte[] tex)>(); //Dictionary<Node, double3x4> meshmat = null;
+      var materials = new List<(string name, uint diffuse, byte[] tex, string texs)>(); //Dictionary<Node, double3x4> meshmat = null;
       var a = File.ReadAllBytes(path);
       fixed (byte* p = a)
       {
@@ -48,7 +48,7 @@ namespace cde
                     case 0x2100: continue; //AMBIENT_LIGHT
                     case 0xafff: //MAT_ENTRY
                       {
-                        string name = null; byte[] tex = null; uint diffuse = 0xff808080;//, difflin = 0xff808080;
+                        string name = null; byte[] tex = null; string texs = null; uint diffuse = 0xff808080;//, difflin = 0xff808080;
                         for (var mate = mdata.inner(); mate.n != 0; mate.next())
                           switch (mate.id)
                           {
@@ -100,9 +100,10 @@ namespace cde
                                       var s1 = new string((sbyte*)col.ptr);
                                       var s2 = !Path.IsPathRooted(s1) ? Path.Combine(Path.GetDirectoryName(path), s1) : null;
                                       if (s2 == null || !File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(path), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
+                                      if (s2 == null) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(path) + "\\..", Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
                                       if (s2 == null) continue;
                                       tex = File.ReadAllBytes(s2);
-                                      if (s2.EndsWith(".tga", true, null)) tex = fmttga.tga2png(tex);
+                                      if (s2.EndsWith(".tga", true, null)) tex = fmttga.tga2png(tex); texs = s2;
                                     }
                                     catch (Exception e) { Debug.WriteLine(e.Message); }
                                     continue;
@@ -118,7 +119,7 @@ namespace cde
                             case 0xa204: continue; //MAT_SPECMAP
                             case 0xa230: continue; //MAT_BUMPMAP
                           }
-                        materials.Add((name, diffuse, tex));
+                        materials.Add((name, diffuse, tex, texs));
                       }
                       continue;
                     case 0x0100: masterscale = *(float*)mdata.ptr; continue; //MASTER_SCALE 
@@ -170,8 +171,9 @@ namespace cde
                                               for (int t = 0, s = 0; t < nfaces; t++) { var up = (ushort*)&pp[pfaces[t]]; ii[s++] = up[0]; ii[s++] = up[invmesh ? 2 : 1]; ii[s++] = up[invmesh ? 1 : 2]; }
                                               var pn = node.Points == null ? node : new Node { };
                                               if (node.Points != null) node.Add(pn);
-                                              pn.Points = points; pn.Indices = ii; pn.Color = mat.diffuse; pn.Texture = mat.tex;
-                                              if (pn.Texture == null) continue;
+                                              pn.Points = points; pn.Indices = ii; pn.Color = mat.diffuse;
+                                              if (mat.tex == null) continue;
+                                              pn.Textures = new[] { (mat.texs, mat.tex) };
                                               if (ppt == null) continue; //??? 
                                               pn.Texcoords = ii.Select(i => ppt[i]).ToArray();
                                             }
@@ -305,7 +307,7 @@ namespace cde
       var tt = new List<byte[]>(); var mm = new List<(uint color, int tex)>(); var nodes = new List<(Node node, int mat)>();
       foreach (var node in root.Descendants(true).Where(t => t.Points != null))
       {
-        int i = -1; var t = node.Texture; if (t != null) { for (i = 0; i < tt.Count && !Native.Equals(tt[i], t); i++) ; if (i == tt.Count) tt.Add(t); }
+        int i = -1; var t = node.Textures != null ? node.Textures[0].bin : null; if (t != null) { for (i = 0; i < tt.Count && !Native.Equals(tt[i], t); i++) ; if (i == tt.Count) tt.Add(t); }
         var m = (node.Color, i); var im = mm.IndexOf(m); if (im == -1) { im = mm.Count; mm.Add(m); }
         nodes.Add((node, im));
       }
@@ -355,7 +357,7 @@ namespace cde
                 });
                 emit(0x4120, () => //FACE_ARRAY
                 {
-                  var si = node.node.StartIndex; var ic = node.node.IndexCount != 0 ? node.node.IndexCount : ii.Length; //if (node.node.IndexCount != 0) { }
+                  var si = 0; var ic = ii.Length; //var si = node.node.StartIndex; var ic = node.node.IndexCount != 0 ? node.node.IndexCount : ii.Length; //if (node.node.IndexCount != 0) { }
                   bw.Write((ushort)(ic / 3)); for (int i = 0; i < ic; i += 3) { bw.Write(ii[si + i + 0]); bw.Write(ii[si + i + 1]); bw.Write(ii[si + i + 2]); bw.Write((ushort)0); }
                   emit(0x4130, () => //MSH_MAT_GROUP
                   {

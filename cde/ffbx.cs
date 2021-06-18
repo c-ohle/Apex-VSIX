@@ -238,14 +238,14 @@ namespace cde
       try
       {
         var v = tex["RelativeFilename"].props;
-        if (v[0] is byte[] a) { node.Texture = a; return; }
+        if (v[0] is (string, byte[])[] a) { node.Textures = a; return; }
         var s1 = (string)v[0];
         var s2 = !Path.IsPathRooted(s1) ? Path.Combine(Path.GetDirectoryName(_.path), s1) : null;
         if (s2 == null || !File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(_.path), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
         if (s2 == null) return;
         var pt = File.ReadAllBytes(s2);
         if (s2.EndsWith(".tga", true, null)) pt = fmttga.tga2png(pt);
-        v[0] = node.Texture = pt;
+        v[0] = node.Textures = new[] { (s2, pt) };
       }
       catch { }
     }
@@ -305,7 +305,7 @@ namespace cde
           if ((t1 = geo["LayerElementMaterial"]) != null)
           {
             var tt = (int[])t1["Materials"].props[0];
-            if (tt.Length == node.Indices.Length / 3)
+            if (tt.Length == node.Indices.Length / 3 && Array.IndexOf(tt, 1) != -1)
             {
               var rr = tt.GroupBy(p => p).Select(p => new Node.Range { i = p.Key, n = p.Count() * 3 }).ToArray();
               var mm = getnodes(_, ppo[0], "Material").Select(p => mat2color(p)).ToArray();
@@ -337,7 +337,7 @@ namespace cde
           {
             if ((t1 = mat["Properties70"]) != null)
             {
-              var t2 = t1.GetProp(null, 0, "DiffuseColor");// "MaterialDiffuse");
+              var t2 = t1.GetProp(null, 0, "DiffuseColor");
               if (t2 != null) node.Color = tocolor(t2);
               else if ((t2 = t1.GetProp(null, 0, "MaterialDiffuse")) != null) node.Color = tocolor(t2);
             }
@@ -412,7 +412,7 @@ namespace cde
           (((uint)(todbl(pp[pp.Length - 1]) * 0xff) & 0xff) << 16) |
           (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |
           (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff));
-      if (s != "ColorRGB") { }
+      if (s != "ColorRGB" && s != "Vector3D") { }
       return 0xff000000 |
         (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff) << 16) |
         (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |

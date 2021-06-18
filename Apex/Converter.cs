@@ -162,7 +162,8 @@ namespace Apex
     public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
     {
       var srv = wsrv.Value; if (srv != null) return srv;
-      var node = ((Node)context.Instance).node;
+      var node = context.Instance is Node n ? n.node : ((Node)((object[])context.Instance)[0]).node;
+      //var node = ((Node)context.Instance).node;
       //var hash = (node.GetBuffer(BUFFER.TEXTURE)?.GetHashCode()).GetHashCode();
       //if (this.hash != hash) { this.hash = hash; svc = null; }
       //if (svc != null) return svc;
@@ -211,6 +212,12 @@ namespace Apex
     object Export(PropertyDescriptor pd, object inst)
     {
       var tex = pd.GetValue(inst) as IBuffer; if (tex == null) return null;
+      //void* px; int nx = tex.GetBufferPtr(&px);
+      //var sx = new System.IO.UnmanagedMemoryStream((byte*)px, nx);
+      //var pngDecoder = new System.Windows.Media.Imaging.PngBitmapDecoder(sx,
+      //  System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat,
+      //  System.Windows.Media.Imaging.BitmapCacheOption.Default);
+      //var pngFrame = pngDecoder.Frames[0];
       var dlg = new System.Windows.Forms.SaveFileDialog() { FileName = tex.Name, DefaultExt = "png", Filter = "PNG file|*.png|JPEG file|*.jpg" };
       if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return null;
       byte* pp; var np = tex.GetBufferPtr((void**)&pp);

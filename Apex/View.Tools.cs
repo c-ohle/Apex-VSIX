@@ -778,13 +778,17 @@ namespace Apex
         no.Transform = mb;
         if (ni.Points != null)
         {
-          no.Color = ni.Texture != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color;
+          no.Color = ni.Textures != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color;
           no.SetArray(BUFFER.POINTBUFFER, ni.Points.Select(t => new float3((float)t.x, (float)t.y, (float)t.z)).ToArray());
           no.SetArray(BUFFER.INDEXBUFFER, ni.Indices);
           no.SetArray(BUFFER.TEXCOORDS, ni.Texcoords);
-          no.SetArray(BUFFER.TEXTURE, ni.Texture);
+          for (int t = 0, n = ni.Textures != null ? Math.Min(15, ni.Textures.Length) : 0; t < n; t++)
+          {
+            if (ni.Textures[t].bin == null) continue;
+            no.SetArray(BUFFER.TEXTURE + t, ni.Textures[t].bin);
+            var tb = no.GetBuffer(BUFFER.TEXTURE + t); if (tb.Name == null) tb.Name = Path.GetFileNameWithoutExtension(ni.Textures[t].path);
+          }
           if (ni.Ranges != null) no.SetArray(BUFFER.RANGES, ni.Ranges);
-          if (ni.IndexCount != 0) { }
         }
         for (int i = 0; i < ni.Count; i++) recu((IRoot)no, ni[i]);
       }

@@ -108,7 +108,7 @@ namespace cde
         for (int i = 0; i < indice.Count; i++) { var p = points[indice[i]]; if (!ptl.TryGetValue(p, out var x)) ptl.Add(p, x = ptl.Count); indice[i] = x; }
         if (!dict.TryGetValue(mt, out var mat)) mat.Item1 = 0xff808080;
         var em = new Node { Name = gr, Color = mat.Item1, Points = ptl.Keys.ToArray(), Indices = indice.Select(p => (ushort)p).ToArray() };
-        if (mat.Item2 != null) try { em.Texture = File.ReadAllBytes(mat.Item2); } catch (Exception e) { Debug.WriteLine(e.Message); }
+        if (mat.Item2 != null) try { var a = File.ReadAllBytes(mat.Item2); em.Textures = new[] { (mat.Item2, a) }; } catch (Exception e) { Debug.WriteLine(e.Message); }
         if (ppts.Count != 0) em.Texcoords = ppts.ToArray();
         indice.Clear(); ppts.Clear(); ptl.Clear(); //bnorm = false; inorm = 0;
         if (ptl.Count < 0xffff) root.Add(em); else { }
@@ -135,7 +135,7 @@ namespace cde
         lib.Write("Kd"); lib.Write(' '); lib.Write((((c >> 16) & 0xff) * (1f / 255)).ToString("0.000000", nf)); lib.Write(' '); lib.Write((((c >> 8) & 0xff) * (1f / 255)).ToString("0.000000", nf)); lib.Write(' '); lib.WriteLine(((c & 0xff) * (1f / 255)).ToString("0.000000", nf));
         lib.Write("Ks"); lib.Write(' '); lib.Write((0.0f).ToString("0.000000", nf)); lib.Write(' '); lib.Write((0.0f).ToString("0.000000", nf)); lib.Write(' '); lib.WriteLine((0.0f).ToString("0.000000", nf));
         lib.Write("Ns"); lib.Write(' '); lib.WriteLine((0.0f).ToString("0.000000", nf));
-        var tex = g.Texture;
+        var tex = g.Textures != null ? g.Textures[0].bin : null;
         if (tex != null)
         {
           int i = 0; for (; i < list.Count && !Native.Equals(list[i], tex); i++) ;
@@ -147,10 +147,8 @@ namespace cde
 
         var m = g.GetTransform(node) * double4x3.Rotation(0, -Math.PI / 2); //studio max default orient
         var pp = g.Points.Select(p => p * m).ToArray();
-
-        var sb = g.IndexCount != 0 && g.IndexCount < g.Indices.Length;
-        var ii = sb ? g.Indices.Skip(g.StartIndex).Take(g.IndexCount).ToArray() : g.Indices;
-        var tt = sb && g.Texcoords != null ? g.Texcoords.Skip(g.StartIndex).Take(g.IndexCount).ToArray() : g.Texcoords;
+        var ii = g.Indices;
+        var tt = g.Texcoords;
         var ik = ii.Select(i => { if (!ppd.TryGetValue(pp[i], out int x)) ppd.Add(pp[i], x = ppd.Count); return x; }).ToArray();
         var tk = tt?.Select(t => { if (!ttd.TryGetValue(t, out int x)) ttd.Add(t, x = ttd.Count); return x; }).ToArray();
         foreach (var p in ppd.Keys)

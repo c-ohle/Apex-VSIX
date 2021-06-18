@@ -14,13 +14,12 @@ namespace cde
     public double4x3 Transform;
     public double3[] Points;
     public ushort[] Indices;
-    public byte[] Texture;
+    public (string path, byte[] bin)[] Textures;
     public float2[] Texcoords;
     public uint Color;
     public struct Range { internal int i, n; internal uint c; }
     public Range[] Ranges;
     public Node Parent { get; private set; }
-    public int IndexCount, StartIndex;
     public object Tag;
 #if (DEBUG)
     internal void CheckMesh()
@@ -119,7 +118,7 @@ namespace cde
     }
     public Node Clone(int fl = 0)
     {
-      var p = new Node { Name = Name, Transform = Transform, Points = Points, Indices = Indices, Texture = Texture, Texcoords = Texcoords, Color = Color, IndexCount = IndexCount, StartIndex = StartIndex };
+      var p = new Node { Name = Name, Transform = Transform, Points = Points, Indices = Indices, Textures = Textures, Texcoords = Texcoords, Color = Color };
       if ((fl & 1) != 0 && p.Points != null) p.Points = (double3[])p.Points.Clone();
       if ((fl & 2) != 0 && p.Indices != null) p.Indices = (ushort[])p.Indices.Clone();
       foreach (var t in this) p.Add(t.Clone());
