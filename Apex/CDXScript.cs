@@ -56,7 +56,7 @@ namespace Apex
         stack.Add(stack.@this); list.Add(Expression.Assign(stack.@this, Expression.Convert(stack[0], stack.@this.Type)));
         if (dbg != null) { stack.xpos = stack.Count; stack.Add(Expression.Variable(typeof(Func<(int, object)[]>), "?")); stack.dict[stack[stack.xpos]] = -1; }
       }
-      if (map != null && (flags & 0x02) != 0) { var s = this; for (s.n = 1; *s.s != '{'; s.s--) ; __map(s); }
+      if (map != null && (flags & 0x02) != 0) { var s = this; for (s.n = 1; s.s > (char*)ptr + 16; s.s--) if (*s.s == '{') { __map(s); break; } }
       for (var c = this; c.n != 0;)
       {
         var a = c.block(); if (a.n == 0) continue;
@@ -1301,7 +1301,7 @@ namespace Apex
       var code = EditText;
       var debug = map.Any(p => (p.v & 0x10) != 0);
       var isdebug = node.funcs != null && node.funcs.Length != 0 && node.funcs[0] == null;// node.funcs != null && ((object[])node.funcs[0]).Length == 4;
-      if (debug == isdebug && code == node.getcode()) return; 
+      if (debug == isdebug && code == node.getcode()) return;
       var inode = node.node;
       if (string.IsNullOrEmpty(code))
       {
@@ -1310,7 +1310,7 @@ namespace Apex
         //inode.RemoveBuffer(CDX.BUFFER.SCRIPTDATA);
         node.Invalidate(Inval.PropertySet); return;
       }
-      if(node.funcs != null && node.funcs.Length != 0)
+      if (node.funcs != null && node.funcs.Length != 0)
       {
         Node.SaveProps(node.node, node.GetMethod<Action<IExchange>>());
         //var cd = Node.GetData(node.GetMethod<Action<IExchange>>(), node.node);
@@ -1323,7 +1323,7 @@ namespace Apex
         Script.bps = map.Where(p => p.v == 0x1A).Select(p => p.i).ToArray();
         Script.dbg = DebugStep; (Script.map = map).Clear(); sp = null; state = 0;
         node.GetMethod<Action<IExchange>>();
-      } 
+      }
       Node.CompactProps(node.node, node.GetMethod<Action<IExchange>>());
       node.Invalidate(Inval.PropertySet); hccode = code.GetHashCode();
       //////////

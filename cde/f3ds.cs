@@ -186,15 +186,6 @@ namespace cde
                                                 uslist.Add(up[invmesh ? 2 : 1]);
                                                 uslist.Add(up[invmesh ? 1 : 2]);
                                               }
-                                              //var ii = new ushort[nfaces * 3];
-                                              //for (int t = 0, s = 0; t < nfaces; t++) { var up = (ushort*)&pp[pfaces[t]]; ii[s++] = up[0]; ii[s++] = up[invmesh ? 2 : 1]; ii[s++] = up[invmesh ? 1 : 2]; }
-                                              //var pn = node.Points == null ? node : new Node { };
-                                              //if (node.Points != null) node.Add(pn);
-                                              //pn.Points = points; pn.Indices = ii; pn.Color = mat.diffuse;
-                                              //if (mat.tex == null) continue;
-                                              //pn.Textures = new[] { (mat.texs, mat.tex) };
-                                              //if (ppt == null) continue; //??? 
-                                              //pn.Texcoords = ii.Select(i => ppt[i]).ToArray();
                                             }
                                             continue;
                                           case 0x4150: continue; //SMOOTH_GROUP

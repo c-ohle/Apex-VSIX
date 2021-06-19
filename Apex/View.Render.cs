@@ -39,8 +39,8 @@ namespace Apex
         for (int i = 0, n = scene.SelectionCount; i < n; i++)
         {
           var p = scene.GetSelection(i); if (p == view.Camera) continue;
-          var f = Node.From(this, p).GetMethod<Action<DC>>();
-          if (f != null) try { f(dc); } catch (Exception e) { System.Diagnostics.Debug.WriteLine(e.Message); }
+          var o = Node.From(this, p); var f = o.GetMethod<Action<DC>>();
+          if (f != null) try { f(dc); } catch (Exception e) { o.disable(f); Debug.WriteLine(e.Message); }
 
           //if (p.Name == "test")
           //{
@@ -138,9 +138,9 @@ namespace Apex
 
     void ISink.Animate(INode p, uint t)
     {
-      var node = p.Tag as Node ?? Node.From(this, p);
-      try { node.GetMethod<Action<uint>>()?.Invoke(t); }
-      catch (Exception e) { Debug.WriteLine(e.Message); }
+      var o = p.Tag as Node ?? Node.From(this, p);
+      var f = o.GetMethod<Action<uint>>(); if (f == null) return;
+      try { f(t); } catch (Exception e) { o.disable(f); Debug.WriteLine(e.Message); }
     }
     void ISink.Reslove(object p, COM.IStream s)
     {

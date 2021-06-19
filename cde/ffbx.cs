@@ -43,7 +43,7 @@ namespace cde
       doc.Save(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\fbx.xml");
 #endif
       var thenode = new Node();
-      build((path, conns, objects, new List<ushort>()), par, thenode);
+      new Cont { path = path, conns = conns, objs = objects, iii = new List<ushort>() }.build(par, thenode);
       var upaxis = 1; //Y
       var p = root.GetProp(0, "GlobalSettings", "Properties70", "UpAxis");
       if (p != null) upaxis = (int)p[4];
@@ -51,9 +51,14 @@ namespace cde
       if (upaxis == 1) thenode.Transform = double4x3.Rotation(0, Math.PI / 2);
       return thenode;
     }
-    [DebuggerDisplay("{name}")]
+    [DebuggerDisplay("{ToString()}")]
     class FBXNode : List<FBXNode>
     {
+      public override string ToString()
+      {
+        if (props == null) return name ?? base.ToString();
+        return name + " " + string.Join(", ", props.Take(7).Select(p => p.ToString()));
+      }
       internal string name;
       internal object[] props;
       internal FBXNode this[string s]
@@ -195,7 +200,7 @@ namespace cde
             for (; s[a - 1] != ':'; a++) ;
             var b = a; for (; s[b] != '}'; b++) ;
             var su = s.Substring(a, b - a); var uu = su.Split(',');
-            if (name == "Vertices" || name == "UV" || name == "Points" || su.IndexOf('.') != -1)
+            if (name == "Vertices" || name == "UV" || name == "Points" || name == "KnotVectorU" || name == "KnotVectorV" || su.IndexOf('.') != -1)
             {
               var aa = new double[uu.Length]; list.Add(aa); //NumberFormatInfo.CurrentInfo
               for (int t = 0; t < aa.Length; t++) aa[t] = double.Parse(uu[t], nf);
@@ -234,202 +239,280 @@ namespace cde
       }
     }
 
-    static void gettexture(in (string path, FBXNode conns, FBXNode objs, List<ushort> uus) _, Node node, FBXNode tex)
+    class Cont
     {
-      try
+      internal string path; internal FBXNode conns; internal FBXNode objs; internal List<ushort> iii;
+      internal void build(object par, Node root)
       {
-        var v = tex["RelativeFilename"].props;
-        if (v[0] is (string, byte[])[] a) { node.Textures = a; return; }
-        var s1 = (string)v[0];
-        var s2 = !Path.IsPathRooted(s1) ? Path.Combine(Path.GetDirectoryName(_.path), s1) : null;
-        if (s2 == null || !File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(_.path), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
-        if (s2 == null) return;
-        var pt = File.ReadAllBytes(s2);
-        if (s2.EndsWith(".tga", true, null)) pt = fmttga.tga2png(pt);
-        v[0] = node.Textures = new[] { (s2, pt) };
+        foreach (var obj in getnodes(par, "Model"))
+        {
+          var ppo = obj.props; var ss = ((string)ppo[par is string ? 0 : 1]).Split('|');
+          var node = new Node { Name = ss[0], Color = 0xffffffff }; root.Add(node);
+          var t1 = obj["Properties70"]; var offs = 4; object[] v;
+          if (t1 == null) { t1 = obj["Properties60"]; offs = 3; }
+          if (t1 != null)
+          {
+            //GeometricScaling * GeometricRotation * GeometricTranslation * Lcl Scaling * Lcl Rotation * PreRotation * Lcl Translation
+            if ((v = t1.GetProp(null, 0, "GeometricScaling")) != null)
+              node.Transform *= double4x3.Scaling(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+            if ((v = t1.GetProp(null, 0, "GeometricRotation")) != null)
+              node.Transform *= double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180));
+            if ((v = t1.GetProp(null, 0, "GeometricTranslation")) != null)
+              node.Transform *= double4x3.Translation(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+            if ((v = t1.GetProp(null, 0, "Lcl Scaling")) != null)
+              node.Transform *= double4x3.Scaling(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+            if ((v = t1.GetProp(null, 0, "Lcl Rotation")) != null)
+              node.Transform *= double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180));
+            if ((v = t1.GetProp(null, 0, "PreRotation")) != null)
+              node.Transform *= (double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180)));
+            if ((v = t1.GetProp(null, 0, "Lcl Translation")) != null)
+              node.Transform *= double4x3.Translation(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+          }
+          var geo = getnodes(ppo[0], "Geometry").FirstOrDefault();
+          if (geo != null)
+          {
+          m1:
+            var type = geo.props[2];
+            switch (type)
+            {
+              default: continue;
+              case "TrimNurbsSurface":
+                {
+                  //var xx = __descends(_, geo.props[0]).Where(p => p.name == "Geometry" && p.props[2] as string == "NurbsSurface").ToArray();
+                  var uu = getnodes(geo.props[0], "Geometry").FirstOrDefault(p => p.props[2] as string == "NurbsSurface");
+                  if (uu != null) { geo = uu; goto m1; }
+                  break;
+                }
+              case "NurbsSurface":
+                {
+                  //var xx = getnodes(_, ppo[0], "Geometry").ToArray(); if (xx.Length != 1) { }
+                  //var i1 = geo["SurfaceDisplay"].props;
+                  //var i2 = geo["NurbsSurfaceOrder"].props;
+                  //var i4 = geo["Step"].props;
+                  //var vu = (double[])geo["KnotVectorU"].props[0];
+                  //var vv = (double[])geo["KnotVectorV"].props[0];
+
+                  var dims = geo["Dimensions"].props;
+                  var form = geo["Form"].props;
+                  var pp = (double[])geo["Points"].props[0];
+                  var xo = (string)form[0] == "Open";
+                  var yo = (string)form[1] == "Open";
+                  var dx = toint(dims[0]);
+                  var dy = toint(dims[1]);
+                  if (dx * dy != pp.Length >> 2) continue;
+                  var pv = new double3[pp.Length >> 2];
+                  for (int t = 0, s = 0; t < pv.Length; t++, s += 4) pv[t] = new double3(pp[s], pp[s + 1], pp[s + 2]);
+
+                  var nx = xo ? dx - 1 : dx;
+                  var ny = yo ? dy - 1 : dy;
+                  var tt = new ushort[nx * ny * 6];
+                  for (int y1 = 0, t = 0; y1 < ny; y1++)
+                    for (int x1 = 0, y2 = (y1 + 1) % dy; x1 < nx; x1++, t += 6)
+                    {
+                      var x2 = (x1 + 1) % dx;
+                      tt[t + 0] = tt[t + 5] = (ushort)(y1 * dx + x1);
+                      tt[t + 2] = tt[t + 3] = (ushort)(y2 * dx + x2);
+                      tt[t + 1] = (ushort)(y1 * dx + x2);
+                      tt[t + 4] = (ushort)(y2 * dx + x1);
+                    }
+
+                  node.Points = pv;
+                  node.Indices = tt;
+                  node.Color = 0xffffffff;
+
+                  break;
+                }
+              case "Mesh":
+                {
+                  var vv = (double[])geo["Vertices"].props[0];
+                  var ii = (int[])geo["PolygonVertexIndex"].props[0];
+                  var pv = node.Points = new double3[vv.Length / 3];
+                  for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(vv[s], vv[s + 1], vv[s + 2]);
+                  iii.Clear();
+                  for (int t = 0, j; t < ii.Length;)
+                    for (j = t + 1; ; j++)
+                    {
+                      iii.Add((ushort)ii[t]);
+                      iii.Add((ushort)ii[j]); var l = ii[j + 1];
+                      iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
+                    }
+                  node.Indices = iii.ToArray();
+                  if ((t1 = geo["LayerElementUV"]) != null)
+                  {
+                    var aa = (double[])t1["UV"].props[0]; var bb = (int[])t1["UVIndex"].props[0];
+                    if (bb.Length == ii.Length)
+                    {
+                      iii.Clear();
+                      for (int t = 0, j; t < ii.Length;)
+                        for (j = t + 1; ; j++)
+                        {
+                          iii.Add((ushort)bb[t]);
+                          iii.Add((ushort)bb[j]);
+                          iii.Add((ushort)bb[j + 1]); if (ii[j + 1] < 0) { t = j + 2; break; }
+                        }
+                      var tt = node.Texcoords = new float2[iii.Count];
+                      for (int t = 0, x; t < tt.Length; t++)
+                        tt[t] = new float2((float)aa[x = iii[t] << 1], -(float)aa[x + 1]);
+                    }
+                  }
+                  break;
+                }
+            }
+            
+            if ((t1 = geo["LayerElementMaterial"]) != null)
+            {
+              var tt = (int[])t1["Materials"].props[0];
+              if (tt.Length == node.Indices.Length / 3 && Array.IndexOf(tt, 1) != -1)
+              {
+                var rr = tt.GroupBy(p => p).Select(p => new Node.Range { i = p.Key, n = p.Count() * 3 }).ToArray();
+                var mm = getnodes(ppo[0], "Material").Select(p => mat2color(p)).ToArray();
+                for (int t = 0, ab = 0; t < rr.Length; t++) { rr[t].c = mm[rr[t].i]; rr[t].i = ab; ab += rr[t].n; }
+                node.Ranges = rr;
+              }
+              else { }
+            }
+            var mat = getnodes(ppo[0], "Material").FirstOrDefault();
+            if (mat != null)
+            {
+              if ((t1 = mat["Properties70"]) != null)
+              {
+                var t2 = t1.GetProp(null, 0, "DiffuseColor");
+                if (t2 != null) node.Color = tocolor(t2);
+                else if ((t2 = t1.GetProp(null, 0, "MaterialDiffuse")) != null) node.Color = tocolor(t2);
+                //if ((node.Color & 0xffffff) == 0) { }
+              }
+              else { }
+              var tex = getnodes(mat.props[0], "Texture").FirstOrDefault();
+              if (tex != null) gettexture(node, tex);
+            }
+            else
+            {
+              //var p = geo.GetProp(0, "Properties70", "Color"); //
+              //if (p != null) node.Color = tocolor(p);
+            }
+          }
+          else if ((t1 = obj["Vertices"]) != null)
+          {
+            var t6 = obj["PolygonVertexIndex"];
+            var pv = node.Points = new double3[t1.props.Length / 3];
+            for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(todbl(t1.props[s]), todbl(t1.props[s + 1]), todbl(t1.props[s + 2]));
+            var ii = t6.props; iii.Clear();
+            for (int t = 0, j; t < ii.Length;)
+              for (j = t + 1; ; j++)
+              {
+                iii.Add((ushort)toint(ii[t]));
+                iii.Add((ushort)toint(ii[j])); var l = toint(ii[j + 1]);
+                iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
+              }
+            node.Indices = iii.ToArray();
+            var t7 = obj["LayerElementUV"];
+            if (t7 != null)
+            {
+              var aa = t7["UV"].props; var bb = t7["UVIndex"].props;
+              if (bb.Length == ii.Length)
+              {
+                iii.Clear();
+                for (int t = 0, j; t < ii.Length;)
+                  for (j = t + 1; ; j++)
+                  {
+                    iii.Add((ushort)toint(bb[t]));
+                    iii.Add((ushort)toint(bb[j]));
+                    iii.Add((ushort)toint(bb[j + 1])); if (toint(ii[j + 1]) < 0) { t = j + 2; break; }
+                  }
+                var tt = node.Texcoords = new float2[iii.Count];
+                for (int t = 0, x; t < tt.Length; t++)
+                  tt[t] = new float2((float)todbl(aa[x = iii[t] << 1]), (float)todbl(aa[x + 1]));
+              }
+            }
+            var mat = getnodes(ppo[0], "Material").FirstOrDefault();
+            if (mat != null)
+            {
+              if ((v = mat.GetProp(0, "Properties60", "Diffuse")) != null) node.Color = tocolor(v);
+              if ((t1 = getnodes(mat.props[0], "Texture").FirstOrDefault()) != null)
+                gettexture(node, t1);
+              else if ((t1 = getnodes(mat.props[0], "LayeredTexture").FirstOrDefault()) != null)
+                if ((t1 = getnodes(t1.props[0], "Texture").FirstOrDefault()) != null)
+                  gettexture(node, t1);
+            }
+          }
+          node.CheckMesh();
+          build(ppo[0], node);
+        }
       }
-      catch { }
-    }
-    static IEnumerable<FBXNode> getnodes((string path, FBXNode conns, FBXNode objs, List<ushort> uus) _, object par, string name)
-    {
-      for (int i = 0; i < _.conns.Count; i++)
+
+      //IEnumerable<FBXNode> __descends(object par)
+      //{
+      //  for (int i = 0; i < conns.Count; i++)
+      //  {
+      //    var ppc = conns[i].props; if (!ppc[2].Equals(par)) continue;
+      //    var obj = objs.GetNode(null, 0, ppc[1]); yield return obj;
+      //    foreach (var t in __descends(obj.props[0])) yield return t;
+      //  }
+      //}
+      internal IEnumerable<FBXNode> getnodes(object par, string name)
       {
-        var ppc = _.conns[i].props; if (!ppc[2].Equals(par)) continue;
-        if (ppc[0] as string == "OP" && name == "Model") continue;
-        var obj = _.objs.GetNode(null, 0, ppc[1]); if (obj == null) continue;
-        if (obj.name == name) yield return obj;
+        for (int i = 0; i < conns.Count; i++)
+        {
+          var ppc = conns[i].props; if (!ppc[2].Equals(par)) continue;
+          if (ppc[0] as string == "OP" && name == "Model") continue;
+          var obj = objs.GetNode(null, 0, ppc[1]); if (obj == null) continue;
+          if (obj.name == name) yield return obj;
+        }
       }
-    }
-    static void build(in (string path, FBXNode conns, FBXNode objs, List<ushort> uus) _, object par, Node root)
-    {
-      foreach (var obj in getnodes(_, par, "Model"))
+      internal void gettexture(Node node, FBXNode tex)
       {
-        var ppo = obj.props; var ss = ((string)ppo[par is string ? 0 : 1]).Split('|');
-        var node = new Node { Name = ss[0], Color = 0xffffffff }; root.Add(node);
-        var t1 = obj["Properties70"]; var offs = 4; object[] v;
-        if (t1 == null) { t1 = obj["Properties60"]; offs = 3; }
+        try
+        {
+          var v = tex["RelativeFilename"].props;
+          if (v[0] is (string, byte[])[] a) { node.Textures = a; return; }
+          var s1 = (string)v[0];
+          var s2 = !Path.IsPathRooted(s1) ? Path.Combine(Path.GetDirectoryName(this.path), s1) : null;
+          if (s2 == null || !File.Exists(s2)) s2 = Directory.EnumerateFiles(Path.GetDirectoryName(this.path), Path.GetFileName(s1), SearchOption.AllDirectories).FirstOrDefault();
+          if (s2 == null) { Debug.WriteLine($"{s1} not found!"); return; }
+          var pt = File.ReadAllBytes(s2);
+          if (s2.EndsWith(".tga", true, null)) pt = fmttga.tga2png(pt);
+          v[0] = node.Textures = new[] { (s2, pt) };
+        }
+        catch { }
+      }
+      static double todbl(object p)
+      {
+        if (p is double d) return d;
+        if (p is int i) return i;
+        throw new Exception();
+      }
+      static int toint(object p)
+      {
+        if (p is int d) return d;
+        throw new Exception();
+      }
+      static uint tocolor(object[] pp)
+      {
+        var s = pp[1] as string;
+        if (s == "Vector4D")
+          return (((uint)(todbl(pp[pp.Length - 4]) * 0xff) & 0xff) << 24) |
+            (((uint)(todbl(pp[pp.Length - 1]) * 0xff) & 0xff) << 16) |
+            (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |
+            (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff));
+        if (s != "ColorRGB" && s != "Vector3D" && s != "Color") { }
+        return 0xff000000 |
+          (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff) << 16) |
+          (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |
+          (((uint)(todbl(pp[pp.Length - 1]) * 0xff) & 0xff));
+      }
+      static uint mat2color(FBXNode mat)
+      {
+        var t1 = mat["Properties70"];
         if (t1 != null)
         {
-          //GeometricScaling * GeometricRotation * GeometricTranslation * Lcl Scaling * Lcl Rotation * PreRotation * Lcl Translation
-          if ((v = t1.GetProp(null, 0, "GeometricScaling")) != null)
-            node.Transform *= double4x3.Scaling(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
-          if ((v = t1.GetProp(null, 0, "GeometricRotation")) != null)
-            node.Transform *= double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180));
-          if ((v = t1.GetProp(null, 0, "GeometricTranslation")) != null)
-            node.Transform *= double4x3.Translation(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
-          if ((v = t1.GetProp(null, 0, "Lcl Scaling")) != null)
-            node.Transform *= double4x3.Scaling(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
-          if ((v = t1.GetProp(null, 0, "Lcl Rotation")) != null)
-            node.Transform *= double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180));
-          if ((v = t1.GetProp(null, 0, "PreRotation")) != null)
-            node.Transform *= (double4x3.Rotation(0, todbl(v[offs + 0]) * (Math.PI / 180)) * double4x3.Rotation(1, todbl(v[offs + 1]) * (Math.PI / 180)) * double4x3.Rotation(2, todbl(v[offs + 2]) * (Math.PI / 180)));
-          if ((v = t1.GetProp(null, 0, "Lcl Translation")) != null)
-            node.Transform *= double4x3.Translation(todbl(v[offs + 0]), todbl(v[offs + 1]), todbl(v[offs + 2]));
+          var t2 = t1.GetProp(null, 0, "DiffuseColor");// "MaterialDiffuse");
+          if (t2 != null) return tocolor(t2);
+          else if ((t2 = t1.GetProp(null, 0, "MaterialDiffuse")) != null) return tocolor(t2);
         }
-        var geo = getnodes(_, ppo[0], "Geometry").FirstOrDefault();
-        if (geo != null)
-        {
-          if ((t1 = geo["Vertices"]) == null) continue; //?? geo["Points"] ?? geo["PointsIndex"]
-          var vv = (double[])t1.props[0];
-          var ii = (int[])(geo["PolygonVertexIndex"]).props[0];
-          var pv = node.Points = new double3[vv.Length / 3];
-          for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(vv[s], vv[s + 1], vv[s + 2]);
-          var iii = _.uus; iii.Clear();
-          for (int t = 0, j; t < ii.Length;)
-            for (j = t + 1; ; j++)
-            {
-              iii.Add((ushort)ii[t]);
-              iii.Add((ushort)ii[j]); var l = ii[j + 1];
-              iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
-            }
-          node.Indices = iii.ToArray();
-          if ((t1 = geo["LayerElementMaterial"]) != null)
-          {
-            var tt = (int[])t1["Materials"].props[0];
-            if (tt.Length == node.Indices.Length / 3 && Array.IndexOf(tt, 1) != -1)
-            {
-              var rr = tt.GroupBy(p => p).Select(p => new Node.Range { i = p.Key, n = p.Count() * 3 }).ToArray();
-              var mm = getnodes(_, ppo[0], "Material").Select(p => mat2color(p)).ToArray();
-              for (int t = 0, ab = 0; t < rr.Length; t++) { rr[t].c = mm[rr[t].i]; rr[t].i = ab; ab += rr[t].n; }
-              node.Ranges = rr;
-            }
-          }
-          if ((t1 = geo["LayerElementUV"]) != null)
-          {
-            var aa = (double[])t1["UV"].props[0]; var bb = (int[])t1["UVIndex"].props[0];
-            if (bb.Length == ii.Length)
-            {
-              iii.Clear();
-              for (int t = 0, j; t < ii.Length;)
-                for (j = t + 1; ; j++)
-                {
-                  iii.Add((ushort)bb[t]);
-                  iii.Add((ushort)bb[j]);
-                  iii.Add((ushort)bb[j + 1]); if (ii[j + 1] < 0) { t = j + 2; break; }
-                }
-              var tt = node.Texcoords = new float2[iii.Count];
-              for (int t = 0, x; t < tt.Length; t++)
-                tt[t] = new float2((float)aa[x = iii[t] << 1], (float)aa[x + 1]);
-            }
-          }
-          var mat = getnodes(_, ppo[0], "Material").FirstOrDefault();
-          if (mat != null)
-          {
-            if ((t1 = mat["Properties70"]) != null)
-            {
-              var t2 = t1.GetProp(null, 0, "DiffuseColor");
-              if (t2 != null) node.Color = tocolor(t2);
-              else if ((t2 = t1.GetProp(null, 0, "MaterialDiffuse")) != null) node.Color = tocolor(t2);
-            }
-            else { }
-            var tex = getnodes(_, mat.props[0], "Texture").FirstOrDefault();
-            if (tex != null) gettexture(_, node, tex);
-          }
-        }
-        else if ((t1 = obj["Vertices"]) != null)
-        {
-          var t6 = obj["PolygonVertexIndex"];
-          var pv = node.Points = new double3[t1.props.Length / 3];
-          for (int t = 0, s = 0; t < pv.Length; t++, s += 3) pv[t] = new double3(todbl(t1.props[s]), todbl(t1.props[s + 1]), todbl(t1.props[s + 2]));
-          var ii = t6.props; var iii = _.uus; iii.Clear();
-          for (int t = 0, j; t < ii.Length;)
-            for (j = t + 1; ; j++)
-            {
-              iii.Add((ushort)toint(ii[t]));
-              iii.Add((ushort)toint(ii[j])); var l = toint(ii[j + 1]);
-              iii.Add((ushort)(l >= 0 ? l : -l - 1)); if (l < 0) { t = j + 2; break; }
-            }
-          node.Indices = iii.ToArray();
-          var t7 = obj["LayerElementUV"];
-          if (t7 != null)
-          {
-            var aa = t7["UV"].props; var bb = t7["UVIndex"].props;
-            if (bb.Length == ii.Length)
-            {
-              iii.Clear();
-              for (int t = 0, j; t < ii.Length;)
-                for (j = t + 1; ; j++)
-                {
-                  iii.Add((ushort)toint(bb[t]));
-                  iii.Add((ushort)toint(bb[j]));
-                  iii.Add((ushort)toint(bb[j + 1])); if (toint(ii[j + 1]) < 0) { t = j + 2; break; }
-                }
-              var tt = node.Texcoords = new float2[iii.Count];
-              for (int t = 0, x; t < tt.Length; t++)
-                tt[t] = new float2((float)todbl(aa[x = iii[t] << 1]), (float)todbl(aa[x + 1]));
-            }
-          }
-          var mat = getnodes(_, ppo[0], "Material").FirstOrDefault();
-          if (mat != null)
-          {
-            if ((v = mat.GetProp(0, "Properties60", "Diffuse")) != null) node.Color = tocolor(v);
-            if ((t1 = getnodes(_, mat.props[0], "Texture").FirstOrDefault()) != null)
-              gettexture(_, node, t1);
-            else if ((t1 = getnodes(_, mat.props[0], "LayeredTexture").FirstOrDefault()) != null)
-              if ((t1 = getnodes(_, t1.props[0], "Texture").FirstOrDefault()) != null)
-                gettexture(_, node, t1);
-          }
-        }
-        node.CheckMesh();
-        build(_, ppo[0], node);
+        return 0;
       }
     }
-    static double todbl(object p)
-    {
-      if (p is double d) return d;
-      if (p is int i) return i;
-      throw new Exception();
-    }
-    static double toint(object p)
-    {
-      if (p is int d) return d;
-      throw new Exception();
-    }
-    static uint tocolor(object[] pp)
-    {
-      var s = pp[1] as string;
-      if (s == "Vector4D")
-        return (((uint)(todbl(pp[pp.Length - 4]) * 0xff) & 0xff) << 24) |
-          (((uint)(todbl(pp[pp.Length - 1]) * 0xff) & 0xff) << 16) |
-          (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |
-          (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff));
-      if (s != "ColorRGB" && s != "Vector3D" && s != "Color") { }
-      return 0xff000000 |
-        (((uint)(todbl(pp[pp.Length - 3]) * 0xff) & 0xff) << 16) |
-        (((uint)(todbl(pp[pp.Length - 2]) * 0xff) & 0xff) << 8) |
-        (((uint)(todbl(pp[pp.Length - 1]) * 0xff) & 0xff));
-    }
-    static uint mat2color(FBXNode mat)
-    {
-      var t1 = mat["Properties70"];
-      if (t1 != null)
-      {
-        var t2 = t1.GetProp(null, 0, "DiffuseColor");// "MaterialDiffuse");
-        if (t2 != null) return tocolor(t2);
-        else if ((t2 = t1.GetProp(null, 0, "MaterialDiffuse")) != null) return tocolor(t2);
-      }
-      return 0;
-    }
+
 #if (DEBUG)
     static void fbx2xml(XElement doc, FBXNode node, StringBuilder sb)
     {
@@ -466,11 +549,10 @@ namespace cde
         var ppc = _.conns[i].props; if (!ppc[2].Equals(par)) continue;
         var obj = _.objs.GetNode(null, 0, ppc[1]); if (obj == null) continue;
         var ppo = obj.props;
-        //var ss = ((string)ppo[par is string ? 0 : 1]).Split('|');
         var no = new XElement("Node"); doc.Add(no);
         no.SetAttributeValue("name", ppo[par is string ? 0 : 1]);
         no.SetAttributeValue("id", ppo[0]);
-        //if (ppc[0] as string == "OP") { no.SetAttributeValue("OP", ""); continue; }
+        if (ppo.Length > 2) no.SetAttributeValue("type", ppo[2]);
         fbx2xml2(_, ppc[1], no);
       }
     }

@@ -334,7 +334,8 @@ namespace Apex
       funcs = Array.Empty<object>();
       return funcs;
     }
-
+    internal void disable(Delegate t) => funcs[Array.IndexOf(funcs, t)] = null;
+  
     internal T GetMethod<T>() where T : Delegate
     {
       var a = getfuncs(); for (int i = 1; i < a.Length; i++) if (a[i] is T t) return t; return null;

@@ -70,8 +70,7 @@ namespace Apex
     public override void ResetValue(object component) { }
     public override object GetValue(object component) => fi.GetValue(component);
     public override void SetValue(object component, object value) => fi.SetValue(component, value);
-    public static PropertyDescriptorCollection GetProperties(object value) =>
-      new PropertyDescriptorCollection(value.GetType().GetFields().Select(fi => new FieldPD(fi)).ToArray());
+    public static PropertyDescriptorCollection GetProperties(Type t) => new PropertyDescriptorCollection(t.GetFields().Select(fi => new FieldPD(fi)).ToArray());
   }
   class FormatConverter : TypeConverter
   {

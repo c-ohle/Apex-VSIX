@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -414,7 +415,7 @@ namespace Apex
     public readonly struct DC
     {
       readonly IView p;
-      internal DC(IView p) => this.p = p;
+      public DC(IView p) => this.p = p;
       public void SetOrtographic()
       {
         p.Draw(Draw.Orthographic, null);
@@ -653,9 +654,8 @@ namespace Apex
           var ss = ((string)value).Split(';');
           return new float2(float.Parse(ss[0], culture), float.Parse(ss[1], culture));
         }
-        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => true;
-        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
-          => FieldPD.GetProperties(value);
+        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => context.PropertyDescriptor != null; //!Editor
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(typeof(float2));
       }
     }
 
@@ -792,8 +792,8 @@ namespace Apex
           if (ss.Length == 1 && context?.PropertyDescriptor.Name == ".s") { var v = float.Parse(ss[0], culture); return new float3(v, v, v); }
           return new float3(float.Parse(ss[0], culture), float.Parse(ss[1], culture), float.Parse(ss[2], culture));
         }
-        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => true;
-        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(value);
+        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => context.PropertyDescriptor != null; //!Editor
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(typeof(float3));
       }
     }
 
@@ -877,8 +877,8 @@ namespace Apex
           var ss = ((string)value).Split(';');
           return new float4(float.Parse(ss[0], culture), float.Parse(ss[1], culture), float.Parse(ss[2], culture), float.Parse(ss[3], culture));
         }
-        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => true;
-        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(value);
+        public override bool GetPropertiesSupported(ITypeDescriptorContext context) => context.PropertyDescriptor != null; //!Editor
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(typeof(float4));
       }
     }
 
