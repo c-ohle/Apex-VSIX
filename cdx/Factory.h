@@ -41,7 +41,8 @@ public:
 	HRESULT __stdcall GetInfo(CDX_INFO i, UINT* v);
 	HRESULT __stdcall GetBuffer(CDX_BUFFER i, const BYTE* p, UINT n, ICDXBuffer** v);
 	HRESULT __stdcall CopyCoords(const XMFLOAT3* appp, const USHORT* aiip, UINT aiin, const XMFLOAT2* attp, const XMFLOAT3* bppp, const USHORT* biip, UINT biin, XMFLOAT2* bttp, FLOAT eps);
-
+	HRESULT __stdcall Push(const UINT* p, UINT n);
+	HRESULT __stdcall Pop(UINT* n, UINT** p);
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(Factory), CFactory)

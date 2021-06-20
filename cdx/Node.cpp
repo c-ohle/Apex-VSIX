@@ -591,7 +591,7 @@ HRESULT CNode::SetBufferPtr(CDX_BUFFER id, const BYTE* p, UINT n)
     return SetBufferPtr((CDX_BUFFER)(id & ~0x1000), (const BYTE*)stackptr, n >> 1);
   }
   if (id > 31) return E_INVALIDARG;
-  if (!p) { setbuffer(id, 0); return 0; }
+  if (!n) { setbuffer(id, 0); return 0; }
   Critical crit;
   setbuffer(id, CCacheBuffer::getbuffer(min(id, CDX_BUFFER_TEXTURE), p, n));
   return 0;

@@ -37,6 +37,8 @@ namespace Apex
       int GetInfo(int id);
       IBuffer GetBuffer(BUFFER id, void* p, int n);
       void CopyCoords(float3* app, ushort* aii, int ani, float2* att, float3* bpp, ushort* bii, int bni, float2* btt, float eps = 0);
+      //void Push(void* p, int n);
+      //void* Pop(out int n);
     }
 
     internal struct Range
@@ -115,6 +117,7 @@ namespace Apex
       DrawPolyline = 18,
       DrawEllipse = 19,
       DrawBox = 20,
+      //Push = 21, Pop = 22,
     }
 
     [ComImport, Guid("4C0EC273-CA2F-48F4-B871-E487E2774492"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]
@@ -243,9 +246,9 @@ namespace Apex
       void* s; var n = p.GetBufferPtr(id, &s) / sizeof(T); if (s == null) return null;
       var a = new T[n]; fixed (void* d = a) Native.memcpy(d, s, (void*)(n * sizeof(T))); return a;
     }
-    internal static void SetArray<T>(this INode p, BUFFER id, T[] a) where T : unmanaged
+    internal static void SetArray<T>(this INode p, BUFFER id, T[] a, int c = -1) where T : unmanaged
     {
-      fixed (void* t = a) p.SetBufferPtr(id, t, a != null ? a.Length * sizeof(T) : 0);
+      fixed (void* t = a) p.SetBufferPtr(id, t, a != null ? (c != -1 ? c : a.Length) * sizeof(T) : 0);
     }
     internal static float3[] GetPoints(this INode p) => p.GetArray<float3>(BUFFER.POINTBUFFER);
     internal static ushort[] GetIndices(this INode p) => p.GetArray<ushort>(BUFFER.INDEXBUFFER);
@@ -322,13 +325,23 @@ namespace Apex
       fixed (float3* pt = pp) fixed (int* pi = ii)
         b.Update(new CSG.Variant(&pt->x, 3, pp.Length), new CSG.Variant(pi, 1, ii.Length));
     }
-    public static void SetMesh(this INode a, float3[] pp, int[] ii, float2[] tt = null)
+    public static void SetMesh(this INode a, float3[] pp, int[] ii, float2[] tt = null, int np = -1, int ni = -1, int nt = -1)
     {
-      if (ii != null) for (int i = 0, m = pp.Length; i < ii.Length; i++) if ((uint)ii[i] >= m) throw new Exception("Invalid index");
-      a.SetArray(BUFFER.POINTBUFFER, pp);
-      a.SetArray(BUFFER.INDEXBUFFER | (BUFFER)0x1000, ii);
-      a.SetArray(BUFFER.TEXCOORDS, tt);
+      if (ii != null)
+        for (int i = 0, 
+          m = np != -1 ? np : pp.Length,
+          n = ni != -1 ? ni : ii.Length; i < n; i++) if ((uint)ii[i] >= m) throw new Exception("Invalid index");
+      a.SetArray(BUFFER.POINTBUFFER, pp, np);
+      a.SetArray(BUFFER.INDEXBUFFER | (BUFFER)0x1000, ii, ni);
+      a.SetArray(BUFFER.TEXCOORDS, tt, nt);
     }
+    //public static void SetMesh(this INode a, float3[] pp, int np, int[] ii, int ni, float2[] tt = null, int nt = 0)
+    //{
+    //  if (ii != null) for (int i = 0, m = pp.Length; i < ii.Length; i++) if ((uint)ii[i] >= m) throw new Exception("Invalid index");
+    //  a.SetArray(BUFFER.POINTBUFFER, pp, np);
+    //  a.SetArray(BUFFER.INDEXBUFFER | (BUFFER)0x1000, ii, ni);
+    //  a.SetArray(BUFFER.TEXCOORDS, tt, nt);
+    //}
     public static IEnumerable<INode> Descendants(this IScene p)
     {
       for (var t = p.Child; t != null; t = t.NextSibling(null)) yield return t;
@@ -412,6 +425,19 @@ namespace Apex
       }
     }
 
+    static class wt<T> { internal static WeakRef<T[]> wr; }
+    public static T[] GetBuffer<T>(int minsize, bool clear = true)
+    {
+      var t = wt<T>.wr.Value;
+      if (t == null || t.Length < minsize) t = new T[minsize];
+      else if(clear) Array.Clear(t, 0, minsize); return t;
+    }
+    public static void Release<T>(this T[] a)
+    {
+      var t = wt<T>.wr.Value;
+      if (t == null || t.Length < a.Length) wt<T>.wr.Value = a;
+    }
+
     public readonly struct DC
     {
       readonly IView p;
@@ -491,11 +517,27 @@ namespace Apex
       }
       public void DrawLine(float2 a, float2 b)
       {
-        var c = (2, (float3)a, (float3)b); p.Draw(Draw.DrawPolyline, &c.Item1);
+        var t1 = ((float3)a, (float3)b); var t2 = (2, new IntPtr(&t1.Item1));
+        p.Draw(Draw.DrawPolyline, &t2.Item1);
+        //var c = (2, (float3)a, (float3)b); p.Draw(Draw.DrawPolyline, &c.Item1);
       }
       public void DrawLine(float3 a, float3 b)
       {
-        var c = (2, a, b); p.Draw(Draw.DrawPolyline, &c.Item1);
+        var t1 = (a, b); var t2 = (2, new IntPtr(&t1.Item1));
+        p.Draw(Draw.DrawPolyline, &t2.Item1);
+        //var c = (2, a, b); p.Draw(Draw.DrawPolyline, &c.Item1);
+      }
+      //public void DrawPolyline(params float3[] a)
+      //{
+      //  fixed (float3* t1 = a) DrawPolyline(t1, a.Length);
+      //}
+      public void DrawPolyline(float3[] p, int i, int n)
+      {
+        fixed (float3* t = p) DrawPolyline(t + i, n);
+      }
+      public void DrawPolyline(float3* pp, int np)
+      {
+        var t = (np, new IntPtr(pp)); p.Draw(Draw.DrawPolyline, &t.Item1);
       }
       public void DrawBox(float3box b)
       {
@@ -528,10 +570,13 @@ namespace Apex
         });
       }
       static IBuffer texpt;
-
-      public void DrawPoints(params float3[] vv)
+      public void DrawPoints(params float3[] pp)
       {
-        fixed (float3* pv = vv) DrawPoints(pv, vv.Length);
+        fixed (float3* t = pp) DrawPoints(t, pp.Length);
+      }
+      public void DrawPoints(float3[] pp, int np)
+      {
+        fixed (float3* t = pp) DrawPoints(t, np);
       }
       public void DrawPoints(float3* vv, int np)
       {
@@ -546,13 +591,6 @@ namespace Apex
         var t = (u, id); p.Draw(Draw.Catch, &t.u);
         if (node != null) Marshal.Release(t.u);
       }
-      //internal static int icatch;
-      //public void Catch(int id = 0)
-      //{
-      //  if (id != 0) id |= icatch << 16;
-      //  p.Draw(Draw.Catch, &id);
-      //}
-
     }
   }
 
@@ -847,6 +885,10 @@ namespace Apex
       public static float4 operator *(float4 v, float f)
       {
         v.x *= f; v.y *= f; v.z *= f; v.w *= f; return v;
+      }
+      public static float4 operator +(float4 a, float4 b)
+      {
+        return new float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
       }
       public static explicit operator uint(in float4 p)
       {
@@ -1179,6 +1221,6 @@ namespace Apex
         pp[c] = XmlConvert.ToSingle(s.Substring(a, b - a));
       }
     }
-  }
 
+  }
 }

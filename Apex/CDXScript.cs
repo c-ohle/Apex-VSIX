@@ -201,14 +201,15 @@ namespace Apex
           if (g) { if (r.Type == typeof(Script)) b.error("missing return"); var gg = wt.GetGenericArguments(); gg[gg.Length - 1] = r.Type; wt = wt.GetGenericTypeDefinition().MakeGenericType(gg); }
           r = Expression.Lambda(wt, r, stack.Skip(ab)); stack.RemoveRange(ab, stack.Count - ab); return r;
         }
-        var ea = a.Parse(null);
+        var ea = a.Parse(null); var wwt = default(Type);
         switch (op)
         {
           case 0x54: return Expression.TypeIs(ea, GetType(b));
           case 0x55: return Expression.TypeAs(ea, GetType(b));
           case 0xc0: a = b.next(':'); return Expression.Condition(ea, a.Parse(wt), b.Parse(wt));
+          case 0x40: case 0x41: case 0xd9: case 0xda: wwt = typeof(int); break; //<< >>
         }
-        var eb = b.Parse(ea.Type);
+        var eb = b.Parse(wwt ?? ea.Type);
         if (op == 0x30 && (ea.Type == typeof(string) || eb.Type == typeof(string)))
         {
           if (ea.Type != typeof(string)) ea = Expression.Call(ea, ea.Type.GetMethod("ToString", Type.EmptyTypes));
@@ -247,7 +248,7 @@ namespace Apex
           ea = Convert(ea, pp[0].ParameterType);
           eb = Convert(eb, pp[1].ParameterType);
         }
-        else if (ea.Type != eb.Type)
+        else if (ea.Type != eb.Type && wwt == null)
         {
           if (Convertible(eb.Type, ea.Type) != null) eb = Convert(eb, ea.Type);
           else if (Convertible(ea.Type, eb.Type) != null) ea = Convert(ea, eb.Type);
@@ -325,7 +326,8 @@ namespace Apex
         if (a.n > 1 && a.s[0] == '0' && (a.s[1] | 0x20) == 'x')
         {
           a.trim(2, 0); if (wt == typeof(uint) || (a.n == 8 && a.s[0] > '7')) { left = Expression.Constant(uint.Parse(a.ToString(), NumberStyles.HexNumber)); goto eval; }
-          left = Expression.Constant(int.Parse(a.ToString(), NumberStyles.HexNumber)); goto eval;
+          left = Expression.Constant(a.n > 8 ? (object)long.Parse(a.ToString(), NumberStyles.HexNumber) :
+            int.Parse(a.ToString(), NumberStyles.HexNumber)); goto eval;
         }
         var tc = TypeCode.Int32;
         switch (a.s[n - 1] | 0x20)
@@ -765,9 +767,12 @@ namespace Apex
     {
       if (n == 0) return 0;
       int x = 0; var c = s[x++];
-      if (c == '<')
-        for (int i = 1, k = 1; i < n; i++)
-          if (s[i] == '<') k++; else if (s[i] == '>' && --k == 0) return i + 1;
+      //if(false)
+      //if (c == '<')
+      //  for (int i = 1, k = 1; i < n; i++) 
+      //    if (s[i] == ';') break;
+      //    else if (s[i] == '<') k++; 
+      //    else if (s[i] == '>' && --k == 0) return i + 1;
       if (c == '(' || c == '{' || c == '[')
       {
         for (int k = 1; x < n;)

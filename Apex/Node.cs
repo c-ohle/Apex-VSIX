@@ -135,6 +135,7 @@ namespace Apex
 
       void save<T>(string name, T v)
       {
+        if (name[0] == '_') return;
         if (this.name != null) { if (name != this.name) return; todo = -1; }
         var node = (INode)this.value; var t = typeof(T);
         if (blittable(t))
@@ -146,6 +147,7 @@ namespace Apex
       }
       void load<T>(string name, ref T v)
       {
+        if (name[0] == '_') return;
         var node = (INode)this.value;
         void* p; int n, typ; fixed (char* ss = name) n = node.GetProp(ss, &p, out typ);
         if (p == null) return;
