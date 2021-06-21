@@ -44,7 +44,6 @@ namespace Apex
         if (reg.GetValue("sfl") is int i) sflags = i; sflags |= 1;
         if (reg.GetValue("drv") is long v) drvsettings = v;
         Factory.SetDevice((uint)drvsettings);
-        //Trace.WriteLine( ConsoleTraceListener
         //Debug.Listeners.Add(new Listner());
         Trace.Listeners.Add(new Listner());
       }
@@ -89,7 +88,6 @@ namespace Apex
         //var pane = ((EnvDTE.OutputWindow)window.Object).OutputWindowPanes.Cast<EnvDTE.OutputWindowPane>().FirstOrDefault(p =>
         //  new Guid(p.Guid) == Microsoft.VisualStudio.VSConstants.GUID_OutWindowDebugPane);
         //if (pane != null) { pane.Activate(); pane.OutputString(s); }
-
         var wnd = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
         var guid = Microsoft.VisualStudio.VSConstants.GUID_OutWindowDebugPane;
         wnd.GetPane(ref guid, out var pane);

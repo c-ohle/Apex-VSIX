@@ -74,6 +74,18 @@ namespace cde
     {
       return string.Format("{0}; {1}; {2}; {3}", x.ToString("R"), y.ToString("R"), z.ToString("R"), w.ToString("R"));
     }
+    //public float4(float x, float y, float z, float w)
+    //{
+    //  this.x = x; this.y = y; this.z = z; this.w = w;
+    //}
+    //public static float4 operator *(in float4 v, float f)
+    //{
+    //  return new float4(v.x * f, v.y * f, v.z * f, v.w * f);
+    //}
+    //public static float4 operator +(in float4 a, in float4 b)
+    //{
+    //  return new float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+    //}
   }
 
   public struct double2 : IEquatable<double2>
@@ -239,6 +251,14 @@ namespace cde
     public static double4 Round(in double4 a, int dec)
     {
       return new double4 { x = Math.Round(a.x, dec), y = Math.Round(a.y, dec), z = Math.Round(a.z, dec), w = Math.Round(a.w, dec) };
+    }
+    public static double4 operator *(in double4 v, double f)
+    {
+      return new double4(v.x * f, v.y * f, v.z * f, v.w * f);
+    }
+    public static double4 operator +(in double4 a, in double4 b)
+    {
+      return new double4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
     }
   }
 
@@ -435,6 +455,101 @@ namespace cde
         if (i == 2) { _31 = value.x; _32 = value.y; _33 = value.z; return; }
         _41 = value.x; _42 = value.y; _43 = value.z;
       }
+    }
+  }
+
+  class NURBS
+  {
+    int dimx, dimy; int deg_u, deg_v;
+    internal double[] knots_u, knots_v, a; double4[] points; 
+    
+    static int getspan(int degree, double[] knots, double u)
+    {
+      int n = knots.Length - degree - 2;
+      if (u > knots[n + 1] - 1e-6f) return n;
+      if (u < knots[degree] + 1e-6f) return degree;
+      int low = degree;
+      int high = n + 1, mid = (int)Math.Floor((low + high) * 0.5);
+      for (; (u < knots[mid]) || (u >= knots[mid + 1]);)
+      {
+        if (u < knots[mid]) high = mid; else low = mid;
+        mid = (int)Math.Floor((low + high) * 0.5);
+      }
+      return mid;
+    }
+    static void bspline(double[] a, int o, int deg, int span, double[] knots, double u)
+    {
+      a[o] = 1; var le = o + deg + 1; var ri = le + deg + 1;
+      for (int j = 1; j <= deg; j++)
+      {
+        a[le + j] = u - knots[span + 1 - j];
+        a[ri + j] = knots[span + j] - u;
+        var s = 0.0;
+        for (int r = 0; r < j; r++)
+        {
+          var t = a[o + r] / (a[ri + r + 1] + a[le + j - r]);
+          a[o + r] = s + a[ri + r + 1] * t;
+          s = a[le + j - r] * t;
+        }
+        a[o + j] = s;
+      }
+    }
+    double3 nurbsPoint(double u, double v)
+    {
+      var p = new double4();
+      int span_u = getspan(deg_u, knots_u, u);
+      int span_v = getspan(deg_v, knots_v, v);
+      bspline(a, 0, deg_u, span_u, knots_u, u); var o = (deg_u + 1) * 3;
+      bspline(a, o, deg_v, span_v, knots_v, v);
+      for (int l = 0; l <= deg_v; l++)
+      {
+        var t = new double4(); var vv = ((span_v - deg_v + l) % dimy) * dimx;
+        for (int k = 0; k <= deg_u; k++)
+          t += points[vv + (span_u - deg_u + k) % dimx] * a[k];
+        p += t * a[o + l];
+      }
+      return new double3(p.x / p.w, p.y / p.w, p.z / p.w);
+    }
+
+    internal void setup(int dimx, int dimy, int deg_u, int deg_v, double[] knots_u, double[] knots_v, double[] v4)
+    {
+      this.dimx = dimx; this.dimy = dimy; this.deg_u = deg_u; this.deg_v = deg_v;
+      this.knots_u = knots_u; this.knots_v = knots_v;
+      this.a = new double[(deg_u + deg_v + 2) * 3];
+      this.points = new double4[dimx * dimy];
+      for (int t = 0, s = 0; t < points.Length; t++, s += 4)
+        points[t] = new double4(
+          v4[s + 0] * v4[s + 3],
+          v4[s + 1] * v4[s + 3],
+          v4[s + 2] * v4[s + 3],
+          v4[s + 3]);
+    }
+    internal void calcsurf(int dx, int dy, out double3[] pp, out ushort[] ii)
+    {
+      var u1 = knots_u[deg_u]; var u2 = knots_u[knots_u.Length - deg_u - 2 + 1];
+      var v1 = knots_v[deg_v]; var v2 = knots_v[knots_v.Length - deg_v - 2 + 1];
+      var fu = (u2 - u1) / (dx - 1);
+      var fv = (v2 - v1) / (dy - 1);
+     
+      pp = new double3[dx * dy];
+      for (int y = 0, i = 0; y < dy; y++)
+        for (int x = 0; x < dx; x++, i++)
+          pp[i] = nurbsPoint(u1 + x * fu, v1 + y * fv);
+    
+      var nx = dx - 1;
+      var ny = dy - 1;
+      ii = new ushort[nx * ny * 6];
+      for (int y1 = 0, t = 0; y1 < ny; y1++)
+        for (int x1 = 0, y2 = (y1 + 1)/* % dy*/; x1 < nx; x1++, t += 6)
+        {
+          var x2 = (x1 + 1);// % dx;
+          ii[t + 0] = (ushort)(y1 * dx + x1);
+          ii[t + 1] = (ushort)(y1 * dx + x2);
+          ii[t + 2] = (ushort)(y2 * dx + x2);
+          ii[t + 3] = (ushort)(y2 * dx + x2);
+          ii[t + 4] = (ushort)(y2 * dx + x1);
+          ii[t + 5] = (ushort)(y1 * dx + x1);
+        }
     }
   }
 

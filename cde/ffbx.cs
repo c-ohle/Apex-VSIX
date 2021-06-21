@@ -285,41 +285,21 @@ namespace cde
                 }
               case "NurbsSurface":
                 {
-                  //var xx = getnodes(_, ppo[0], "Geometry").ToArray(); if (xx.Length != 1) { }
-                  //var i1 = geo["SurfaceDisplay"].props;
-                  //var i2 = geo["NurbsSurfaceOrder"].props;
-                  //var i4 = geo["Step"].props;
-                  //var vu = (double[])geo["KnotVectorU"].props[0];
-                  //var vv = (double[])geo["KnotVectorV"].props[0];
-
+                  //if (form[0] as string == "Periodic") continue;
+                  //if (form[1] as string == "Periodic") continue;
                   var dims = geo["Dimensions"].props;
-                  var form = geo["Form"].props;
-                  var pp = (double[])geo["Points"].props[0];
-                  var xo = (string)form[0] == "Open";
-                  var yo = (string)form[1] == "Open";
-                  var dx = toint(dims[0]);
-                  var dy = toint(dims[1]);
-                  if (dx * dy != pp.Length >> 2) continue;
-                  var pv = new double3[pp.Length >> 2];
-                  for (int t = 0, s = 0; t < pv.Length; t++, s += 4) pv[t] = new double3(pp[s], pp[s + 1], pp[s + 2]);
-
-                  var nx = xo ? dx - 1 : dx;
-                  var ny = yo ? dy - 1 : dy;
-                  var tt = new ushort[nx * ny * 6];
-                  for (int y1 = 0, t = 0; y1 < ny; y1++)
-                    for (int x1 = 0, y2 = (y1 + 1) % dy; x1 < nx; x1++, t += 6)
-                    {
-                      var x2 = (x1 + 1) % dx;
-                      tt[t + 0] = tt[t + 5] = (ushort)(y1 * dx + x1);
-                      tt[t + 2] = tt[t + 3] = (ushort)(y2 * dx + x2);
-                      tt[t + 1] = (ushort)(y1 * dx + x2);
-                      tt[t + 4] = (ushort)(y2 * dx + x1);
-                    }
-
+                  var nurbs = new NURBS();
+                  nurbs.setup(
+                    toint(dims[0]), toint(dims[1]), 3, 3,
+                    (double[])geo["KnotVectorU"].props[0],
+                    (double[])geo["KnotVectorV"].props[0],
+                    (double[])geo["Points"].props[0]);
+                  var dx = nurbs.knots_u.Length;
+                  var dy = nurbs.knots_v.Length;
+                  nurbs.calcsurf(dx, dy, out var pv, out var tt); 
                   node.Points = pv;
                   node.Indices = tt;
                   node.Color = 0xffffffff;
-
                   break;
                 }
               case "Mesh":
@@ -358,7 +338,7 @@ namespace cde
                   break;
                 }
             }
-            
+
             if ((t1 = geo["LayerElementMaterial"]) != null)
             {
               var tt = (int[])t1["Materials"].props[0];
