@@ -44,14 +44,16 @@ namespace Apex
         if (reg.GetValue("sfl") is int i) sflags = i; sflags |= 1;
         if (reg.GetValue("drv") is long v) drvsettings = v;
         Factory.SetDevice((uint)drvsettings);
-        Debug.Listeners.Add(new Listner());
+        //Trace.WriteLine( ConsoleTraceListener
+        //Debug.Listeners.Add(new Listner());
+        Trace.Listeners.Add(new Listner());
       }
       view = Factory.CreateView(Handle, this, (uint)(drvsettings >> 32));
       view.BkColor = 0xffcccccc;
       view.Render = (RenderFlags)reg.GetValue("fl",
         (int)(RenderFlags.BoundingBox | RenderFlags.Coordinates | RenderFlags.Wireframe | RenderFlags.Shadows))
         | RenderFlags.ZPlaneShadows;
-      view.Scene = scene; var defcam = scene.Camera;
+      view.Scene = scene; var defcam = scene.Camera; 
       if (defcam == null)
       {
         defcam = Factory.CreateNode(); defcam.Name = "(default)";
@@ -89,11 +91,9 @@ namespace Apex
         //if (pane != null) { pane.Activate(); pane.OutputString(s); }
 
         var wnd = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-        // GUID_OutWindowGeneralPane
-        //if (wnd is IVsWindowPane sv) { }
         var guid = Microsoft.VisualStudio.VSConstants.GUID_OutWindowDebugPane;
         wnd.GetPane(ref guid, out var pane);
-        pane.Activate(); pane.OutputStringThreadSafe(s);
+        pane.Activate(); pane.OutputString(s);
       }
     }
 

@@ -298,7 +298,7 @@ namespace Apex
         b.SetBufferPtr(BUFFER.INDEXBUFFER, ip, ni * sizeof(ushort));
       }
       finally { Marshal.FreeCoTaskMem(pp); }
-      b.SetArray(BUFFER.TEXCOORDS, tt);
+      b.SetArray(BUFFER.TEXCOORDS, tt, ni);
     }
     //public static void CopyTo(this CSG.IMesh a, out IBuffer pb, out IBuffer ib)
     //{
@@ -325,23 +325,20 @@ namespace Apex
       fixed (float3* pt = pp) fixed (int* pi = ii)
         b.Update(new CSG.Variant(&pt->x, 3, pp.Length), new CSG.Variant(pi, 1, ii.Length));
     }
-    public static void SetMesh(this INode a, float3[] pp, int[] ii, float2[] tt = null, int np = -1, int ni = -1, int nt = -1)
+    public static void SetMesh(this INode a, float3[] pp, int[] ii, float2[] tt = null)
     {
-      if (ii != null)
-        for (int i = 0, 
-          m = np != -1 ? np : pp.Length,
-          n = ni != -1 ? ni : ii.Length; i < n; i++) if ((uint)ii[i] >= m) throw new Exception("Invalid index");
-      a.SetArray(BUFFER.POINTBUFFER, pp, np);
-      a.SetArray(BUFFER.INDEXBUFFER | (BUFFER)0x1000, ii, ni);
-      a.SetArray(BUFFER.TEXCOORDS, tt, nt);
+      if (ii != null) for (int i = 0, m = pp.Length, n = ii.Length; i < n; i++) if ((uint)ii[i] >= m) throw new Exception("Invalid index");
+      a.SetArray(BUFFER.POINTBUFFER, pp);
+      a.SetArray(BUFFER.INDEXBUFFER | (BUFFER)0x1000, ii);
+      a.SetArray(BUFFER.TEXCOORDS, tt);
     }
-    //public static void SetMesh(this INode a, float3[] pp, int np, int[] ii, int ni, float2[] tt = null, int nt = 0)
-    //{
-    //  if (ii != null) for (int i = 0, m = pp.Length; i < ii.Length; i++) if ((uint)ii[i] >= m) throw new Exception("Invalid index");
-    //  a.SetArray(BUFFER.POINTBUFFER, pp, np);
-    //  a.SetArray(BUFFER.INDEXBUFFER | (BUFFER)0x1000, ii, ni);
-    //  a.SetArray(BUFFER.TEXCOORDS, tt, nt);
-    //}
+    public static void SetMesh(this INode a, float3[] pp, int np, ushort[] ii, int ni, float2[] tt = null)
+    {
+      if (ii != null) for (int i = 0; i < ni; i++) if (ii[i] >= np) throw new Exception("Invalid index");
+      a.SetArray(BUFFER.POINTBUFFER, pp, np);
+      a.SetArray(BUFFER.INDEXBUFFER, ii, ni);
+      a.SetArray(BUFFER.TEXCOORDS, tt, tt != null ? ni : 0);
+    }
     public static IEnumerable<INode> Descendants(this IScene p)
     {
       for (var t = p.Child; t != null; t = t.NextSibling(null)) yield return t;
@@ -430,7 +427,7 @@ namespace Apex
     {
       var t = wt<T>.wr.Value;
       if (t == null || t.Length < minsize) t = new T[minsize];
-      else if(clear) Array.Clear(t, 0, minsize); return t;
+      else if (clear) Array.Clear(t, 0, minsize); return t;
     }
     public static void Release<T>(this T[] a)
     {
@@ -527,10 +524,6 @@ namespace Apex
         p.Draw(Draw.DrawPolyline, &t2.Item1);
         //var c = (2, a, b); p.Draw(Draw.DrawPolyline, &c.Item1);
       }
-      //public void DrawPolyline(params float3[] a)
-      //{
-      //  fixed (float3* t1 = a) DrawPolyline(t1, a.Length);
-      //}
       public void DrawPolyline(float3[] p, int i, int n)
       {
         fixed (float3* t = p) DrawPolyline(t + i, n);
@@ -560,7 +553,6 @@ namespace Apex
           p.Draw(Draw.DrawText, &c.Item1);
         }
       }
-
       static IBuffer gettex()
       {
         return GetTexture(32, 32, 32, gr =>
@@ -701,7 +693,10 @@ namespace Apex
     public struct float3 : IEquatable<float3>, IFormattable
     {
       public float x, y, z;
-      public float2 xy => new float2(x, y);
+      public float2 xy
+      { 
+        get => new float2(x, y); set { x = value.x; y = value.y; } 
+      }
       public override string ToString()
       {
         return $"{x:R}; {y:R}; {z:R}";
@@ -839,10 +834,17 @@ namespace Apex
     public struct float4 : IEquatable<float4>, IFormattable
     {
       public float x, y, z, w;
-      public float3 xyz => new float3(x, y, z);
+      public float3 xyz
+      {
+        get => new float3(x, y, z); set { x = value.x; y = value.y; z = value.z; }
+      }
       public float4(float x, float y, float z, float w)
       {
         this.x = x; this.y = y; this.z = z; this.w = w;
+      }
+      public float4(float3 p, float w)
+      {
+        this.x = p.x; this.y = p.y; this.z = p.z; this.w = w;
       }
       public override string ToString()
       {

@@ -125,7 +125,7 @@ namespace Apex
           {
             var t0 = @return.Type != typeof(Script) ? @return.Type : null;
             var t1 = t.Parse(t0); if (t0 == null) @return.GetType().GetField("_type", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(@return, t0 = t1.Type);
-            list.Add(Expression.Return(@return, Convert(t1, t0))); continue;
+            n.n = (int)(t.s - n.s) + t.n; __map(n); list.Add(Expression.Return(@return, Convert(t1, t0))); continue;
           }
           if (t.n != 0) n.error("invalid type"); __map(n); list.Add(Expression.Return(@return)); continue;
         }
@@ -206,7 +206,7 @@ namespace Apex
         {
           case 0x54: return Expression.TypeIs(ea, GetType(b));
           case 0x55: return Expression.TypeAs(ea, GetType(b));
-          case 0xc0: a = b.next(':'); return Expression.Condition(ea, a.Parse(wt), b.Parse(wt));
+          case 0xc0: { a = b.next(':'); var t1 = a.Parse(wt); var t2 = b.Parse(wt ?? t1.Type); return Expression.Condition(ea, t1, t2); }
           case 0x40: case 0x41: case 0xd9: case 0xda: wwt = typeof(int); break; //<< >>
         }
         var eb = b.Parse(wwt ?? ea.Type);
@@ -339,7 +339,13 @@ namespace Apex
           case 'l': a.trim(0, 1); tc = TypeCode.Int64; if ((a.s[n - 1] | 0x20) == 'u') { a.trim(0, 1); tc = TypeCode.UInt64; } break;
           default: for (int i = 0; i < a.n; i++) if (!char.IsNumber(a.s[i])) { tc = TypeCode.Double; break; } break;
         }
-        if (wt != null) { var v = Type.GetTypeCode(wt); if (v > tc) tc = v; }
+        if (wt != null) 
+        { 
+          var v = Type.GetTypeCode(wt);
+          if (v != tc)
+            if (v > tc) tc = v;
+            else if (tc < TypeCode.Single && v > TypeCode.Char && v < TypeCode.Single) tc = v;
+        }
         left = Expression.Constant(System.Convert.ChangeType(a.ToString(), tc, CultureInfo.InvariantCulture));
         if (wt != null && wt.IsEnum) if (0.Equals(((ConstantExpression)left).Value)) left = Expression.Convert(left, wt);
         goto eval;
@@ -354,8 +360,8 @@ namespace Apex
       {
         for (a = b; b.n != 0 && b.s[0] != '(' && b.s[0] != '[' && b.s[0] != '{'; b.next()) ;
         a.n = (int)(b.s - a.s); a.trim(); var t = GetType(a); a = b.next(); var tc = a.s[0]; a.trim(1, 1);
-        if (tc == '[') while (a.n == 0 && b.s[0] == '[') { t = t.MakeArrayType(); a = b.next(); a.trim(1, 1); }
-        var ab = stack.list.Count; if (tc != '{') for (; a.n != 0;) stack.list.Add(a.next(',').Parse(null));
+        if (tc == '[') while (b.n != 0 && b.s[0] == '[') { t = t.MakeArrayType(); b.next(); }
+        var ab = stack.list.Count; if (tc != '{') for (; a.n != 0;) stack.list.Add(a.next(',').Parse(typeof(int)));
         if (tc == '[')
         {
           if (ab != stack.list.Count) left = Expression.NewArrayBounds(t, stack.list.Skip(ab));
@@ -412,8 +418,9 @@ namespace Apex
         if (checkthis) goto call; a = b.next();
         if (a.s[0] == '[')
         {
-          a.trim(1, 1); var ab = stack.list.Count; for (; a.n != 0;) stack.list.Add(a.next(',').Parse(null));
-          left = left.Type.IsArray ? Expression.ArrayAccess(left, stack.list.Skip(ab)) : Expression.Property(left, left.Type == typeof(string) ? "Chars" : "Item", stack.list.Skip(ab).ToArray());
+          a.trim(1, 1); var ab = stack.list.Count; var ar = left.Type.IsArray; //var xx = new int[6][];
+          for (; a.n != 0;) { var t = a.next(','); stack.list.Add(ar ? Convert(t.Parse(typeof(int)), typeof(int)) : t.Parse(null)); }
+          left = ar ? Expression.ArrayAccess(left, stack.list.Skip(ab)) : Expression.Property(left, left.Type == typeof(string) ? "Chars" : "Item", stack.list.Skip(ab).ToArray());
           stack.list.RemoveRange(ab, stack.list.Count - ab); continue;
         }
         if (a.s[0] == '(')
@@ -802,7 +809,7 @@ namespace Apex
         {
           var z = s[y++]; if (z == '<') { if (s[y - 2] == z) break; k++; continue; }
           if (z == '>') { if (--k == 0) return y; continue; }
-          if (!(z <= ' ' || z == '.' || z == ',' || z == '_' || char.IsLetterOrDigit(z))) break;
+          if (!(z == '_' || char.IsLetterOrDigit(z) || z <= ' ' || z == '.' || z == ',' || z == '[' || z == ']')) break;
         }
       }
       if (x == n) return x;

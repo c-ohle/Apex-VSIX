@@ -24,7 +24,7 @@ namespace Apex
       if (tool == null)
       {
         var k = ModifierKeys | (
-          e.Button == MouseButtons.Left ? Keys.LButton :
+          e.Button == MouseButtons.Left ? Keys.LButton : 
           e.Button == MouseButtons.Right ? Keys.RButton :
           e.Button == MouseButtons.Middle ? Keys.MButton : 0);
         var f = main == null || main.IsStatic ? ToolFlags.GroundClick : ToolFlags.ObjectClick;
