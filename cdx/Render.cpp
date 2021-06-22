@@ -58,7 +58,7 @@ void CView::renderekbox(CNode* main)
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskX), m) - pc),
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskY), m) - pc),
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskZ), m) - pc));
-
+    
     auto ma = box[1] + sc * XMVectorReplicate(0.03f);
     auto va = sc * XMVectorReplicate(0.01f);
     auto vr = sc * XMVectorReplicate(0.002f);

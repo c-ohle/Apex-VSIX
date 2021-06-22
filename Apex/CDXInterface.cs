@@ -424,7 +424,7 @@ namespace Apex
 
     internal static T[] getbuffer<T>(int n)
     {
-      ref var p = ref WeakSingleton<T[]>.p; var v = p.Value; 
+      ref var p = ref WeakSingleton<T[]>.p; var v = p.Value;
       if (v == null || v.Length < n) p.Value = v = new T[n]; return v;
     }
     public static T[] GetBuffer<T>(int minsize, bool clear = true)
@@ -697,10 +697,6 @@ namespace Apex
     public struct float3 : IEquatable<float3>, IFormattable
     {
       public float x, y, z;
-      public float2 xy
-      {
-        get => new float2(x, y); set { x = value.x; y = value.y; }
-      }
       public override string ToString()
       {
         return $"{x:R}; {y:R}; {z:R}";
@@ -730,6 +726,10 @@ namespace Apex
       public float3(float x, float y, float z)
       {
         this.x = x; this.y = y; this.z = z;
+      }
+      public float2 xy
+      {
+        get => new float2(x, y); internal set { x = value.x; y = value.y; }
       }
       public float LengthSq => x * x + y * y + z * z;
       public float Length => (float)Math.Sqrt(x * x + y * y + z * z);
@@ -831,16 +831,17 @@ namespace Apex
         }
         public override bool GetPropertiesSupported(ITypeDescriptorContext context) => context.PropertyDescriptor != null; //!Editor
         public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => FieldPD.GetProperties(typeof(float3));
+        //public override bool GetCreateInstanceSupported(ITypeDescriptorContext context) => false;
       }
     }
-
+    
     [TypeConverter(typeof(float4.Converter))]
     public struct float4 : IEquatable<float4>, IFormattable
     {
       public float x, y, z, w;
       public float3 xyz
       {
-        get => new float3(x, y, z); set { x = value.x; y = value.y; z = value.z; }
+        get => new float3(x, y, z); internal set { x = value.x; y = value.y; z = value.z; }
       }
       public float4(float x, float y, float z, float w)
       {
