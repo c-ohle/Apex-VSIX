@@ -174,7 +174,6 @@ namespace Apex
       return 1;
     }
 #endif
-    //static CSG.IMesh BytesToMesh(byte[] a) { var m = CSG.Factory.CreateMesh(); m.ReadFromStream(COM.Stream(a)); return m; }
     static CSG.IMesh MeshFromNode(INode node)
     {
       var mesh = CSG.Factory.CreateMesh();
@@ -188,24 +187,64 @@ namespace Apex
       var str = COM.SHCreateMemStream(); mesh.WriteToStream(str); return str.ToArray();
     }
 
-    static void MeshRound(ref float3[] pp, ref ushort[] ii)
+    static Dictionary<float3, ushort> getptdict(int np)
     {
-      for (int i = 0, j, k; i < ii.Length; i++)
+      ref var p = ref WeakSingleton<Dictionary<float3, ushort>>.p;
+      var v = p.Value; if (v != null) { v.Clear(); return v; }
+      return p.Value = v = new Dictionary<float3, ushort>(Math.Min(1024, np));
+    }
+
+    static void MeshRound(float3[] pp, ref int np, ushort[] ii, ref int ni, float2[] tt, Range[] rr, ref int nr, float eps = 1e-10f)
+    {
+      for (int i = 0, j, k; i < ni; i++)
       {
         var d = (pp[j = ii[i]] - pp[k = ii[i + (i % 3 == 2 ? -2 : 1)]]).LengthSq;
-        if (d != 0 && d < 1e-10f) pp[j] = pp[k];// = (pp[j] + pp[k]) / 2;
+        if (d != 0 && d < eps) pp[j] = pp[k]; // = (pp[j] + pp[k]) / 2;
       }
-      var dict = new Dictionary<float3, ushort>(pp.Length); var ni = 0;
-      for (int i = 0; i < ii.Length; i++)
+      var t = 0; var dict = getptdict(np);
+      for (int i = 0; i < ni; i++)
       {
         if (!dict.TryGetValue(pp[ii[i]], out var k)) dict.Add(pp[ii[i]], k = (ushort)dict.Count);
-        ii[ni++] = k; if (i % 3 != 2) continue;
-        if (ii[ni - 3] != ii[ni - 2] && ii[ni - 2] != ii[ni - 1] && ii[ni - 1] != ii[ni - 3]) continue;
-        ni -= 3;
+        ii[t++] = k; if (i % 3 != 2) continue;
+        if (ii[t - 3] != ii[t - 2] && ii[t - 2] != ii[t - 1] && ii[t - 1] != ii[t - 3]) continue;
+        t -= 3; if (tt != null) Array.Copy(tt, t + 3, tt, t, ni - (t + 3));
+        if (rr == null) continue;
+        for (int j = 0; j < rr.Length; j++)
+        {
+          ref var r = ref rr[j];
+          if (r.Start > t) r.Start -= 3;
+          else if (r.Start + r.Count > t) r.Count -= 3;
+        }
       }
-      Array.Resize(ref pp, dict.Count); dict.Keys.CopyTo(pp, 0);
+      ni = t; np = dict.Count; dict.Keys.CopyTo(pp, 0);
+#if (DEBUG)
+      var ff = GetBuffer<byte>(np); int c1 = 0, c2 = 0, c3 = 0; var min = 1f;
+      for (int i = 0; i < ni; i++) ff[ii[i]] = 1;
+      for (int i = 0; i < np; i++) if (ff[i] == 0) c1++;
+      for (int i = 0; i < ni; i += 3)
+      {
+        var v = pp[ii[i + 1]] - pp[ii[i]] ^ pp[ii[i + 2]] - pp[ii[i]];
+        if (v.LengthSq < 1e-12f) { c2++; min = Math.Min(min, v.Length); }
+      }
+      if (rr != null)
+      {
+        for (int i = 0; i < nr; i++)
+        {
+          var r = rr[i]; if (r.Count < 0 || r.Start + r.Count > ni) throw new Exception();
+          if (r.Count == 0) c3++;
+        }
+      }
+      if (c1 != 0 || c2 != 0 || c3 != 0) System.Diagnostics.Debug.WriteLine($"MeshRound unused points: {c1} min faces: {c2} min: {min} rz:{c3}");
+#endif
+    }
+    static void MeshRound(ref float3[] pp, ref ushort[] ii)
+    {
+      int np = pp.Length, ni = ii.Length, nr = 0;
+      MeshRound(pp, ref np, ii, ref ni, null, null, ref nr);
+      Array.Resize(ref pp, np);
       Array.Resize(ref ii, ni);
     }
+
     static void CopyCoords(INode sour, float3[] bpp, ushort[] bii, ref float2[] btt)
     {
       float3* app; var anp = sour.GetBufferPtr(BUFFER.POINTBUFFER, (void**)&app) / sizeof(float3);
@@ -450,7 +489,7 @@ namespace Apex
       var pp = node.GetArray<float3>(BUFFER.POINTBUFFER);
       var ii = node.GetArray<ushort>(BUFFER.INDEXBUFFER);
       var tt = node.GetArray<float2>(BUFFER.TEXCOORDS);
-      var dict = new Dictionary<float3, ushort>(pp.Length);
+      var dict = getptdict(pp.Length);
       var nodes = new INode[nr];
       for (int i = 0; i < nr; i++)
       {

@@ -6,6 +6,9 @@ using System.Linq;
 
 namespace cde
 {
+  [Flags]
+  public enum NodeFlags { NoCull = 1 }
+
   [DebuggerDisplay("{Name}")]
   public class Node : List<Node>
   {
@@ -17,18 +20,19 @@ namespace cde
     public (string path, byte[] bin)[] Textures;
     public float2[] Texcoords;
     public uint Color;
-    public struct Range { internal int i, n; internal uint c; }
+    public struct Range { public int i, n; public uint c; }
     public Range[] Ranges;
     public Node Parent { get; private set; }
     public object Tag;
+    public NodeFlags Flags;
     internal unsafe void CheckMesh()
     {
 #if(DEBUG)
       if (Points == null) return;
       var ff = new bool[Points.Length];
       for (int i = 0; i < Indices.Length; i++) ff[Indices[i]] = true;
-      var unused = ff.Count(p => !p); 
-      if (unused != 0) 
+      var unused = ff.Count(p => !p);
+      if (unused != 0)
       {
         Debug.WriteLine("unused points " + unused);
       }
@@ -38,8 +42,7 @@ namespace cde
             throw new Exception();
 #endif
     }
-
-#if(false)
+#if (false)
     public void MeshCompact()
     {
       var dict = new Dictionary<double3, ushort>(4096);

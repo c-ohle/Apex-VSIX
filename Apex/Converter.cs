@@ -237,5 +237,8 @@ namespace Apex
       set { if (value == null) p = null; else if (p == null) p = new WeakReference(value); else p.Target = value; }
     }
   }
-
+  static class WeakSingleton<T> where T : class 
+  {
+    internal static WeakRef<T> p; 
+  }
 }

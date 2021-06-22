@@ -241,7 +241,8 @@ namespace cde
 
     class Cont
     {
-      internal string path; internal FBXNode conns; internal FBXNode objs; internal List<ushort> iii;
+      internal string path; internal FBXNode conns; internal FBXNode objs;
+      internal List<ushort> iii; NURBS nurbs;
       internal void build(object par, Node root)
       {
         foreach (var obj in getnodes(par, "Model"))
@@ -285,18 +286,16 @@ namespace cde
                 }
               case "NurbsSurface":
                 {
-                  //if (form[0] as string == "Periodic") continue;
-                  //if (form[1] as string == "Periodic") continue;
                   var dims = geo["Dimensions"].props;
-                  var nurbs = new NURBS();
+                  if (nurbs == null) nurbs = new NURBS();
                   nurbs.setup(
-                    toint(dims[0]), toint(dims[1]), 3, 3,
+                    toint(dims[0]), toint(dims[1]), 3, 3, //"Steps" ?
                     (double[])geo["KnotVectorU"].props[0],
                     (double[])geo["KnotVectorV"].props[0],
                     (double[])geo["Points"].props[0]);
                   var dx = nurbs.knots_u.Length;
                   var dy = nurbs.knots_v.Length;
-                  nurbs.calcsurf(dx, dy, out var pv, out var tt); 
+                  nurbs.calcsurf(dx, dy, out var pv, out var tt);
                   node.Points = pv;
                   node.Indices = tt;
                   node.Color = 0xffffffff;
@@ -415,6 +414,8 @@ namespace cde
                   gettexture(node, t1);
             }
           }
+          if (node.Points != null && (t1 = obj["Culling"]) != null && t1.props[0] as string == "CullingOff")
+            node.Flags |= NodeFlags.NoCull;
           node.CheckMesh();
           build(ppo[0], node);
         }

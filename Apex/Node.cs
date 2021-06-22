@@ -202,14 +202,14 @@ namespace Apex
         return i;
       }
 
-      static WeakRef<byte[]> wbytes;
+      //static WeakRef<byte[]> wbytes;
       static void writeobj(INode node, string name, object o, Type t)
       {
-        var a = wbytes.Value; if (a == null) wbytes.Value = a = new byte[256];
+        var a = GetBuffer<byte>(1024); //var a = wbytes.Value; if (a == null) wbytes.Value = a = new byte[256];
         var str = (p: a, i: 0); writeobj(ref str, o);
         fixed (void* aa = str.p) fixed (char* ss = name)
           node.SetProp(ss, aa, str.i, (int)Type.GetTypeCode(t));
-        wbytes.Value = str.p;
+        str.p.Release();
       }
       static void writeobj(ref (byte[] a, int i) str, object o)
       {

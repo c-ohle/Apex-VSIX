@@ -24,7 +24,7 @@ namespace Apex
       if (tool == null)
       {
         var k = ModifierKeys | (
-          e.Button == MouseButtons.Left ? Keys.LButton : 
+          e.Button == MouseButtons.Left ? Keys.LButton :
           e.Button == MouseButtons.Right ? Keys.RButton :
           e.Button == MouseButtons.Middle ? Keys.MButton : 0);
         var f = main == null || main.IsStatic ? ToolFlags.GroundClick : ToolFlags.ObjectClick;
@@ -778,18 +778,25 @@ namespace Apex
         no.Transform = mb;
         if (ni.Points != null)
         {
+          int nni = ni.Indices.Length; var ii = ni.Indices;
+          var nnp = ni.Points.Length; var pp = getbuffer<float3>(nnp);
+          for (int t = 0; t < nnp; t++) { var v = ni.Points[t]; pp[t] = new float3((float)v.x, (float)v.y, (float)v.z); }
+          float2[] tt = null; if (ni.Texcoords != null) { tt = getbuffer<float2>(nni); for (int t = 0; t < nni; t++) { var v = ni.Texcoords[t]; tt[t] = new float2(v.x, v.y); } }
+          int nnr = 0; Range[] rr = null; if (ni.Ranges != null) { rr = getbuffer<Range>(nnr = ni.Ranges.Length); for (int t = 0; t < nnr; t++) { var v = ni.Ranges[t]; rr[t] = new Range { Start = v.i, Count = v.n, Color = v.c }; } }
+          MeshRound(pp, ref nnp, ii, ref nni, tt, rr, ref nnr);
+          //for (int t = 0; t < nni; t += 3) { var _ = ii[t]; ii[t] = ii[t + 1]; ii[t + 1] = _; }
           no.Color = ni.Textures != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color;
-          no.SetArray(BUFFER.POINTBUFFER, ni.Points.Select(t => new float3((float)t.x, (float)t.y, (float)t.z)).ToArray());
-          no.SetArray(BUFFER.INDEXBUFFER, ni.Indices);
-          no.SetArray(BUFFER.TEXCOORDS, ni.Texcoords);
+          no.SetArray(BUFFER.POINTBUFFER, pp, nnp);
+          no.SetArray(BUFFER.INDEXBUFFER, ii, nni);
+          no.SetArray(BUFFER.TEXCOORDS, tt, nni);
+          no.SetArray(BUFFER.RANGES, rr, nnr);
           for (int t = 0, n = ni.Textures != null ? Math.Min(15, ni.Textures.Length) : 0; t < n; t++)
           {
-            var a = ni.Textures[t].bin; if (a == null) continue; 
+            var a = ni.Textures[t].bin; if (a == null) continue;
             IBuffer tex; fixed (byte* p = a) tex = Factory.GetBuffer(BUFFER.TEXTURE, p, a.Length);
             no.SetBuffer(BUFFER.TEXTURE + t, tex);
             if (tex.Name == null) tex.Name = Path.GetFileNameWithoutExtension(ni.Textures[t].path);
           }
-          if (ni.Ranges != null) no.SetArray(BUFFER.RANGES, ni.Ranges);
         }
         for (int i = 0; i < ni.Count; i++) recu((IRoot)no, ni[i]);
       }

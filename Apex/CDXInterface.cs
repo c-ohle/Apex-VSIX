@@ -422,17 +422,21 @@ namespace Apex
       }
     }
 
-    static class wt<T> { internal static WeakRef<T[]> wr; }
+    internal static T[] getbuffer<T>(int n)
+    {
+      ref var p = ref WeakSingleton<T[]>.p; var v = p.Value; 
+      if (v == null || v.Length < n) p.Value = v = new T[n]; return v;
+    }
     public static T[] GetBuffer<T>(int minsize, bool clear = true)
     {
-      var t = wt<T>.wr.Value;
+      var t = WeakSingleton<T[]>.p.Value;
       if (t == null || t.Length < minsize) t = new T[minsize];
       else if (clear) Array.Clear(t, 0, minsize); return t;
     }
     public static void Release<T>(this T[] a)
     {
-      var t = wt<T>.wr.Value;
-      if (t == null || t.Length < a.Length) wt<T>.wr.Value = a;
+      var t = WeakSingleton<T[]>.p.Value;
+      if (t == null || t.Length < a.Length) WeakSingleton<T[]>.p.Value = a;
     }
 
     public readonly struct DC
@@ -564,16 +568,16 @@ namespace Apex
       static IBuffer texpt;
       public void DrawPoints(params float3[] pp)
       {
-        fixed (float3* t = pp) DrawPoints(t, pp.Length);
+        fixed (float3* t = pp) DrawPoints(t, pp.Length, 6);
       }
-      public void DrawPoints(float3[] pp, int np)
+      public void DrawPoints(float3[] pp, int np, float r = 6)
       {
-        fixed (float3* t = pp) DrawPoints(t, np);
+        fixed (float3* t = pp) DrawPoints(t, np, r);
       }
-      public void DrawPoints(float3* vv, int np)
+      public void DrawPoints(float3* vv, int np, float r = 6)
       {
         var t1 = Texture; Texture = texpt ?? (texpt = gettex());
-        float4 t; t.x = 8f; *(int*)&t.y = np;
+        float4 t; t.x = r; *(int*)&t.y = np;
         *(float3**)&t.z = vv; p.Draw(Draw.DrawPoints, &t);
         Texture = t1;
       }
@@ -694,8 +698,8 @@ namespace Apex
     {
       public float x, y, z;
       public float2 xy
-      { 
-        get => new float2(x, y); set { x = value.x; y = value.y; } 
+      {
+        get => new float2(x, y); set { x = value.x; y = value.y; }
       }
       public override string ToString()
       {

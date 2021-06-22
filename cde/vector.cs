@@ -457,12 +457,38 @@ namespace cde
       }
     }
   }
+  /*
+  static class Mem
+  {
+    struct WeakRef<T> where T : class
+    {
+      WeakReference p;
+      public T Value
+      {
+        get { if (p != null && p.Target is T v) return v; return null; }
+        set { if (value == null) p = null; else if (p == null) p = new WeakReference(value); else p.Target = value; }
+      }
+    }
+    static class wt<T> { internal static WeakRef<T[]> wr; }
+    public static T[] GetBuffer<T>(int minsize, bool clear = true)
+    {
+      var t = wt<T>.wr.Value;
+      if (t == null || t.Length < minsize) t = new T[minsize];
+      else if (clear) Array.Clear(t, 0, minsize); return t;
+    }
+    public static void Release<T>(this T[] a)
+    {
+      var t = wt<T>.wr.Value;
+      if (t == null || t.Length < a.Length) wt<T>.wr.Value = a;
+    }
+  }
+  */
 
   class NURBS
   {
     int dimx, dimy; int deg_u, deg_v;
-    internal double[] knots_u, knots_v, a; double4[] points; 
-    
+    internal double[] knots_u, knots_v, a; double4[] points;
+    //Dictionary<double3, ushort> dict; ushort[] kk, tt;
     static int getspan(int degree, double[] knots, double u)
     {
       int n = knots.Length - degree - 2;
@@ -510,14 +536,14 @@ namespace cde
       }
       return new double3(p.x / p.w, p.y / p.w, p.z / p.w);
     }
-
+    void ensure<T>(ref T[] a, int n) { if (a == null || a.Length < n) a = new T[n]; }
     internal void setup(int dimx, int dimy, int deg_u, int deg_v, double[] knots_u, double[] knots_v, double[] v4)
     {
       this.dimx = dimx; this.dimy = dimy; this.deg_u = deg_u; this.deg_v = deg_v;
       this.knots_u = knots_u; this.knots_v = knots_v;
-      this.a = new double[(deg_u + deg_v + 2) * 3];
-      this.points = new double4[dimx * dimy];
-      for (int t = 0, s = 0; t < points.Length; t++, s += 4)
+      ensure(ref a, (deg_u + deg_v + 2) * 3);
+      var np = dimx * dimy; ensure(ref points, np);
+      for (int t = 0, s = 0; t < np; t++, s += 4)
         points[t] = new double4(
           v4[s + 0] * v4[s + 3],
           v4[s + 1] * v4[s + 3],
@@ -530,19 +556,44 @@ namespace cde
       var v1 = knots_v[deg_v]; var v2 = knots_v[knots_v.Length - deg_v - 2 + 1];
       var fu = (u2 - u1) / (dx - 1);
       var fv = (v2 - v1) / (dy - 1);
-     
+#if(false)
+      if (dict == null) dict = new Dictionary<double3, ushort>(dx * dy); else dict.Clear();
+      ensure(ref kk, dx * dy);
+      for (int y = 0, i = 0; y < dy; y++)
+        for (int x = 0; x < dx; x++, i++)
+        {
+          var p = nurbsPoint(u1 + x * fu, v1 + y * fv);
+          if (!dict.TryGetValue(p, out var k)) dict.Add(p, k = (ushort)dict.Count); kk[i] = k;
+        }
+      pp = new double3[dict.Count]; dict.Keys.CopyTo(pp, 0); 
+      var nx = dx - 1;
+      var ny = dy - 1;
+      var nt = 0; ensure(ref tt, nx * ny * 6); 
+      for (int y1 = 0, t = 0; y1 < ny; y1++)
+        for (int x1 = 0, y2 = (y1 + 1); x1 < nx; x1++)
+        {
+          var x2 = (x1 + 1);
+          tt[nt + 0] = kk[y1 * dx + x1];
+          tt[nt + 1] = kk[y1 * dx + x2];
+          tt[nt + 2] = kk[y2 * dx + x2]; if (tt[nt + 0] != tt[nt + 1] && tt[nt + 1] != tt[nt + 2] && tt[nt + 2] != tt[nt + 0]) nt += 3;
+          tt[nt + 0] = kk[y2 * dx + x2];
+          tt[nt + 1] = kk[y2 * dx + x1];
+          tt[nt + 2] = kk[y1 * dx + x1]; if (tt[nt + 0] != tt[nt + 1] && tt[nt + 1] != tt[nt + 2] && tt[nt + 2] != tt[nt + 0]) nt += 3;
+        }
+      ii = new ushort[nt];Array.Copy(tt, 0, ii, 0, nt);
+#else
       pp = new double3[dx * dy];
       for (int y = 0, i = 0; y < dy; y++)
         for (int x = 0; x < dx; x++, i++)
           pp[i] = nurbsPoint(u1 + x * fu, v1 + y * fv);
-    
+
       var nx = dx - 1;
       var ny = dy - 1;
       ii = new ushort[nx * ny * 6];
       for (int y1 = 0, t = 0; y1 < ny; y1++)
-        for (int x1 = 0, y2 = (y1 + 1)/* % dy*/; x1 < nx; x1++, t += 6)
+        for (int x1 = 0, y2 = y1 + 1; x1 < nx; x1++, t += 6)
         {
-          var x2 = (x1 + 1);// % dx;
+          var x2 = x1 + 1;
           ii[t + 0] = (ushort)(y1 * dx + x1);
           ii[t + 1] = (ushort)(y1 * dx + x2);
           ii[t + 2] = (ushort)(y2 * dx + x2);
@@ -550,8 +601,8 @@ namespace cde
           ii[t + 4] = (ushort)(y2 * dx + x1);
           ii[t + 5] = (ushort)(y1 * dx + x1);
         }
+#endif
     }
   }
-
 }
 
