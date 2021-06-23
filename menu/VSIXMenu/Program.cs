@@ -187,20 +187,20 @@ namespace VSIXMenu
     [STAThread]
     static void Main()
     {
-      Application.SetHighDpiMode(HighDpiMode.SystemAware);
-      Application.EnableVisualStyles();
-      Application.SetCompatibleTextRenderingDefault(false);
       Convert();
+      //Application.SetHighDpiMode(HighDpiMode.SystemAware);
+      //Application.EnableVisualStyles();
+      //Application.SetCompatibleTextRenderingDefault(false);
       //Application.Run(new MyForm { AllowDrop = true });
     }
 
-    class MyForm : Form
-    {
-      protected override void OnDragEnter(DragEventArgs drgevent)
-      {
-        var dat = drgevent.Data;
-        var a = dat.GetData("csg3mf");
-      }
-    }
+    //class MyForm : Form
+    //{
+    //  protected override void OnDragEnter(DragEventArgs drgevent)
+    //  {
+    //    var dat = drgevent.Data;
+    //    var a = dat.GetData("csg3mf");
+    //  }
+    //}
   }
 }

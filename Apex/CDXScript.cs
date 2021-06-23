@@ -72,7 +72,7 @@ namespace Apex
             for (a = t; a.n != 0;)
             {
               var b = a.next('.'); if (ns != null) ns += '.'; ns += b.ToString();
-              if (map != null) __map(b, a.n == 0 ? 0x88 : 0x78, ns);
+              if (map != null) __map(b, a.n == 0 ? 0x88 : 0x48, ns);
             }
             stack.usings.Add(ns); //t.ToString().Replace(" ", string.Empty));
           }
@@ -1056,10 +1056,6 @@ namespace Apex
         //  if (test != null) return 1;
         //  return 1;
         case 5011: // Run Without Debugging Strg+F5
-                   //if (test != null) return 1;
-                   //if (state == 7) { EndFlyer(); ontimer = null; state = 0; sp = null; return 1; }
-                   //start(8); return 1;
-                   //return 0;
         case 5010: // Run Debugging F5
           if (state != 7)
           {
@@ -1095,6 +1091,7 @@ namespace Apex
           UpdateSyntaxColors(); Invalidate();
           return 1;
         case 5020: return breakpoint(test);
+        case 5021: return clearbreakpoints(test);
           //case 65301: //can close
           //  if (state != 7) return 0;
           //  if (test != null) return 1;
@@ -1114,7 +1111,15 @@ namespace Apex
       if (sp.n == 0) sp = spots.Where(p => LineFromPos(p.i) == l).OrderBy(p => p.i).FirstOrDefault();
       if (sp.n == 0) return 0; if (test != null) return 1;
       var i = map.IndexOf(sp); sp.v ^= 0x10; map[i] = sp; UpdateSyntaxColors(); Invalidate();
+      if ((sp.v & 0x10) != 0) OnLostFocus(null);
       return 1;
+    }
+    int clearbreakpoints(object test)
+    {
+      if (map == null || !map.Any(p => (p.v & 0x10) != 0)) return 0;
+      if (test != null) return 1;
+      for (int i = 0; i < map.Count; i++) pmap[i].v &= ~0x10;
+      UpdateSyntaxColors(); Invalidate(); return 1;
     }
     void build()
     {
@@ -1131,7 +1136,7 @@ namespace Apex
     int state; int* sp; (int id, object p)[] stack; Action ontimer; int lastpos = -1;
     bool DebugStep(int i, (int id, object p)[] stack)
     {
-      if (i >= map.Count) return false;
+      if (!visible) return false;// i >= map.Count) return false;
       ref var m = ref pmap[i];
       if (stack == null)
       {
@@ -1141,23 +1146,26 @@ namespace Apex
           if (state == 1 && sp > &i) return false; // + 1
           if (state == 3 && sp >= &i) return false;
         }
-        if (state == 7) return false; //paint //if (node.funcs == null) return false;
+        if (state == 7) return false;
         return true;
       }
       ReadOnly = true;
-      m.v |= 0x20; Select(m.i); UpdateSyntaxColors(); ScrollVisible();
+      var t1 = node.funcs; node.funcs = Array.Empty<object>();
+      m.v |= 0x20; Select(m.i); UpdateSyntaxColors(); Invalidate(); ScrollVisible();
       if (pane.Frame is IVsWindowFrame f) f.Show();
+      node.view.Visible = false;
+      //var tok = Microsoft.VisualStudio.Shell.VsShellUtilities.ShutdownToken;     
       this.stack = stack; sp = &i;
       for (state = 7; state == 7;)
       {
-        Native.WaitMessage(); Application.DoEvents(); Application.RaiseIdle(null);
-        if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShellIsShuttingDown) { map.Clear(); break; }
+        Native.WaitMessage(); Application.DoEvents();
+        if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShellIsShuttingDown) { state = 0; visible = false; break; }
       }
-      if (map.Count == 0) return false;
-      ReadOnly = false; this.stack = null; m.v &= ~0x20; UpdateSyntaxColors(); Invalidate(); Update();
-      node.view.Invalidate(Inval.Render);
+      node.funcs = t1; ReadOnly = false; this.stack = null; m.v &= ~0x20; UpdateSyntaxColors(); Invalidate(); Update();
+      node.view.Visible = true;
       return true;
     }
+    bool visible; internal void show(bool on) { visible = on; if (!visible) state = 0; }
     void color(int i, int n, byte c) { for (int t = 0; t < n; t++) { charcolor[i + t] = c; } }
     protected override void OnMouseMove(MouseEventArgs e)
     {
@@ -1340,6 +1348,7 @@ namespace Apex
         //node.view.MessageBox(error); // Focus();
         return;
       }
+      if (state == 7) return;
       var code = EditText;
       var debug = map.Any(p => (p.v & 0x10) != 0);
       var isdebug = node.funcs != null && node.funcs.Length != 0 && node.funcs[0] == null;// node.funcs != null && ((object[])node.funcs[0]).Length == 4;
@@ -1355,8 +1364,6 @@ namespace Apex
       if (node.funcs != null && node.funcs.Length != 0)
       {
         Node.SaveProps(node.node, node.GetMethod<Action<IExchange>>());
-        //var cd = Node.GetData(node.GetMethod<Action<IExchange>>(), node.node);
-        //inode.SetBytes(CDX.BUFFER.SCRIPTDATA, cd != null ? Encoding.UTF8.GetBytes(cd) : null);
       }
       node.funcs = null;
       inode.SetBytes(CDX.BUFFER.SCRIPT, Encoding.UTF8.GetBytes(code));

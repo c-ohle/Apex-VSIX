@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 namespace Apex
 {
   [Guid(Guids.GuidEditorFactory)]
-  public class EditorFactory : IVsEditorFactory, IDisposable
+  class EditorFactory : IVsEditorFactory, IDisposable
   {
     ServiceProvider serviceprov;
     void IDisposable.Dispose()
@@ -86,6 +86,7 @@ namespace Apex
           case (int)VSConstants.VSStd97CmdID.StartNoDebug: return 5011;
           case (int)VSConstants.VSStd97CmdID.Stop: return 5013;
           case (int)VSConstants.VSStd97CmdID.ToggleBreakpoint: return 5020;
+          case (int)VSConstants.VSStd97CmdID.ClearBreakpoints: return 5021;
           case (int)VSConstants.VSStd97CmdID.Start: return 5010;
           case (int)VSConstants.VSStd97CmdID.StepInto: return 5015;
           case (int)VSConstants.VSStd97CmdID.StepOver: return 5016;
@@ -122,6 +123,12 @@ namespace Apex
             //case (int)VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_CURRENT: id = 7; break;
         }
       }
+#if(DEBUG)
+      if (guid == typeof(VSConstants.VSStd11CmdID).GUID)
+      {
+        return 0;
+      }
+#endif
       return 0;
     }
     //~CDXPane() { Debug.WriteLine("~CDXPane"); }
@@ -310,9 +317,12 @@ namespace Apex
         view.OnCommand(id, a);
         if (pvaOut != IntPtr.Zero && a[1] != null) Marshal.GetNativeVariantForObject(a[1], pvaOut);
       }
-      catch (Exception e) { view.MessageBox(
-        (uint)e.HResult == 0x8c066001 ? "Degenerated Mesh Object!" : 
-        e.Message); }
+      catch (Exception e)
+      {
+        view.MessageBox(
+(uint)e.HResult == 0x8c066001 ? "Degenerated Mesh Object!" :
+e.Message);
+      }
       return 0;
     }
     internal CDXView.TreeView treeview; static object[] exa2;
@@ -357,9 +367,10 @@ namespace Apex
     }
   }
 
-
   [Guid("381f778f-1111-4f04-88dd-241de0ad3e71")]
-  public class ScriptToolWindowPane : ToolWindowPane, IVsSelectionEvents, IOleCommandTarget//IVsFindTarget
+  class ScriptToolWindowPane : 
+    ToolWindowPane, IVsSelectionEvents, //IVsWindowFrameNotify4
+    IOleCommandTarget, IVsWindowFrameNotify//IVsFindTarget
   {
     //public override bool SearchEnabled => true;//base.SearchEnabled;
     //public override IVsSearchTask CreateSearch(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback)
@@ -396,22 +407,7 @@ namespace Apex
       uishell.ShowContextMenu(0, ref set, 0x2101, new[] { new POINTS { x = (short)p.X, y = (short)p.Y } }, this);
     }
     uint cookie;
-    protected override void OnCreate()
-    {
-      base.OnCreate();
-      if (GetService(typeof(SVsShellMonitorSelection)) is IVsMonitorSelection mon)
-      {
-        mon.AdviseSelectionEvents(this, out cookie);
-        mon.GetCurrentSelection(out IntPtr ppHier, out uint pitemid, out IVsMultiItemSelect ppMIS, out IntPtr ppSC);
-        if (ppHier != IntPtr.Zero) Marshal.Release(ppHier);
-        if (ppSC != IntPtr.Zero)
-        {
-          var sc = Marshal.GetTypedObjectForIUnknown(ppSC, typeof(ISelectionContainer));
-          Marshal.Release(ppSC);
-          Show(sc is CDXView view ? view.unisel() : null);
-        }
-      }
-    }
+    
     protected override void OnClose()
     {
       if (GetService(typeof(SVsShellMonitorSelection)) is IVsMonitorSelection mon)
@@ -435,6 +431,8 @@ namespace Apex
           edit.node.editor = null;
           edit.Dispose();
         }
+        //edit.OnShow(__FRAMESHOW.FRAMESHOW_Hidden);
+        edit.show(false);
         host.Controls.Remove(edit);
       }
       if (node == null) { edit = null; return; }
@@ -448,29 +446,14 @@ namespace Apex
         edit.EditText = (edit.node = node).getcode();
         host.Controls.Add(edit);
       }
+      edit.show(true);
     }
+    bool visible;
     int IVsSelectionEvents.OnSelectionChanged(IVsHierarchy pHierOld, uint itemidOld,
       IVsMultiItemSelect pMISOld, ISelectionContainer pSCOld, IVsHierarchy pHierNew,
       uint itemidNew, IVsMultiItemSelect pMISNew, ISelectionContainer pSCNew)
     {
-      Show(pSCNew is CDXView view ? view.unisel() : null);
-      //if (pSCNew is CDXView view)
-      //{ 
-      //  //view.getscript()
-      //  pSCNew.CountObjects(2, out var n);
-      //  if (n == 1)
-      //  {
-      //    var pp = new object[1];
-      //    pSCNew.GetObjects(2, 1, pp);
-      //    var node = pp[0] as Node;
-      //    if (node != null)
-      //    {
-      //      Show(node);
-      //      return 0;
-      //    }
-      //  }
-      //}
-      //Show(null);
+      if(visible) Show(pSCNew is CDXView view ? view.unisel() : null);
       return 0;
     }
     int IVsSelectionEvents.OnElementValueChanged(uint elementid, object varValueOld, object varValueNew)
@@ -503,6 +486,36 @@ namespace Apex
       return -2147221248;
     }
 
+    int IVsWindowFrameNotify.OnShow(int fShow) 
+    {
+      var s = (__FRAMESHOW)fShow;
+      if (s == __FRAMESHOW.FRAMESHOW_WinShown)
+      {
+        visible = true;
+        if (GetService(typeof(SVsShellMonitorSelection)) is IVsMonitorSelection mon)
+        {
+          mon.AdviseSelectionEvents(this, out cookie);
+          mon.GetCurrentSelection(out IntPtr ppHier, out uint pitemid, out IVsMultiItemSelect ppMIS, out IntPtr ppSC);
+          if (ppHier != IntPtr.Zero) Marshal.Release(ppHier);
+          if (ppSC != IntPtr.Zero)
+          {
+            var sc = Marshal.GetTypedObjectForIUnknown(ppSC, typeof(ISelectionContainer));
+            Marshal.Release(ppSC);
+            Show(sc is CDXView view ? view.unisel() : null);
+          }
+        }
+        return 0;
+      }
+      if (s == __FRAMESHOW.FRAMESHOW_Hidden) 
+      {
+        visible = false;  
+        Show(null);
+      }
+      return 0;
+    }
+    int IVsWindowFrameNotify.OnMove() => 0;
+    int IVsWindowFrameNotify.OnSize() => 0;
+    int IVsWindowFrameNotify.OnDockableChange(int fDockable) => 0;
   }
 
 }

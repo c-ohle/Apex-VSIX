@@ -38,7 +38,7 @@ LRESULT CALLBACK CView::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
   case WM_ERASEBKGND:
     return 1;
   case WM_PAINT:
-    ValidateRect(hWnd, 0);
+    ValidateRect(hWnd, 0); //if(view->stop) return 0;
     if (*(UINT64*)&view->size != *(UINT64*)&view->rcclient.right)
     {
       *(UINT64*)&view->size = *(UINT64*)&view->rcclient.right;
@@ -47,7 +47,6 @@ LRESULT CALLBACK CView::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
     view->Render();
     return 0;
   case WM_MOUSEMOVE:
-    //if (wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) break;
     if (GetCapture() == hWnd) break;
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:

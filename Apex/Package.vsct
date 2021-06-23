@@ -93,16 +93,16 @@
       <Group guid="g2" id="_1000017" priority="1">
         <Parent guid="g2" id="_0x2101" />
       </Group>
-      <Group guid="g2" id="_1000018" priority="3">
+      <Group guid="g2" id="_1000018" priority="4">
         <Parent guid="g2" id="_0x2101" />
       </Group>
-      <Group guid="g2" id="_1000019" priority="7">
+      <Group guid="g2" id="_1000019" priority="8">
         <Parent guid="g2" id="_0x2101" />
       </Group>
-      <Group guid="g2" id="_1000020" priority="11">
+      <Group guid="g2" id="_1000020" priority="12">
         <Parent guid="g2" id="_0x2101" />
       </Group>
-      <Group guid="g2" id="_1000021" priority="15">
+      <Group guid="g2" id="_1000021" priority="16">
         <Parent guid="g2" id="_0x2101" />
       </Group>
       <Group guid="g2" id="_1000022" priority="1">
@@ -509,34 +509,37 @@
     <CommandPlacement guid="guidVSStd97" id="cmdidToggleBreakpoint" priority="2">
       <Parent guid="g2" id="_1000017" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepOver" priority="4">
+    <CommandPlacement guid="guidVSStd97" id="cmdidClearBreakpoints" priority="3">
+      <Parent guid="g2" id="_1000017" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidVSStd97" id="cmdidStepOver" priority="5">
       <Parent guid="g2" id="_1000018" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepInto" priority="5">
+    <CommandPlacement guid="guidVSStd97" id="cmdidStepInto" priority="6">
       <Parent guid="g2" id="_1000018" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidStepOut" priority="6">
+    <CommandPlacement guid="guidVSStd97" id="cmdidStepOut" priority="7">
       <Parent guid="g2" id="_1000018" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidFindSelectedNext" priority="8">
+    <CommandPlacement guid="guidVSStd97" id="cmdidFindSelectedNext" priority="9">
       <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidFindNext" priority="9">
+    <CommandPlacement guid="guidVSStd97" id="cmdidFindNext" priority="10">
       <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidFindPrev" priority="10">
+    <CommandPlacement guid="guidVSStd97" id="cmdidFindPrev" priority="11">
       <Parent guid="g2" id="_1000019" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="12">
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="13">
       <Parent guid="g2" id="_1000020" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="13">
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="14">
       <Parent guid="g2" id="_1000020" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="14">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="15">
       <Parent guid="g2" id="_1000020" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="16">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="17">
       <Parent guid="g2" id="_1000021" />
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="15">

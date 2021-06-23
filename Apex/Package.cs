@@ -40,10 +40,10 @@ namespace Apex
   [ProvideToolboxItems(1, NeedsCallBackAfterReset = true)]
   [ProvideToolWindow(typeof(ScriptToolWindowPane), Orientation = ToolWindowOrientation.Right, Window = EnvDTE.Constants.vsWindowKindOutput, Style = VsDockStyle.Tabbed)]
   //[ProvideToolWindow(typeof(ToolsToolWindowPane), Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindSolutionExplorer)]
-  public sealed class CDXPackage : Package //AsyncPackage
+  public sealed class ApexPackage : Package //AsyncPackage
   {
-    internal static CDXPackage Package;
-    public CDXPackage()
+    internal static ApexPackage Package;
+    public ApexPackage()
     {
       Package = this;
       ToolboxInitialized += ToolboxInit;

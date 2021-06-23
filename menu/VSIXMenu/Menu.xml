@@ -143,6 +143,7 @@
   </ContextMenu>
   <ContextMenu name="Script" id="0x2101" >
     <MenuItem id="cmdidToggleBreakpoint" />
+    <MenuItem id="cmdidClearBreakpoints" />
     <Seperator/>
     <!--<MenuItem id="cmdidStart" />-->
     <MenuItem id="cmdidStepOver" />
@@ -154,6 +155,10 @@
     <MenuItem id="cmdidFindNext" />
     <MenuItem id="cmdidFindPrev" />
     <Seperator/>
+    <!--<MenuItem id="cmdidExpand" />
+    <MenuItem id="cmdidCollapse" />
+    <MenuItem id="cmdidExpandAll" />
+    <Seperator/>--> 
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />
     <MenuItem id="cmdidPaste" />

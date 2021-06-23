@@ -522,7 +522,7 @@ namespace Apex
 
   public static unsafe class COM
   {
-    public static object CreateInstance(string path, in Guid clsid, in Guid iid)
+    internal static object CreateInstance(string path, in Guid clsid, in Guid iid)
     {
       path = Path.Combine(Path.GetDirectoryName(typeof(CDXView).Assembly.Location), path);
       var t1 = LoadLibrary(path);

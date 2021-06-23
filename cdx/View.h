@@ -23,6 +23,7 @@ struct CView : ICDXView
   CDX_RENDER                        flags = (CDX_RENDER)0;
   cameradata                        camdat;
   float                             dpiscale = 0;
+  //bool                            stop = false;
   //float                           vscale = 0.0002f, znear = 0.1f, zfar = 1000, minwz = -1;
 
   struct MBOX { CNode* p; XMFLOAT4X3 m; XMFLOAT3 b[2]; };
