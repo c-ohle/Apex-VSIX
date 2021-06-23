@@ -66,7 +66,16 @@ namespace Apex
         {
           if ((flags & 0x08) == 0) continue;
           if (t.take("static")) { var u = GetType(t); stack.usings.Insert(stack.nstats++, u); }
-          else stack.usings.Add(t.ToString().Replace(" ", string.Empty));
+          else
+          {
+            var ns = default(string);
+            for (a = t; a.n != 0;)
+            {
+              var b = a.next('.'); if (ns != null) ns += '.'; ns += b.ToString();
+              if (map != null) __map(b, a.n == 0 ? 0x88 : 0x78, ns);
+            }
+            stack.usings.Add(ns); //t.ToString().Replace(" ", string.Empty));
+          }
           stack.nusings = stack.usings.Count; continue;
         }
         if (n.equals("if"))
@@ -339,8 +348,8 @@ namespace Apex
           case 'l': a.trim(0, 1); tc = TypeCode.Int64; if ((a.s[n - 1] | 0x20) == 'u') { a.trim(0, 1); tc = TypeCode.UInt64; } break;
           default: for (int i = 0; i < a.n; i++) if (!char.IsNumber(a.s[i])) { tc = TypeCode.Double; break; } break;
         }
-        if (wt != null) 
-        { 
+        if (wt != null)
+        {
           var v = Type.GetTypeCode(wt);
           if (v != tc)
             if (v > tc) tc = v;
@@ -501,13 +510,17 @@ namespace Apex
     {
       if (map != null)
       {
-        var t1 = map; map = null; Type t2; try { t2 = GetType(a, ex); } finally { map = t1; }
-        if (t2 == null) return t2;
-        for (int j = 0, x = (int)(a.s - (char*)(ptr + 32)) + a.n; j < map.Count; j++) { var m = map[j]; if (m.i + m.n == x && m.v == 0) return t2; }
-        for (var e = a; e.n != 0;)
+        var t1 = map; map = null; Type t2 = null; try { t2 = GetType(a, ex); }
+        finally
         {
-          var c = e.next('.'); if (e.n == 0) { __map(c, 0, t2); break; }
-          for (var t3 = t2; t3.IsNested;) { t3 = t3.DeclaringType; if (c.equals(t3.Name)) { __map(c, 0, t3); break; } }
+          map = t1;
+          var ns = default(string);
+          for (var e = a; e.n != 0;)
+          {
+            var c = e.next('.'); if (e.n == 0 && t2 != null) { c = c.next(); __map(c, 0, t2); break; }
+            for (var t3 = t2; t3 != null && t3.IsNested;) { t3 = t3.DeclaringType; if (c.equals(t3.Name)) { __map(c, 0, t3); break; } }
+            if (ns != null) ns += '.'; ns += c.ToString(); __map(c, 0x08, ns);
+          }
         }
         return t2;
       }
@@ -858,8 +871,9 @@ namespace Apex
     internal static Func<int, (int id, object p)[], bool> dbg;
     static void __map(Script s, int v, object p)
     {
+      var i = s.index; for (int t = 0; t < map.Count; t++) if (map[t].i == i && map[t].v == v) return;
       //var t = ((int)(s.s - (char*)(ptr + 32)), s.n, v, p); if (map.Contains(t)) { }
-      map.Add((s.index, s.n, v, p));
+      map.Add((i, s.n, v, p));
     }
     static void __map(Script s, ParameterExpression p)
     {
@@ -1234,18 +1248,34 @@ namespace Apex
       if (flyer != null) return;
       if (cv == '.')
       {
-        var tp = map.FirstOrDefault(p => p.i + p.n + 1 == i1);
-        if (tp.n != 0)
+        var tp = map.FirstOrDefault(p => p.i + p.n + 1 == i1); if (tp.n == 0) return;
+        if (tp.p is string ns)
         {
-          var type = tp.p as Type ?? (tp.p is PropertyInfo pi ? pi.PropertyType : tp.p is FieldInfo fi ? fi.FieldType : null); if (type == null) return;
-          var items = type.GetMembers((tp.v != 0 ? BindingFlags.Instance : BindingFlags.Static | BindingFlags.FlattenHierarchy) |
-            (type == node.GetType() ? BindingFlags.Public | BindingFlags.NonPublic : BindingFlags.Public)).
-            Where(p => TypeHelper.__filter(p, cv == '#')).GroupBy(p => p.Name).Select(p => p.ToArray()).
-            Select(p => new TypeExplorer.Item { icon = TypeHelper.image(p[0]), text = p[0].Name, info = p });
-          if (tp.v != 0) items = items.Concat(Extensions(type).GroupBy(p => p.Name).Select(p => p.ToArray()).
-            Select(p => new TypeExplorer.Item { icon = 24, text = p[0].IsGenericMethod ? p[0].Name + "<>" : p[0].Name, info = p }));
-          EditFlyer(i1, i2, items.OrderBy(p => p.text).ToArray()); return;
+          var usings = map.Where(p => p.v == 0x88).Select(p => (string)p.p);
+          var aa = new Assembly[] { typeof(CDX).Assembly, typeof(int).Assembly, typeof(Control).Assembly };
+          var tt = aa.SelectMany(a => a.GetTypes()).Where(t => t.IsPublic && !t.IsNested && t.Namespace != null);
+          var ii = tt.Select(p => p.Namespace).
+            Where(p => p.Length > ns.Length && p[ns.Length] == '.' && p.StartsWith(ns)).
+            Where(p => (tp.v & 0x0f) == 0x08 || usings.Contains(p)).
+            Select(p => p.Substring(ns.Length + 1, (int)Math.Min((uint)p.IndexOf('.', ns.Length + 1), (uint)p.Length) - (ns.Length + 1))).
+            Distinct().Select(p => new TypeExplorer.Item { icon = 3, text = p, info = string.Format("{0}.{1}", ns, p) });
+          if (tp.v == 0x08) ii = ii.Concat(tt.
+             Where(p => p.Namespace == ns).
+             GroupBy(p => p.Name.Contains('`') ? p.Name.Substring(0, p.Name.IndexOf('`') + 1) : p.Name).
+             Select(p => p.ToArray()).
+             Select(p => new TypeExplorer.Item { icon = TypeHelper.image(p[0]), text = TypeHelper.shortname(p[0], false), info = p }));
+          EditFlyer(i1, i2, ii.OrderBy(p => p.text).ToArray());
+          return;
         }
+        var type = tp.p as Type ?? (tp.p is PropertyInfo pi ? pi.PropertyType : tp.p is FieldInfo fi ? fi.FieldType : null);
+        if (type == null) return;
+        var items = type.GetMembers((tp.v != 0 ? BindingFlags.Instance : BindingFlags.Static | BindingFlags.FlattenHierarchy) |
+          (type == node.GetType() ? BindingFlags.Public | BindingFlags.NonPublic : BindingFlags.Public)).
+          Where(p => TypeHelper.__filter(p, cv == '#')).GroupBy(p => p.Name).Select(p => p.ToArray()).
+          Select(p => new TypeExplorer.Item { icon = TypeHelper.image(p[0]), text = p[0].Name, info = p });
+        if (tp.v != 0) items = items.Concat(Extensions(type).GroupBy(p => p.Name).Select(p => p.ToArray()).
+          Select(p => new TypeExplorer.Item { icon = 24, text = p[0].IsGenericMethod ? p[0].Name + "<>" : p[0].Name, info = p }));
+        EditFlyer(i1, i2, items.OrderBy(p => p.text).ToArray()); return;
       }
     }
     IEnumerable<MethodInfo> Extensions(Type type, string name = null)
