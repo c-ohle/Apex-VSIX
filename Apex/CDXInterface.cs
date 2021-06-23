@@ -424,19 +424,24 @@ namespace Apex
 
     internal static T[] getbuffer<T>(int n)
     {
-      ref var p = ref WeakSingleton<T[]>.p; var v = p.Value;
-      if (v == null || v.Length < n) p.Value = v = new T[n]; return v;
+      return GetBuffer<T>(n, false);
+      //ref var p = ref WeakSingleton<T[]>.p; var v = p.Value;
+      //if (v == null || v.Length < n) p.Value = v = new T[n]; return v;
     }
     public static T[] GetBuffer<T>(int minsize, bool clear = true)
     {
-      var t = WeakSingleton<T[]>.p.Value;
-      if (t == null || t.Length < minsize) t = new T[minsize];
-      else if (clear) Array.Clear(t, 0, minsize); return t;
+      ref var p = ref WeakSingleton<T[]>.p; var v = p.Value;
+      if (v == null || v.Length < minsize) p.Value = v = new T[minsize]; 
+      else if (clear) Array.Clear(v, 0, minsize);
+      return v;
+      //var t = WeakSingleton<T[]>.p.Value;
+      //if (t == null || t.Length < minsize) t = new T[minsize];
+      //else if (clear) Array.Clear(t, 0, minsize); return t;
     }
     public static void Release<T>(this T[] a)
     {
-      var t = WeakSingleton<T[]>.p.Value;
-      if (t == null || t.Length < a.Length) WeakSingleton<T[]>.p.Value = a;
+      //var t = WeakSingleton<T[]>.p.Value;
+      //if (t == null || t.Length < a.Length) WeakSingleton<T[]>.p.Value = a;
     }
 
     public readonly struct DC

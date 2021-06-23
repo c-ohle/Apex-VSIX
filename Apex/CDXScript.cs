@@ -1150,10 +1150,10 @@ namespace Apex
         return true;
       }
       ReadOnly = true;
-      var t1 = node.funcs; node.funcs = Array.Empty<object>();
+      //var t1 = node.funcs; node.funcs = Array.Empty<object>();
       m.v |= 0x20; Select(m.i); UpdateSyntaxColors(); Invalidate(); ScrollVisible();
       if (pane.Frame is IVsWindowFrame f) f.Show();
-      node.view.Visible = false;
+      node.view.Visible = false; /*node.view.Enabled = false;*/
       //var tok = Microsoft.VisualStudio.Shell.VsShellUtilities.ShutdownToken;     
       this.stack = stack; sp = &i;
       for (state = 7; state == 7;)
@@ -1161,8 +1161,9 @@ namespace Apex
         Native.WaitMessage(); Application.DoEvents();
         if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShellIsShuttingDown) { state = 0; visible = false; break; }
       }
-      node.funcs = t1; ReadOnly = false; this.stack = null; m.v &= ~0x20; UpdateSyntaxColors(); Invalidate(); Update();
-      node.view.Visible = true;
+      //node.funcs = t1; 
+      ReadOnly = false; this.stack = null; m.v &= ~0x20; UpdateSyntaxColors(); Invalidate(); Update();
+      /*node.view.Enabled = true;*/ node.view.Visible = true; 
       return true;
     }
     bool visible; internal void show(bool on) { visible = on; if (!visible) state = 0; }

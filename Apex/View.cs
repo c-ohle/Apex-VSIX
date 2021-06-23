@@ -185,7 +185,6 @@ namespace Apex
     void ISink.Timer()
     {
       tiptimer();
-      //animate();
       if (inval == 0) return;
       var f = inval; inval = 0;
       if ((f & (Inval.Tree | Inval.Select | Inval.PropertySet)) != 0)

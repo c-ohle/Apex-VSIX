@@ -59,6 +59,17 @@ LRESULT CALLBACK CView::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
   case WM_SIZE:
     GetClientRect(hWnd, &view->rcclient); InvalidateRect(hWnd, 0, 0);
     break;
+  case WM_WINDOWPOSCHANGING:
+    if (((WINDOWPOS*)lParam)->flags & SWP_HIDEWINDOW)
+      KillTimer(hWnd, 0);
+    else if (((WINDOWPOS*)lParam)->flags & SWP_SHOWWINDOW)
+      SetTimer(hWnd, 0, 0, 0);
+    break;
+  case WM_ENABLE:
+    if (!wParam) {
+      view->relres(); view->size.cx = -1;
+    }
+    break;
   case WM_DESTROY:
     view->hwnd = 0; view->sink.Release(); view->relres();
     SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)view->proc);
@@ -66,15 +77,7 @@ LRESULT CALLBACK CView::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
   case WM_DPICHANGED:
     view->dpiscale = 0;
     break;
-    //case WM_KEYDOWN:
-    //case WM_KEYUP:
-    //case WM_CHAR:
-    //case WM_DEADCHAR:
-    //case WM_SYSKEYDOWN:
-    //case WM_SYSKEYUP:
-    //case WM_SYSCHAR:
-    //case WM_SYSDEADCHAR:
-    //  return 0;
+
   }
   return view->proc(hWnd, message, wParam, lParam);
 }

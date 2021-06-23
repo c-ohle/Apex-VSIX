@@ -59,7 +59,7 @@ namespace Apex
   }
 
   class CDXWindowPane : WindowPane,
-    IVsPersistDocData, IPersistFileFormat,
+    IVsPersistDocData, IPersistFileFormat, IVsWindowFrameNotify,
     IOleCommandTarget, IVsDocOutlineProvider, IVsToolboxUser //, IVsStatusbarUser
   {
     internal static int transcmd(in Guid guid, int id)
@@ -319,9 +319,7 @@ namespace Apex
       }
       catch (Exception e)
       {
-        view.MessageBox(
-(uint)e.HResult == 0x8c066001 ? "Degenerated Mesh Object!" :
-e.Message);
+        view.MessageBox((uint)e.HResult == 0x8c066001 ? "Degenerated Mesh Object!" : e.Message);
       }
       return 0;
     }
@@ -365,11 +363,26 @@ e.Message);
       //ToolboxDataProvider.RestoreItems(toolbox);
       return 0;
     }
+
+    int IVsWindowFrameNotify.OnShow(int fShow)
+    {
+      var s = (__FRAMESHOW)fShow;
+      if (s == __FRAMESHOW.FRAMESHOW_WinShown) view.Enabled = true;
+      else if (s == __FRAMESHOW.FRAMESHOW_Hidden)
+      {
+        if (!view.Visible) return 0; //in debug break
+        view.Enabled = false; //dispose buffers
+      }
+      return 0;
+    }
+    int IVsWindowFrameNotify.OnMove() => 0;
+    int IVsWindowFrameNotify.OnSize() => 0;
+    int IVsWindowFrameNotify.OnDockableChange(int fDockable) => 0;
   }
 
   [Guid("381f778f-1111-4f04-88dd-241de0ad3e71")]
-  class ScriptToolWindowPane : 
-    ToolWindowPane, IVsSelectionEvents, //IVsWindowFrameNotify4
+  class ScriptToolWindowPane :
+    ToolWindowPane, IVsSelectionEvents,
     IOleCommandTarget, IVsWindowFrameNotify//IVsFindTarget
   {
     //public override bool SearchEnabled => true;//base.SearchEnabled;
@@ -407,7 +420,7 @@ e.Message);
       uishell.ShowContextMenu(0, ref set, 0x2101, new[] { new POINTS { x = (short)p.X, y = (short)p.Y } }, this);
     }
     uint cookie;
-    
+
     protected override void OnClose()
     {
       if (GetService(typeof(SVsShellMonitorSelection)) is IVsMonitorSelection mon)
@@ -453,7 +466,7 @@ e.Message);
       IVsMultiItemSelect pMISOld, ISelectionContainer pSCOld, IVsHierarchy pHierNew,
       uint itemidNew, IVsMultiItemSelect pMISNew, ISelectionContainer pSCNew)
     {
-      if(visible) Show(pSCNew is CDXView view ? view.unisel() : null);
+      if (visible) Show(pSCNew is CDXView view ? view.unisel() : null);
       return 0;
     }
     int IVsSelectionEvents.OnElementValueChanged(uint elementid, object varValueOld, object varValueNew)
@@ -486,7 +499,7 @@ e.Message);
       return -2147221248;
     }
 
-    int IVsWindowFrameNotify.OnShow(int fShow) 
+    int IVsWindowFrameNotify.OnShow(int fShow)
     {
       var s = (__FRAMESHOW)fShow;
       if (s == __FRAMESHOW.FRAMESHOW_WinShown)
@@ -506,9 +519,9 @@ e.Message);
         }
         return 0;
       }
-      if (s == __FRAMESHOW.FRAMESHOW_Hidden) 
+      if (s == __FRAMESHOW.FRAMESHOW_Hidden)
       {
-        visible = false;  
+        visible = false;
         Show(null);
       }
       return 0;

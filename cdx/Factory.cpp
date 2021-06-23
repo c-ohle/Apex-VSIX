@@ -510,8 +510,9 @@ void CView::Pick(const short* pt)
 
 HRESULT CView::get_Samples(BSTR* p)
 {
+  if (!swapchain.p) return 1;
   CComBSTR ss; WCHAR tt[32];
-  DXGI_SWAP_CHAIN_DESC desc; swapchain->GetDesc(&desc); wsprintf(tt, L"%i", desc.SampleDesc.Count); ss += tt;
+  DXGI_SWAP_CHAIN_DESC desc; swapchain.p->GetDesc(&desc); wsprintf(tt, L"%i", desc.SampleDesc.Count); ss += tt;
   for (UINT i = 1, q; i <= 16; i++)
     if (device->CheckMultisampleQualityLevels(DXGI_FORMAT_B8G8R8A8_UNORM, i, &q) == 0 && q > 0) { wsprintf(tt, L"\n%i", i); ss += tt; }
   return ss.CopyTo(p);

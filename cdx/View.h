@@ -23,9 +23,7 @@ struct CView : ICDXView
   CDX_RENDER                        flags = (CDX_RENDER)0;
   cameradata                        camdat;
   float                             dpiscale = 0;
-  //bool                            stop = false;
-  //float                           vscale = 0.0002f, znear = 0.1f, zfar = 1000, minwz = -1;
-
+  
   struct MBOX { CNode* p; XMFLOAT4X3 m; XMFLOAT3 b[2]; };
   sarray<MBOX> boxes;
 
@@ -38,7 +36,7 @@ struct CView : ICDXView
   }
   void initres()
   {
-    if (!hwnd) return;
+    if (!hwnd || size.cx == -1) return;
     Resize(); InvalidateRect(hwnd, 0, 0);
   }
   void renderekbox(CNode* main);
@@ -94,7 +92,7 @@ struct CView : ICDXView
   HRESULT __stdcall put_Samples(BSTR p)
   {
     UINT c = _wtoi(p); if (c == 0) return E_INVALIDARG;
-    relres(); sampels = c; initres(); return 0;
+    sampels = c; relres(); initres();return 0;
   }
   HRESULT __stdcall get_BkColor(UINT* p);
   HRESULT __stdcall put_BkColor(UINT p);
