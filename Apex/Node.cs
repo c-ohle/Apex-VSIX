@@ -22,6 +22,7 @@ namespace Apex
     void Format(string text);
     void TypeConverter(Type t);
     bool Exchange<T>(string name, ref T value);
+    bool GetModified();
     bool Modified { get; }
   }
 
@@ -43,7 +44,7 @@ namespace Apex
     {
       ex.todo = 2; ex.name = name; ex.value = value; Exchange(ex);
       if (ex.todo == 2) return false;
-      if (name.IndexOf('.', 0, 1) != 0 && this is Node n)
+      if (!(name[0]=='.' || name[0] == '_') && this is Node n)
       {
         ex.todo = 3; ex.value = n.node; Exchange(ex); //save prop
       }
@@ -124,6 +125,7 @@ namespace Apex
         return false;
       }
       bool IExchange.Modified { get => todo == -2; }
+      bool IExchange.GetModified() { if (todo != -2) return false; todo = -1; return true; }
       void create(string name, Type t)
       {
         for (var a = t; a.IsArray; a = a.GetElementType())
@@ -135,7 +137,6 @@ namespace Apex
         ((PropertyDescriptorCollection)value).Add(new PD(name, attris.ToArray()) { type = t });
         attris.RemoveAll(p => !(p is CategoryAttribute));
       }
-
       void save<T>(string name, T v)
       {
         if (name[0] == '_') return;
@@ -361,13 +362,6 @@ namespace Apex
         if (e.Category("Material"))
         {
           Range* rr; var nr = node.GetBufferPtr(BUFFER.RANGES, (void**)&rr) / sizeof(Range);
-
-          //if(node.HasBuffer(BUFFER.SCRIPT))
-          //{
-          //  var flat = 0.2f; e.DisplayName("Flatness"); 
-          //  if (e.Exchange(".fl", ref flat)) {  }
-          //}
-
           if (nr > 1)
           {
             for (int i = 0; i < nr; i++)
@@ -402,13 +396,7 @@ namespace Apex
           }
         }
       }
-      if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera")) excam(e, node);
-      //if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
-      //{
-      //  BUFFERLIGHT* t; node.GetBufferPtr(BUFFER.LIGHT, (void**)&t); var ld = *t;
-      //  if (e.Exchange("Light Color", ref ld.a))
-      //    node.SetBufferPtr(BUFFER.LIGHT, &ld, sizeof(BUFFERLIGHT));
-      //}
+      //if (node.HasProp("@cfov") && e.Category("Camera")) excam(e, node); 
       if (e.Category("Transform"))
       {
         var m = node.GetTypeTransform(1);
@@ -426,16 +414,6 @@ namespace Apex
           view.Execute(CDXView.undo(node, m));
         }
       }
-    }
-
-    internal static void excam(IExchange e, INode p)
-    {
-      BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t; var d = false;
-      e.DisplayName("Fov"); e.Description("Field Of View in Degree");
-      d |= e.Exchange(".fo", ref cd.fov);
-      e.DisplayName("Range"); e.Description("Depth Near- and Farplane");
-      d |= e.Exchange(".ra", ref *(float2*)&cd.near);
-      if (d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
     }
 
     string ICustomTypeDescriptor.GetClassName()

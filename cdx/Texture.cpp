@@ -160,12 +160,10 @@ HRESULT CView::Thumbnail(UINT dx, UINT dy, UINT samples, UINT bkcolor, IStream* 
 
   auto t1 = flags; flags = (CDX_RENDER)(flags & CDX_RENDER_SHADOWS);
   auto t2 = camera.p; //auto t3 = znear; auto t4 = zfar; auto t5 = minwz; 
-  auto pb = camera.p->getbuffer(CDX_BUFFER_CAMERA); 
+  //auto pb = camera.p->getbuffer(CDX_BUFFER_CAMERA); 
   auto t6 = this->viewport; auto t7 = rcclient;
   CComClass<CNode> tmpcam; 
-  tmpcam.setmatrix(camera.p->getmatrix()); 
-  tmpcam.setbuffer(CDX_BUFFER_CAMERA, pb); 
-  auto t3 = pb->data.p; camera.p = &tmpcam;
+  tmpcam.setmatrix(camera.p->getmatrix()); //tmpcam.setbuffer(CDX_BUFFER_CAMERA, pb); auto t3 = pb->data.p; 
   XMFLOAT4 data(0, 1, 1, 0);
   if (bkcolor == 0x00fffffe)
   {
@@ -176,11 +174,7 @@ HRESULT CView::Thumbnail(UINT dx, UINT dy, UINT samples, UINT bkcolor, IStream* 
     cd.znear = max(1, min(1000000, cd.znear)) * 0.5f;
     cd.zfar  = max(1, min(100000, cd.zfar)) * 2;
     cd.minwz = min(cd.minwz, -1);
-    //z2 = max(1, min(1000, z2));
-    //z1 = powf(10, roundf(log10f(z1)) + fnea); // - 1);
-    //z2 = powf(10, roundf(log10f(z2)) + ffar); // + 1);
-    //znear = z1; zfar = z2; minwz = min(box[0].m128_f32[2], -1);
-    pb->data.p = (BYTE*)&cd;
+    camdat = cd;
   }
   else
   {
@@ -190,7 +184,7 @@ HRESULT CView::Thumbnail(UINT dx, UINT dy, UINT samples, UINT bkcolor, IStream* 
   }
   auto t8 = sink.p; sink.p = 0;
   setproject(); RenderScene();
-  flags = t1; camera.p = t2; pb->data.p = t3; //znear = t3; zfar = t4; minwz = t5; 
+  flags = t1; camera.p = t2; //pb->data.p = t3; //znear = t3; zfar = t4; minwz = t5; 
   this->viewport = t6; rcclient = t7; sink.p = t8;
 
   dsv.Release(); ds.Release(); rtv.Release();

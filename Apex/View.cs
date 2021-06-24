@@ -44,7 +44,6 @@ namespace Apex
         if (reg.GetValue("sfl") is int i) sflags = i; sflags |= 1;
         if (reg.GetValue("drv") is long v) drvsettings = v;
         Factory.SetDevice((uint)drvsettings);
-        //Debug.Listeners.Add(new Listner());
         Trace.Listeners.Add(new Listner());
       }
       view = Factory.CreateView(Handle, this, (uint)(drvsettings >> 32));
@@ -52,13 +51,14 @@ namespace Apex
       view.Render = (RenderFlags)reg.GetValue("fl",
         (int)(RenderFlags.BoundingBox | RenderFlags.Coordinates | RenderFlags.Wireframe | RenderFlags.Shadows))
         | RenderFlags.ZPlaneShadows;
-      view.Scene = scene; var defcam = scene.Camera; 
+      view.Scene = scene; var defcam = scene.Camera;
       if (defcam == null)
       {
         defcam = Factory.CreateNode(); defcam.Name = "(default)";
         defcam.Transform = !LookAtLH(new float3(-3, -6, 3), default, new float3(0, 0, 1));
         var c1 = new BUFFERCAMERA { fov = 50, near = 1, far = 10000, minz = -1 };
-        defcam.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(BUFFERCAMERA));
+        defcam.SetProp("@cfov", c1);
+        //defcam.SetBufferPtr(BUFFER.CAMERA, &c1, sizeof(BUFFERCAMERA));
         view.Camera = defcam; scene.Camera = defcam;
         var c2 = new BUFFERCAMERA { fov = 100, near = 1 }; view.Command(Cmd.Center, &c2);
         if (c2.near < c1.near || c2.far > c1.far)
@@ -319,14 +319,11 @@ namespace Apex
           var p = view.view.Camera;
           e.TypeConverter(typeof(CamConv));
           if (e.Exchange("Camera", ref p)) { view.view.Camera = p; }
-          Node.excam(e, p);
-          //BUFFERCAMERA* t; p.GetBufferPtr(BUFFER.CAMERA, (void**)&t); var cd = *t;
-          //e.Description("Field Of View in Degree");
-          //e.DisplayName("Field Of View"); var d = false;
-          //d |= e.Exchange("Fov", ref cd.fov);
-          //e.Description("Depth Near- and Farplane");
-          //d |= e.Exchange("Range", ref *(float2*)&cd.near);// e.Exchange("ZFar", ref cd.far))
-          //if(d) p.SetBufferPtr(BUFFER.CAMERA, &cd, sizeof(BUFFERCAMERA));
+
+          var cd = p.GetProp<BUFFERCAMERA>("@cfov"); e.GetModified();
+          e.DisplayName("Fov"); e.Description("Field Of View in Degree"); e.Exchange(".fo", ref cd.fov);
+          e.DisplayName("Range"); e.Description("Depth Near- and Farplane"); e.Exchange(".ra", ref *(float2*)&cd.near);
+          if (e.GetModified()) p.SetProp("@cfov", cd);
         }
       }
       string ICustomTypeDescriptor.GetClassName() => GetType().Name;
@@ -367,7 +364,7 @@ namespace Apex
         {
           var view = ((Scene)context.Instance).view;
           pp = Enumerable.Repeat(view.scene.Camera, 1). //tp != null && tp.Scene == null ? tp : null, 1).
-            Concat(view.scene.SelectNodes(BUFFER.CAMERA)).ToArray();
+            Concat(view.scene.Descendants().Where(p => p.HasProp("@cfov"))).ToArray();
           ss = pp.Select(p => p.Name).ToArray();
           return new StandardValuesCollection(pp);
         }

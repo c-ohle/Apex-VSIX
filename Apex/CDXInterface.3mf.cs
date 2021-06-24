@@ -31,7 +31,7 @@ namespace Apex
       {
         var defcam = scene.Camera;
         doc.SetAttributeValue(ax + "ct", (string)defcam.Transform);
-        doc.SetAttributeValue(ax + "ca", Convert.ToBase64String(defcam.GetBytes(BUFFER.CAMERA)));
+        doc.SetAttributeValue(ax + "cf", (string)defcam.GetProp<float4>("@cfov"));
       }
       var resources = new XElement(ns + "resources"); doc.Add(resources);
       var build = new XElement(ns + "build"); doc.Add(build);
@@ -131,15 +131,16 @@ namespace Apex
         var objectid = uid++; obj.SetAttributeValue("id", objectid);
         item.SetAttributeValue("objectid", objectid);
         item.SetAttributeValue("transform", (string)group.Transform);
-        dest.Add(item);
+        dest.Add(item); byte[] bb;
         var fl = (group.IsStatic ? 1 : 0) | (group.IsActive ? 2 : 0); if (fl != 0) obj.SetAttributeValue(ax + "fl", fl);
-        var bb = group.GetBytes(BUFFER.CAMERA);
-        if (bb != null)
-        {
-          obj.SetAttributeValue(ax + "ca", Convert.ToBase64String(bb));
-          if (group == actcam) obj.SetAttributeValue(ax + "ct", string.Empty);
-        }
+        //var bb = group.GetBytes(BUFFER.CAMERA);
+        //if (bb != null)
+        //{
+        //  obj.SetAttributeValue(ax + "ca", Convert.ToBase64String(bb));
+        //  if (group == actcam) obj.SetAttributeValue(ax + "ct", string.Empty);
+        //}
         //if ((bb = group.GetBytes(BUFFER.LIGHT)) != null) obj.SetAttributeValue(ax + "li", Convert.ToBase64String(bb));
+        if (group == actcam) obj.SetAttributeValue(ax + "ct", string.Empty);
         if ((bb = group.GetBytes(BUFFER.SCRIPT)) != null)
         {
           obj.SetAttributeValue(ax + "cs", Convert.ToBase64String(bb)); //group.FetchBuffer();
@@ -198,7 +199,8 @@ namespace Apex
         if ((pt = model.Attribute(ax + "ct")) != null)
         {
           var defcam = Factory.CreateNode(); defcam.Name = "(default)"; defcam.Transform = (float4x3)pt.Value;
-          if ((pt = model.Attribute(ax + "ca")) != null) defcam.SetBytes(BUFFER.CAMERA, Convert.FromBase64String(pt.Value));
+          if ((pt = model.Attribute(ax + "cf")) != null) defcam.SetProp("@cfov", (float4)pt.Value);
+          else defcam.SetProp("@cfov", new float4(50, 1, 1000, -1));//todo: remove
           scene.Camera = defcam;
         }
         switch ((string)model.Attribute("unit"))
@@ -329,19 +331,9 @@ namespace Apex
             if (rr != null) node.SetArray(BUFFER.RANGES, rr);
           }
           var bb = (string)obj.Attribute(ax + "cs");
-          if (bb != null)
-          {
-            node.SetBytes(BUFFER.SCRIPT, Convert.FromBase64String(bb)); //apex = "x"; //todo: remove, detect old apex docs without x namespace
-            //if ((bb = (string)obj.Attribute(ax + "cd")) != null) node.SetBytes(BUFFER.SCRIPTDATA, Convert.FromBase64String(bb));
-          }
-          if ((bb = (string)obj.Attribute(ax + "pr")) != null)
-            node.SetBytes(BUFFER.PROPS, Convert.FromBase64String(bb));
-          if ((bb = (string)obj.Attribute(ax + "ca")) != null)
-          {
-            node.SetBytes(BUFFER.CAMERA, Convert.FromBase64String(bb));
-            if (obj.Attribute(ax + "ct") != null) scene.Tag = node;
-          }
-          //if ((bb = (string)obj.Attribute(ax + "li")) != null) node.SetBytes(BUFFER.LIGHT, Convert.FromBase64String(bb));
+          if (bb != null) node.SetBytes(BUFFER.SCRIPT, Convert.FromBase64String(bb)); //apex = "x"; //todo: remove, detect old apex docs without x namespace
+          if ((bb = (string)obj.Attribute(ax + "pr")) != null) node.SetBytes(BUFFER.PROPS, Convert.FromBase64String(bb));
+          if (obj.Attribute(ax + "ct") != null) scene.Tag = node;
           var cmp = obj.Element(ns + "components");
           if (cmp != null) foreach (var p in cmp.Elements(ns + "component")) convert(node.AddNode(null), p);
         };

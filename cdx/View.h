@@ -21,7 +21,7 @@ struct CView : ICDXView
   CComPtr<CNode>                    overnode; 
   UINT                              iover = 0, pickprim = 0, anitime = 0;
   CDX_RENDER                        flags = (CDX_RENDER)0;
-  cameradata                        camdat;
+  cameradata                        camdat = { 0 };
   float                             dpiscale = 0;
   
   struct MBOX { CNode* p; XMFLOAT4X3 m; XMFLOAT3 b[2]; };

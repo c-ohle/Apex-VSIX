@@ -13,7 +13,9 @@ extern CComPtr<ID3D11DeviceContext> context;
 
 void CView::setproject()
 {
-  camdat = *(const cameradata*)camera.p->getbuffer(CDX_BUFFER_CAMERA)->data.p;
+  auto t = camera.p->getpropptr("@cfov", 16);
+  if (t) camdat = *(const cameradata*)t; //else if (camdat.fov == 0) { camdat.fov = 50; camdat.znear = 1; camdat.zfar = 10000; camdat.minwz = -1 }
+  //camdat = *(const cameradata*)camera.p->getbuffer(CDX_BUFFER_CAMERA)->data.p;
   auto f = camdat.znear * camdat.fov * (0.00025f / 45) *
     (dpiscale ? dpiscale : (dpiscale = 120.0f / GetDpiForWindow(hwnd)));
   auto vpx = viewport.Width * f;

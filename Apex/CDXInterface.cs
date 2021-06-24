@@ -54,7 +54,7 @@ namespace Apex
       TEXCOORDS = 2,
       PROPS = 3,
       RANGES = 4,
-      CAMERA = 7,
+      //CAMERA = 7,
       SCRIPT = 10,
       TEXTURE = 16,
     }
@@ -249,8 +249,21 @@ namespace Apex
     {
       fixed (void* t = a) p.SetBufferPtr(id, t, a != null ? (c != -1 ? c : a.Length) * sizeof(T) : 0);
     }
-    internal static float3[] GetPoints(this INode p) => p.GetArray<float3>(BUFFER.POINTBUFFER);
-    internal static ushort[] GetIndices(this INode p) => p.GetArray<ushort>(BUFFER.INDEXBUFFER);
+    //internal static float3[] GetPoints(this INode p) => p.GetArray<float3>(BUFFER.POINTBUFFER);
+    //internal static ushort[] GetIndices(this INode p) => p.GetArray<ushort>(BUFFER.INDEXBUFFER);
+    internal static T GetProp<T>(this INode p, string s) where T : unmanaged
+    {
+      fixed (char* t = s) { void* unk; var n = p.GetProp(t, &unk, out var vt); if (n == sizeof(T)) return *(T*)unk; }
+      return default(T);
+    }
+    internal static void SetProp<T>(this INode p, string s, T v) where T : unmanaged
+    {
+      fixed (char* t = s) p.SetProp(t, &v, sizeof(T), (int)Type.GetTypeCode(typeof(T)));
+    }
+    internal static bool HasProp(this INode p, string s)
+    {
+      fixed (char* t = s) { void* unk; var n = p.GetProp(t, &unk, out var vt); return n != 0; }
+    }
 
     internal static string GetClassName(this INode node)
     {
@@ -347,10 +360,10 @@ namespace Apex
     {
       for (int i = 0, n = p.SelectionCount; i < n; i++) yield return p.GetSelection(i);
     }
-    public static IEnumerable<INode> SelectNodes(this IScene p, BUFFER id)
-    {
-      for (var t = p.Child; t != null; t = t.NextSibling(null)) if (t.HasBuffer(id)) yield return t;
-    }
+    //public static IEnumerable<INode> SelectNodes(this IScene p, BUFFER id)
+    //{
+    //  for (var t = p.Child; t != null; t = t.NextSibling(null)) if (t.HasBuffer(id)) yield return t;
+    //}
     public static IEnumerable<INode> Nodes(this IScene p)
     {
       for (var t = p.Child; t != null; t = t.Next) yield return t;
@@ -431,7 +444,7 @@ namespace Apex
     public static T[] GetBuffer<T>(int minsize, bool clear = true)
     {
       ref var p = ref WeakSingleton<T[]>.p; var v = p.Value;
-      if (v == null || v.Length < minsize) p.Value = v = new T[minsize]; 
+      if (v == null || v.Length < minsize) p.Value = v = new T[minsize];
       else if (clear) Array.Clear(v, 0, minsize);
       return v;
       //var t = WeakSingleton<T[]>.p.Value;
@@ -839,7 +852,7 @@ namespace Apex
         //public override bool GetCreateInstanceSupported(ITypeDescriptorContext context) => false;
       }
     }
-    
+
     [TypeConverter(typeof(float4.Converter))]
     public struct float4 : IEquatable<float4>, IFormattable
     {
@@ -881,6 +894,14 @@ namespace Apex
       public override bool Equals(object obj)
       {
         return obj is float4 && Equals((float4)obj);
+      }
+      public static explicit operator string(float4 p)
+      {
+        return $"{XmlConvert.ToString(p.x)} {XmlConvert.ToString(p.y)} {XmlConvert.ToString(p.z)} {XmlConvert.ToString(p.w)}";
+      }
+      public static explicit operator float4(string s)
+      {
+        float4 p; scan(s, (float*)&p, 4); return p;
       }
       public static bool operator ==(in float4 a, in float4 b)
       {
