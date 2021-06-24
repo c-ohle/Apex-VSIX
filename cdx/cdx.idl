@@ -149,7 +149,6 @@ typedef enum CDX_BUFFER
   CDX_BUFFER_PROPS = 3,
   CDX_BUFFER_RANGES = 4,
   CDX_BUFFER_CAMERA = 7,
-  CDX_BUFFER_LIGHT = 8,
   CDX_BUFFER_SCRIPT = 10,
   CDX_BUFFER_TEXTURE = 16, 
 } CDX_BUFFER;
@@ -189,7 +188,7 @@ interface ICDXNode : ICDXRoot
   HRESULT GetTypeTransform([in] UINT typ, [out, retval] XMFLOAT4X3* p);
   HRESULT SetTypeTransform([in] UINT typ, [in] const XMFLOAT4X3* p);
   HRESULT SetProp([in] LPCWSTR s, [in] const BYTE* p, [in] UINT n, [in] UINT typ);
-  HRESULT GetProp([in] LPCWSTR s, [in] BYTE** p, [out] UINT* typ, [out, retval] UINT* n);
+  HRESULT GetProp([in] LPCWSTR s, [in] const BYTE** p, [out] UINT* typ, [out, retval] UINT* n);
   HRESULT GetProps([out, retval] BSTR* p);
 };
 

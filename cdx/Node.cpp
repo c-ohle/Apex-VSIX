@@ -284,13 +284,14 @@ void CNode::update(XMFLOAT3* pp, UINT np, USHORT* ii, UINT ni, float smooth, voi
   }
 }
 
-void CNode::update(CScene* scene, UINT i)
+void CNode::update()
 {
   ib.Release(); vb.Release();
   auto pp = getbuffer(CDX_BUFFER_POINTBUFFER); if (!pp) return;
   auto ii = getbuffer(CDX_BUFFER_INDEXBUFFER); if (!ii || !ii->data.n) return;
   auto tt = getbuffer(CDX_BUFFER_TEXCOORDS);
-  float flatt = getprop("@flat", 0.2f);
+  float flatt = 0.2f; //getprop("@flat", 0.2f);
+  if (flags & NODE_FL_MESHOPS) flatt = *(float*)getpropptr("@flat", 4);
   update((XMFLOAT3*)pp->data.p, pp->data.n / sizeof(XMFLOAT3),
     (USHORT*)ii->data.p, ii->data.n >> 1, flatt,
     tt ? tt->data.p : 0, tt ? 2 : 0);

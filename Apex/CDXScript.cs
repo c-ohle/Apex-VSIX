@@ -1057,6 +1057,7 @@ namespace Apex
         //  return 1;
         case 5011: // Run Without Debugging Strg+F5
         case 5010: // Run Debugging F5
+          if (id == 5011 && state == 7) return 0;
           if (state != 7)
           {
             if (error == null && hccode == EditText.GetHashCode()) return 0;
@@ -1086,9 +1087,10 @@ namespace Apex
         case 5013: // Stop Debugging
           if (state != 7) return 0;
           if (test != null) return 1;
-          EndFlyer(); ontimer = null; state = 0; sp = null;
-          for (int i = 0; i < map.Count; i++) pmap[i].v &= ~0x10;
-          UpdateSyntaxColors(); Invalidate();
+          state = 0; clearbreakpoints(test);
+          //EndFlyer(); ontimer = null; state = 0; sp = null;
+          //for (int i = 0; i < map.Count; i++) pmap[i].v &= ~0x10;
+          //UpdateSyntaxColors(); Invalidate();
           return 1;
         case 5020: return breakpoint(test);
         case 5021: return clearbreakpoints(test);
@@ -1149,22 +1151,22 @@ namespace Apex
         if (state == 7) return false;
         return true;
       }
-      ReadOnly = true;
-      //var t1 = node.funcs; node.funcs = Array.Empty<object>();
+      ReadOnly = true; //var t1 = node.funcs; node.funcs = Array.Empty<object>();
       m.v |= 0x20; Select(m.i); UpdateSyntaxColors(); Invalidate(); ScrollVisible();
       if (pane.Frame is IVsWindowFrame f) f.Show();
-      node.view.Visible = false; /*node.view.Enabled = false;*/
-      //var tok = Microsoft.VisualStudio.Shell.VsShellUtilities.ShutdownToken;     
+      node.view.Visible = false; ApexPackage.Package.CanClose += CanClose;
       this.stack = stack; sp = &i;
-      for (state = 7; state == 7;)
-      {
-        Native.WaitMessage(); Application.DoEvents();
-        if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShellIsShuttingDown) { state = 0; visible = false; break; }
-      }
-      //node.funcs = t1; 
-      ReadOnly = false; this.stack = null; m.v &= ~0x20; UpdateSyntaxColors(); Invalidate(); Update();
-      /*node.view.Enabled = true;*/ node.view.Visible = true; 
+      for (state = 7; state == 7;) { Native.WaitMessage(); Application.DoEvents(); }
+      this.stack = null; m.v &= ~0x20; ReadOnly = false; UpdateSyntaxColors(); Invalidate(); Update();
+      node.view.Visible = true; ApexPackage.Package.CanClose -= CanClose; //node.funcs = t1;
       return true;
+    }
+    void CanClose(bool[] ok)
+    {
+      if (state != 7) return;
+      ok[0] = false; //node.view.MessageBox("Stop debugging!"); 
+      if (MessageBox.Show(this, "Stop Debugging?", "Script", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+        OnCommand(5013, null);
     }
     bool visible; internal void show(bool on) { visible = on; if (!visible) state = 0; }
     void color(int i, int n, byte c) { for (int t = 0; t < n; t++) { charcolor[i + t] = c; } }
@@ -1261,7 +1263,7 @@ namespace Apex
         if (tp.p is string ns)
         {
           var usings = map.Where(p => p.v == 0x88).Select(p => (string)p.p);
-          var aa = new Assembly[] { typeof(CDX).Assembly, typeof(int).Assembly, typeof(Control).Assembly };
+          var aa = new Assembly[] { typeof(CDX).Assembly, typeof(int).Assembly, typeof(Control).Assembly, typeof(Point).Assembly };
           var tt = aa.SelectMany(a => a.GetTypes()).Where(t => t.IsPublic && !t.IsNested && t.Namespace != null);
           var ii = tt.Select(p => p.Namespace).
             Where(p => p.Length > ns.Length && p[ns.Length] == '.' && p.StartsWith(ns)).

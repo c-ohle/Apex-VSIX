@@ -949,7 +949,6 @@ enum CDX_BUFFER
         CDX_BUFFER_PROPS	= 3,
         CDX_BUFFER_RANGES	= 4,
         CDX_BUFFER_CAMERA	= 7,
-        CDX_BUFFER_LIGHT	= 8,
         CDX_BUFFER_SCRIPT	= 10,
         CDX_BUFFER_TEXTURE	= 16
     } 	CDX_BUFFER;
@@ -1087,7 +1086,7 @@ EXTERN_C const IID IID_ICDXNode;
         
         virtual HRESULT STDMETHODCALLTYPE GetProp( 
             /* [in] */ LPCWSTR s,
-            /* [in] */ BYTE **p,
+            /* [in] */ const BYTE **p,
             /* [out] */ UINT *typ,
             /* [retval][out] */ UINT *n) = 0;
         
@@ -1283,7 +1282,7 @@ EXTERN_C const IID IID_ICDXNode;
         HRESULT ( STDMETHODCALLTYPE *GetProp )( 
             ICDXNode * This,
             /* [in] */ LPCWSTR s,
-            /* [in] */ BYTE **p,
+            /* [in] */ const BYTE **p,
             /* [out] */ UINT *typ,
             /* [retval][out] */ UINT *n);
         

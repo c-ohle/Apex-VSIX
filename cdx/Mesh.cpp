@@ -185,7 +185,7 @@ static UINT readcount(const BYTE* bb, UINT& is)
   for (UINT shift = 0; ; shift += 7) { UINT b = bb[is++]; c |= (b & 0x7F) << shift; if ((b & 0x80) == 0) break; }
   return c;
 }
-static BYTE* getprop(CBuffer* p, const char* name, UINT* np)
+const BYTE* getprop(const CBuffer* p, const char* name, UINT* np)
 {
   auto dp = p->data.p;
   for (UINT i = 0; i < p->data.n;)
@@ -200,17 +200,54 @@ static BYTE* getprop(CBuffer* p, const char* name, UINT* np)
   *np = 0; return 0;
 }
 
-float CNode::getprop(const char* s, float def)
+const BYTE* CNode::getpropptr(const char* s, UINT n)
 {
   auto pb = getbuffer(CDX_BUFFER_PROPS);
   if (pb)
   {
     UINT c; auto t = ::getprop(pb, s, &c);
-    if (c == 4 && t[-1] == 13)
-      return *(float*)t;
+    if (c == n)// && t[-1] == 13)
+      return t;
   }
-  return def;
+  return 0;
 }
+
+float CNode::getprop(const char* s, float def)
+{
+  auto p = getpropptr(s, 4);
+  if (p && p[-1] == 13)
+    return *(float*)p;
+  return def;
+  //auto pb = getbuffer(CDX_BUFFER_PROPS);
+  //if (pb)
+  //{
+  //  UINT c; auto t = ::getprop(pb, s, &c);
+  //  if (c == 4 && t[-1] == 13)
+  //    return *(float*)t;
+  //}
+  //return def;
+}
+
+void CNode::propschk()
+{
+  if (flags & NODE_FL_PROPCHK)
+    return;
+  flags |= NODE_FL_PROPCHK; flags &= ~(NODE_FL_CAMERA | NODE_FL_LIGHT);
+  auto pb = getbuffer(CDX_BUFFER_PROPS); if (!pb) return;
+  auto dp = pb->data.p;
+  for (UINT i = 0; i < pb->data.n;)
+  {
+    auto t1 = readcount(dp, i); auto t2 = i; i += t1;
+    auto t3 = readcount(dp, i); auto t4 = i; i += t3 + 1;
+    if (dp[t2] != '@') continue;
+    if (t1 == 5 && t3 == 16 && !memcmp("@cfov", dp + t2, t1)) { flags |= NODE_FL_CAMERA; continue; }
+    if (t1 == 5 && t3 == 12 && !memcmp("@ldir", dp + t2, t1)) { flags |= NODE_FL_LIGHT; continue; }
+    if (t1 == 5 && t3 == 04 && !memcmp("@flat", dp + t2, t1)) { flags |= NODE_FL_MESHOPS; continue; }
+  }
+  //UINT n; auto p = ::getprop(pb, "@ldir", &n); if (n == 12) flags |= NODE_FL_LIGHT;
+  //p = ::getprop(pb, "@fov", &n); if (n == 16) flags |= NODE_FL_CAMERA;
+}
+
 
 HRESULT CNode::SetProp(LPCWSTR s, const BYTE* p, UINT n, UINT typ)
 {
@@ -231,7 +268,7 @@ HRESULT CNode::SetProp(LPCWSTR s, const BYTE* p, UINT n, UINT typ)
       }
       else
       {
-        UINT h = 3; 
+        UINT h = 3;
         for (auto c = nb; c >= 0x80; h++, c >>= 7);
         for (auto c = np; c >= 0x80; h++, c >>= 7);
         updp = (UINT)(pp - pb->data.p) - nb - h;
@@ -254,17 +291,17 @@ HRESULT CNode::SetProp(LPCWSTR s, const BYTE* p, UINT n, UINT typ)
     writecount(ss, ns, nb); memcpy(ss + ns, sb, nb); ns += nb;
     writecount(ss, ns, n); ss[ns++] = (BYTE)typ; memcpy(ss + ns, p, n); ns += n;
   }
-
-  if (flags & NODE_FL_MASHOK)
+  if (sb[0] == '@')
   {
-    if (!strcmp("@flat", sb))
-      flags &= ~NODE_FL_MASHOK;
+    flags &= ~NODE_FL_PROPCHK;
+    if (flags & NODE_FL_MASHOK)
+      if (!strcmp("@flat", sb))
+        flags &= ~NODE_FL_MASHOK;
   }
-
   return SetBufferPtr(CDX_BUFFER_PROPS, ns ? ss : 0, ns);
 }
 
-HRESULT CNode::GetProp(LPCWSTR s, BYTE** p, UINT* typ, UINT* n)
+HRESULT CNode::GetProp(LPCWSTR s, const BYTE** p, UINT* typ, UINT* n)
 {
   auto pb = getbuffer(CDX_BUFFER_PROPS); if (!pb) return 1;
 

@@ -58,7 +58,7 @@ void CView::renderekbox(CNode* main)
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskX), m) - pc),
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskY), m) - pc),
       XMVector3LengthEst(XMVector3TransformCoord(XMVectorAndInt(box[1], g_XMMaskZ), m) - pc));
-    
+
     auto ma = box[1] + sc * XMVectorReplicate(0.03f);
     auto va = sc * XMVectorReplicate(0.01f);
     auto vr = sc * XMVectorReplicate(0.002f);
@@ -147,23 +147,32 @@ static void render(CView& v, REC& r, UINT mode)
   }
 }
 
+const BYTE* getprop(const CBuffer* p, const char* name, UINT* np);
+
 void CView::RenderScene()
 {
   UINT nrecs = 0; REC* recs = (REC*)stackptr;
-  UINT nflags = 0, transp = 0; CNode* plight = 0; anitime = 0;
+  UINT nflags = 0, transp = 0; anitime = 0; CNode* plight = 0; XMVECTOR ldir;
   for (auto node = scene.p->child(); node; node = node->nextsibling(0))
   {
     if (flags & CDX_RENDER_SELONLY && !(node->flags & NODE_FL_INSEL)) continue;
     if (node->flags & NODE_FL_ACTIVE && sink.p)
       sink.p->Animate(node, anitime ? anitime : (anitime = getanitime()));
+    if (!(node->flags & NODE_FL_PROPCHK))
+      node->propschk();
     if (!(node->flags & NODE_FL_MASHOK) || (node->ib.p && !node->ib.p->p)) //drv reset
     {
       node->flags |= NODE_FL_MASHOK;
-      node->update(scene, -1);
+      node->update();
     }
-    if (node->bmask & (1 << CDX_BUFFER_LIGHT))
+    if (node->flags & NODE_FL_LIGHT)
     {
-      if (!plight) plight = node;
+      if (!plight)
+      {
+        plight = node;
+        auto p = node->getpropptr("@ldir", 12);
+        ldir = XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3((const XMFLOAT3*)p), node->gettrans(scene)));
+      }
     }
     if (node->ib.p)
     {
@@ -194,11 +203,11 @@ void CView::RenderScene()
   }
 
   SetColor(VV_AMBIENT, 0x00404040);
-  XMVECTOR light;
-  if (plight) light = plight->gettrans(scene.p).r[2];
-  else light = XMVector3Normalize(XMVectorSet(1, -1, 2, 0));
+  //if (plight) light = plight->gettrans(scene.p).r[2];
+  //else light = XMVector3Normalize(XMVectorSet(1, -1, 2, 0));
+  if (!plight) ldir = XMVector3Normalize(XMVectorSet(1, -1, 2, 0));
   XMVECTOR lightdir = flags & CDX_RENDER_SHADOWS ?
-    XMVectorSetW(XMVectorMultiply(light, XMVectorSet(0.3f, 0.3f, 0.3f, 0)), camdat.minwz) : light;
+    XMVectorSetW(XMVectorMultiply(ldir, XMVectorSet(0.3f, 0.3f, 0.3f, 0)), camdat.minwz) : ldir;
   SetVector(VV_LIGHTDIR, lightdir);
   for (UINT i = 0; i < nrecs; i++)
     render(*this, recs[i], MO_TOPO_TRIANGLELISTADJ | MO_DEPTHSTENCIL_ZWRITE | MO_VSSHADER_LIGHT);
@@ -231,7 +240,7 @@ void CView::RenderScene()
     }
     if (flags & (CDX_RENDER_COORDINATES | CDX_RENDER_BOUNDINGBOX))
     {
-      if (flags & CDX_RENDER_COORDINATES) SetVector(VV_LIGHTDIR, light);
+      if (flags & CDX_RENDER_COORDINATES) SetVector(VV_LIGHTDIR, ldir);
       for (UINT j = 0; j < scene->selection.n; j++)
       {
         auto main = scene->selection.p[j];
@@ -252,7 +261,7 @@ void CView::RenderScene()
   if (transp)
   {
     SetColor(VV_AMBIENT, 0x00404040);
-    SetVector(VV_LIGHTDIR, light);
+    SetVector(VV_LIGHTDIR, ldir);
     for (UINT i = 0; i < transp; i++)
     {
       auto& r = recs[recs[i].itrans]; auto& node = *r.node;
@@ -263,6 +272,7 @@ void CView::RenderScene()
       context->DrawIndexed(node.ib.p->ni, 0, 0);
     }
   }
+
   if (flags & CDX_RENDER_SHADOWS)
   {
     SetVector(VV_LIGHTDIR, lightdir);
@@ -286,7 +296,7 @@ void CView::RenderScene()
       SetVertexBuffer(node.vb.p->p.p); SetIndexBuffer(node.ib.p->p.p); SetBuffers();
       context->DrawIndexed(node.ib.p->ni, 0, 0);
     }
-    SetColor(VV_AMBIENT, 0); SetVector(VV_LIGHTDIR, XMVectorMultiply(light, XMVectorReplicate(0.7f)));
+    SetColor(VV_AMBIENT, 0); SetVector(VV_LIGHTDIR, XMVectorMultiply(ldir, XMVectorReplicate(0.7f)));
     for (UINT i = 0; i < nrecs; i++)
       render(*this, recs[i], MO_TOPO_TRIANGLELISTADJ | MO_BLENDSTATE_ALPHAADD | MO_VSSHADER_LIGHT);
     if (flags & CDX_RENDER_ZPLANESHADOWS)
@@ -298,6 +308,7 @@ void CView::RenderScene()
     }
     context->ClearDepthStencilView(dsv.p, D3D11_CLEAR_STENCIL, 1, 0);
   }
+
   stackptr = recs;
 }
 

@@ -139,7 +139,7 @@ namespace Apex
           obj.SetAttributeValue(ax + "ca", Convert.ToBase64String(bb));
           if (group == actcam) obj.SetAttributeValue(ax + "ct", string.Empty);
         }
-        if ((bb = group.GetBytes(BUFFER.LIGHT)) != null) obj.SetAttributeValue(ax + "li", Convert.ToBase64String(bb));
+        //if ((bb = group.GetBytes(BUFFER.LIGHT)) != null) obj.SetAttributeValue(ax + "li", Convert.ToBase64String(bb));
         if ((bb = group.GetBytes(BUFFER.SCRIPT)) != null)
         {
           obj.SetAttributeValue(ax + "cs", Convert.ToBase64String(bb)); //group.FetchBuffer();
@@ -341,7 +341,7 @@ namespace Apex
             node.SetBytes(BUFFER.CAMERA, Convert.FromBase64String(bb));
             if (obj.Attribute(ax + "ct") != null) scene.Tag = node;
           }
-          if ((bb = (string)obj.Attribute(ax + "li")) != null) node.SetBytes(BUFFER.LIGHT, Convert.FromBase64String(bb));
+          //if ((bb = (string)obj.Attribute(ax + "li")) != null) node.SetBytes(BUFFER.LIGHT, Convert.FromBase64String(bb));
           var cmp = obj.Element(ns + "components");
           if (cmp != null) foreach (var p in cmp.Elements(ns + "component")) convert(node.AddNode(null), p);
         };

@@ -108,42 +108,42 @@ namespace Apex
       protected override void OnAfterCollapse(TreeViewEventArgs e)
       {
       }
-      protected override void OnBeforeLabelEdit(NodeLabelEditEventArgs e) { }
-      protected override void OnAfterLabelEdit(NodeLabelEditEventArgs e)
-      {
-        e.CancelEdit = true; if (e.Label == null) return;
-        var node = e.Node.Tag as INode;
-        var a = node.Name; if (string.IsNullOrEmpty(a)) a = null;
-        var b = e.Label; if (string.IsNullOrEmpty(b) || b == node.GetClassName()) b = null;
-        if (a == b) return;
-        if (b == "Group") { settype(node, 0); return; }
-        if (b == "Camera") { settype(node, 1); return; }
-        if (b == "Light") { settype(node, 2); return; }
-        view.Execute(setname(node, b));
-        return;
-      }
-      Action setname(INode node, string s)
-      {
-        var v = view;
-        return () => { var t = node.Name; node.Name = s; s = t; v.Invalidate(Inval.Tree); };
-      }
-      void settype(INode node, int type)
-      {
-        var act = setname(node, null);
-        if (node.HasBuffer(BUFFER.CAMERA) && type != 1) act += undo(node, BUFFER.CAMERA, (byte[])null);
-        if (node.HasBuffer(BUFFER.LIGHT) && type != 2) act += undo(node, BUFFER.LIGHT, (byte[])null);
-        if (type == 0) view.Execute(act);
-        else if (type == 1)
-        {
-          var data = view.view.Camera.GetBytes(BUFFER.CAMERA);
-          view.Execute(undo(node, BUFFER.CAMERA, data) + act);
-        }
-        else if (type == 2)
-        {
-          var data = new BUFFERLIGHT { };
-          view.Execute(undo(node, BUFFER.LIGHT, &data, sizeof(BUFFERLIGHT)) + act);
-        }
-      }
+      //protected override void OnBeforeLabelEdit(NodeLabelEditEventArgs e) { }
+      //protected override void OnAfterLabelEdit(NodeLabelEditEventArgs e)
+      //{
+      //  e.CancelEdit = true; if (e.Label == null) return;
+      //  var node = e.Node.Tag as INode;
+      //  var a = node.Name; if (string.IsNullOrEmpty(a)) a = null;
+      //  var b = e.Label; if (string.IsNullOrEmpty(b) || b == node.GetClassName()) b = null;
+      //  if (a == b) return;
+      //  //if (b == "Group"|| b == "Model") { settype(node, 0); return; }
+      //  //if (b == "Camera") { settype(node, 1); return; }
+      //  //if (b == "Light") { settype(node, 2); return; }
+      //  view.Execute(setname(node, b));
+      //  return;
+      //}
+      //Action setname(INode node, string s)
+      //{
+      //  var v = view;
+      //  return () => { var t = node.Name; node.Name = s; s = t; v.Invalidate(Inval.Tree); };
+      //}
+      //void settype(INode node, int type)
+      //{
+      //  var act = setname(node, null);
+      //  if (node.HasBuffer(BUFFER.CAMERA) && type != 1) act += undo(node, BUFFER.CAMERA, (byte[])null);
+      //  if (node.HasBuffer(BUFFER.LIGHT) && type != 2) act += undo(node, BUFFER.LIGHT, (byte[])null);
+      //  if (type == 0) view.Execute(act);
+      //  else if (type == 1)
+      //  {
+      //    var data = view.view.Camera.GetBytes(BUFFER.CAMERA);
+      //    view.Execute(undo(node, BUFFER.CAMERA, data) + act);
+      //  }
+      //  else if (type == 2)
+      //  {
+      //    var data = new BUFFERLIGHT { };
+      //    view.Execute(undo(node, BUFFER.LIGHT, &data, sizeof(BUFFERLIGHT)) + act);
+      //  }
+      //}
       protected override void OnKeyDown(KeyEventArgs e)
       {
         switch (e.KeyCode)

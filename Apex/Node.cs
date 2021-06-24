@@ -53,8 +53,10 @@ namespace Apex
     internal static void SaveProps(INode node, Action<IExchange> func)
     {
       if (func == null) return;
+      var t1 = ex.todo; var t2 = ex.name; var t3 = ex.value; //Update in exchange
       try { ex.todo = 3; ex.name = null; ex.value = node; func(ex); }
       catch { }
+      ex.todo = t1; ex.name = t2; ex.value = t3;
     }
     internal static void LoadProps(INode node, Action<IExchange> func)
     {
@@ -85,7 +87,8 @@ namespace Apex
       bool IExchange.DisplayName(string name)
       {
         if (todo != 0) return false;
-        if (name != null) attris.Add(new DisplayNameAttribute(name)); return true;
+        attris.Add(name != null ? (Attribute)new DisplayNameAttribute(name) : new BrowsableAttribute(false));
+        return true;
       }
       void IExchange.Description(string text)
       {
@@ -337,7 +340,7 @@ namespace Apex
       return funcs;
     }
     internal void disable(Delegate t) => funcs[Array.IndexOf(funcs, t)] = null;
-  
+
     internal T GetMethod<T>() where T : Delegate
     {
       var a = getfuncs(); for (int i = 1; i < a.Length; i++) if (a[i] is T t) return t; return null;
@@ -400,12 +403,12 @@ namespace Apex
         }
       }
       if (node.HasBuffer(BUFFER.CAMERA) && e.Category("Camera")) excam(e, node);
-      if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
-      {
-        BUFFERLIGHT* t; node.GetBufferPtr(BUFFER.LIGHT, (void**)&t); var ld = *t;
-        if (e.Exchange("Light Color", ref ld.a))
-          node.SetBufferPtr(BUFFER.LIGHT, &ld, sizeof(BUFFERLIGHT));
-      }
+      //if (node.HasBuffer(BUFFER.LIGHT) && e.Category("Light"))
+      //{
+      //  BUFFERLIGHT* t; node.GetBufferPtr(BUFFER.LIGHT, (void**)&t); var ld = *t;
+      //  if (e.Exchange("Light Color", ref ld.a))
+      //    node.SetBufferPtr(BUFFER.LIGHT, &ld, sizeof(BUFFERLIGHT));
+      //}
       if (e.Category("Transform"))
       {
         var m = node.GetTypeTransform(1);

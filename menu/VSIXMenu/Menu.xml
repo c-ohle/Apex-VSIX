@@ -140,7 +140,10 @@
     <MenuItem text="Ungroup" id="2036" />
     <Seperator/>
     <MenuItem text="Center" id="2300" />
+    <Seperator/>
+    <MenuItem id="cmdidPropertiesWindow" />
   </ContextMenu>
+  
   <ContextMenu name="Script" id="0x2101" >
     <MenuItem id="cmdidToggleBreakpoint" />
     <MenuItem id="cmdidClearBreakpoints" />
@@ -149,7 +152,7 @@
     <MenuItem id="cmdidStepOver" />
     <MenuItem id="cmdidStepInto" />
     <MenuItem id="cmdidStepOut" />
-    <!--<MenuItem id="cmdidStop" />-->
+    <MenuItem id="cmdidStop" />
     <Seperator/>
     <MenuItem id="cmdidFindSelectedNext" />
     <MenuItem id="cmdidFindNext" />

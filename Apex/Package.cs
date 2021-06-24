@@ -73,6 +73,12 @@ namespace Apex
       Apex.ToolboxDataProvider.RemoveItems(toolbox);
       Apex.ToolboxDataProvider.RestoreItems(toolbox);
     }
+    protected override int QueryClose(out bool canClose)
+    {
+      if (CanClose != null) { var a = new bool[] { true }; CanClose(a); canClose = a[0]; return 0; }
+      return base.QueryClose(out canClose);
+    }
+    internal Action<bool[]> CanClose;
   }
 
   internal static class Guids

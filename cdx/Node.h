@@ -145,12 +145,16 @@ struct XRANGE
 //  float flatness;
 };
 
-#define NODE_FL_SELECT    0x01
-#define NODE_FL_INSEL     0x02
-#define NODE_FL_STATIC    0x04
-#define NODE_FL_MASHOK    0x08
-#define NODE_FL_LAST      0x10
-#define NODE_FL_ACTIVE    0x20
+#define NODE_FL_SELECT   0x0001
+#define NODE_FL_INSEL    0x0002
+#define NODE_FL_STATIC   0x0004
+#define NODE_FL_MASHOK   0x0008
+#define NODE_FL_LAST     0x0010
+#define NODE_FL_ACTIVE   0x0020
+#define NODE_FL_PROPCHK  0x0100
+#define NODE_FL_CAMERA   0x0200
+#define NODE_FL_LIGHT    0x0400
+#define NODE_FL_MESHOPS  0x0800
 
 struct __declspec(novtable) CNode : ICDXNode
 {
@@ -180,12 +184,13 @@ struct __declspec(novtable) CNode : ICDXNode
   HRESULT __stdcall GetTypeTransform(UINT typ, XMFLOAT4X3* p);
   HRESULT __stdcall SetTypeTransform(UINT typ, const XMFLOAT4X3* p);
 
-  float getprop(const char* s, float def);
+  float getprop(const char* s, float def); void propschk();
+  const BYTE* CNode::getpropptr(const char* s, UINT n);
   CBuffer* getbuffer(CDX_BUFFER id) const;
   void setbuffer(CDX_BUFFER id, CBuffer* p);
   void inval(CDX_BUFFER id);
   void getbox(XMVECTOR box[2], const XMMATRIX* pm, CBuffer* pp = 0);
-  void update(struct CScene* scene, UINT i);
+  void update();
   void update(XMFLOAT3* pp, UINT np, USHORT* ii, UINT ni, float smooth = 0, void* tex = 0, UINT fl = 0);
   void save(struct Archive& ar);
   static CNode* load(Archive& ar);
@@ -284,6 +289,6 @@ struct __declspec(novtable) CNode : ICDXNode
   HRESULT __stdcall get_Next(ICDXNode** p);
   HRESULT __stdcall NextSibling(ICDXNode* r, ICDXNode** p);
   HRESULT __stdcall SetProp(LPCWSTR s, const BYTE* p, UINT n, UINT typ);
-  HRESULT __stdcall GetProp(LPCWSTR s, BYTE** p, UINT* typ, UINT* pn);
+  HRESULT __stdcall GetProp(LPCWSTR s, const BYTE** p, UINT* typ, UINT* pn);
   HRESULT __stdcall GetProps(BSTR* p);
 };

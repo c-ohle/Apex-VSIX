@@ -330,7 +330,9 @@ namespace Apex
     }
     int IVsDocOutlineProvider.GetOutline(out IntPtr phwnd, out IOleCommandTarget ppCmdTarget)
     {
-      treeview = new CDXView.TreeView { view = view, BorderStyle = BorderStyle.None, Font = System.Drawing.SystemFonts.SmallCaptionFont, LabelEdit = true };
+      treeview = new CDXView.TreeView { view = view, BorderStyle = BorderStyle.None, Font = System.Drawing.SystemFonts.SmallCaptionFont, 
+        //LabelEdit = true 
+      };
       treeview.CreateControl(); phwnd = treeview.Handle; ppCmdTarget = this;
       treeview.inval(); /*view.Invalidate(4);*/ return 0;
     }

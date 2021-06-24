@@ -55,7 +55,6 @@ namespace Apex
       PROPS = 3,
       RANGES = 4,
       CAMERA = 7,
-      LIGHT = 8,
       SCRIPT = 10,
       TEXTURE = 16,
     }
@@ -70,7 +69,7 @@ namespace Apex
       void Update(byte* p, int n);
     }
 
-    internal struct BUFFERLIGHT { internal float a, b, c, d; }
+    //internal struct BUFFERLIGHT { internal float a, b, c, d; }
     internal struct BUFFERCAMERA { internal float fov, near, far, minz; }
 
     [Flags]
@@ -255,8 +254,9 @@ namespace Apex
 
     internal static string GetClassName(this INode node)
     {
-      if (node.HasBuffer(BUFFER.CAMERA)) return "Camera";
-      if (node.HasBuffer(BUFFER.LIGHT)) return "Light";
+      //node.GetProp()
+      //if (node.HasBuffer(BUFFER.CAMERA)) return "Camera";
+      //if (node.HasBuffer(BUFFER.LIGHT)) return "Light";
       if (node.HasBuffer(BUFFER.POINTBUFFER)) return "Model";
       return "Group";
     }
