@@ -47,7 +47,7 @@ namespace Apex
     public static (int i, int n) LastError { get; private set; }
     public override string ToString() => new string(s, 0, n);
     char* s; int n; static byte* ptr; static Stack stack;
-    class Stack : List<ParameterExpression> { internal ParameterExpression @this; internal List<object> usings = new List<object>(); internal int nstats, nusings, npub, xpos; internal List<Expression> list = new List<Expression>(); internal Dictionary<ParameterExpression, int> dict; }
+    class Stack : List<ParameterExpression> { internal ParameterExpression @this; internal List<object> usings = new List<object>(); internal int nstats, nusings, npub, xpos; internal List<Expression> list = new List<Expression>(); internal Dictionary<ParameterExpression, int> dict; internal string tuplnames; }
     Expression Parse(LabelTarget @return, LabelTarget @break, LabelTarget @continue, int flags)
     {
       var list = stack.list; int stackab = (flags & 1) != 0 ? 1 : stack.Count, listab = list.Count, ifunc = 0; var ep = *(Script*)ptr;
@@ -144,13 +144,13 @@ namespace Apex
         var @public = false; if (n.equals("public")) { a = t; @public = true; }
         n = a; t = n.gettype(); if (t.n == 0) { if ((flags & 0x08) != 0) continue; __map(a); list.Add(a.Parse(null)); continue; }
         a = n; n = a.next();
-        var type = !t.equals("var") ? GetType(t) : null; var rettupl = tuplnames;
+        var type = !t.equals("var") ? GetType(t) : null; var rettupl = stack.tuplnames;
         if (a.n != 0 && a.s[0] == '(')
         {
           int i = 0; if ((flags & 0x01) != 0) for (i = 1; !n.stackequals(stack[i].Name); i++) ;
           var s = n.ToString(); var istack = i; if (i == 0) { istack = @public ? stack.npub++ : stack.Count; stack.Insert(istack, null); }
           t = a.next(); t.trim(1, 1); a.trim(1, 1); var ab = stack.Count;
-          for (; t.n != 0;) { n = t.next(','); var v = n.gettype(); n.check(ab); stack.Add(Expression.Parameter(GetType(v), n.ToString() + tuplnames)); if (map != null && (flags & 0x08) == 0) __map(n, stack[stack.Count - 1]); }
+          for (; t.n != 0;) { n = t.next(','); var v = n.gettype(); n.check(ab); stack.Add(Expression.Parameter(GetType(v), n.ToString() + stack.tuplnames)); if (map != null && (flags & 0x08) == 0) __map(n, stack[stack.Count - 1]); }
           var t0 = i != 0 ? stack[istack].Type : type != typeof(void) ? Expression.GetFuncType(stack.Skip(ab).Select(p => p.Type).Concat(Enumerable.Repeat(type, 1)).ToArray()) : Expression.GetActionType(stack.Skip(ab).Select(p => p.Type).ToArray());
           var t1 = i != 0 ? stack[istack] : Expression.Variable(t0, s + rettupl); stack[istack] = t1;
           if ((flags & 0x08) != 0) { stack.RemoveRange(ab, stack.Count - ab); continue; }
@@ -160,13 +160,13 @@ namespace Apex
         for (; n.n != 0; n = a.next())
         {
           var v = a.next(','); var b = v.next('='); if (!((flags & 0x01) != 0 && type != null)) n.check(stackab);
-          if ((flags & 0x08) != 0) { if (type != null) { stack.Add(Expression.Parameter(type, n.ToString() + tuplnames)); if (map != null) __map(n, stack[stack.Count - 1]); } continue; }
+          if ((flags & 0x08) != 0) { if (type != null) { stack.Add(Expression.Parameter(type, n.ToString() + stack.tuplnames)); if (map != null) __map(n, stack[stack.Count - 1]); } continue; }
           var r = type == null || v.n != 0 ? v.Parse(type) : null;
           int i = 0; if ((flags & 0x01) != 0 && type != null) for (i = 1; !n.stackequals(stack[i].Name); i++) ; var tupls = default(string);
           if (i == 0 && type == null) //xxx var 
           {
             var t1 = r; if (r is InvocationExpression u) t1 = u.Expression;
-            if(t1 is ParameterExpression t2) { var x = t2.Name.IndexOf(','); if (x != -1) tupls = t2.Name.Substring(x); }
+            if (t1 is ParameterExpression t2) { var x = t2.Name.IndexOf(','); if (x != -1) tupls = t2.Name.Substring(x); }
             //else { }
           }
           var e = i != 0 ? stack[i] : Expression.Parameter(type ?? r.Type, n.ToString() + tupls); //if (map != null) __map(n, 0x04, e.Type);
@@ -383,7 +383,7 @@ namespace Apex
             if (v > tc) tc = v;
             else if (tc < TypeCode.Single && v > TypeCode.Char && v < TypeCode.Single) tc = v;
         }
-        left = Expression.Constant(System.Convert.ChangeType(a.ToString(), tc, CultureInfo.InvariantCulture));
+       left = Expression.Constant(System.Convert.ChangeType(a.ToString(), tc, CultureInfo.InvariantCulture));
         if (wt != null && wt.IsEnum) if (0.Equals(((ConstantExpression)left).Value)) left = Expression.Convert(left, wt);
         goto eval;
       }
@@ -534,10 +534,9 @@ namespace Apex
       }
       return match;
     }
-    static string tuplnames;
     static Type GetType(Script a, bool ex = true)
     {
-      tuplnames = null;
+      stack.tuplnames = null;
       if (a.s[0] == '(') //xxx (ushort[] ii, int ni)
       {
         var u = a; u.trim(1, 1); int c = 0; for (var v = u; v.n != 0; v.next(','), c++) ;
@@ -546,10 +545,10 @@ namespace Apex
           var tt = new Type[c]; //var ss = default(string[]);// new string[c];
           for (c = 0; c < tt.Length; c++)
           {
-            var t1 = tuplnames;
+            var t1 = stack.tuplnames;
             var v = u.next(','); var w = v.gettype(); tt[c] = GetType(w.n != 0 ? w : v, ex);
-            tuplnames = t1;
-            if (w.n != 0) { if (tuplnames == null) for (int j = 0; j < c; j++) tuplnames += ','; tuplnames += ','; tuplnames += v.ToString(); } //v:name
+            stack.tuplnames = t1;
+            if (w.n != 0) { if (stack.tuplnames == null) for (int j = 0; j < c; j++) stack.tuplnames += ','; stack.tuplnames += ','; stack.tuplnames += v.ToString(); } //v:name
           }
           return getvtup(tt.Length).MakeGenericType(tt);
         }
@@ -790,11 +789,6 @@ namespace Apex
       if (t.IsByRef)
       {
         t = t.GetElementType();
-        //if (a.Type == t && a is MemberExpression ex && ex.Member.DeclaringType.IsValueType) //bypass Expressions bug, ref access to struct member  
-        //{
-        //  var v = Expression.Variable(t, string.Empty); stack.Add(v);
-        //  return Expression.Assign(v, a);
-        //}
         return Convert(a, t);
       }
       if (a is ConstantExpression c)
@@ -949,7 +943,7 @@ namespace Apex
     static void __map(Script s, ParameterExpression p)
     {
       if (!stack.dict.TryGetValue(p, out var i)) stack.dict[p] = i = stack.dict.Count + 1;
-      __map(s, 0x04 | (i << 8), p.Type);
+      __map(s, 0x04 | (i << 8), p.Name.Contains(',') ? (object)new Tuple<Type, string>(p.Type, p.Name) : p.Type); //xxx
     }
     static void __map(Script p)
     {
@@ -1349,7 +1343,7 @@ namespace Apex
           EditFlyer(i1, i2, ii.OrderBy(p => p.text).ToArray());
           return;
         }
-        var type = tp.p as Type ?? (tp.p is PropertyInfo pi ? pi.PropertyType : tp.p is FieldInfo fi ? fi.FieldType : null);
+        var type = tp.p as Type ?? (tp.p is PropertyInfo pi ? pi.PropertyType : tp.p is FieldInfo fi ? fi.FieldType :  tp.p is Tuple<Type,string> xx ? xx.Item1 : null );
         if (type == null) return;
         var items = type.GetMembers((tp.v != 0 ? BindingFlags.Instance : BindingFlags.Static | BindingFlags.FlattenHierarchy) |
           (type == node.GetType() ? BindingFlags.Public | BindingFlags.NonPublic : BindingFlags.Public)).
@@ -1357,6 +1351,11 @@ namespace Apex
           Select(p => new TypeExplorer.Item { icon = TypeHelper.image(p[0]), text = p[0].Name, info = p });
         if (tp.v != 0) items = items.Concat(Extensions(type).GroupBy(p => p.Name).Select(p => p.ToArray()).
           Select(p => new TypeExplorer.Item { icon = 24, text = p[0].IsGenericMethod ? p[0].Name + "<>" : p[0].Name, info = p }));
+        if(tp.p is Tuple<Type, string> ts)//xxx
+        {
+          var ff = ts.Item1.GetFields();
+          items = items.Concat(ts.Item2.Split(',').Skip(1).Select((p,x) => new TypeExplorer.Item { icon = 8, text = p, info = ff[x] } ));
+        }
         EditFlyer(i1, i2, items.OrderBy(p => p.text).ToArray()); return;
       }
     }

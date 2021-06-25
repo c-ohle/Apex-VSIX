@@ -1281,6 +1281,13 @@ namespace Apex
       if (bt != null && bt != typeof(object) && bt != typeof(ValueType))
         yield return new Item { icon = 8, text = string.Format("base {{{0}}}", TypeHelper.fullname(bt)), obj = obj, info = type.BaseType };
 
+      if (info is Tuple<Type, string> xx)
+      {
+        var ff = xx.Item1.GetFields(); var ss = xx.Item2.Split(',');
+        for (int i = 0; i < ff.Length; i++)
+          yield return new Item { icon = 8, text = ss[i + 1], obj = ff[i].GetValue(obj), info = ff[i].FieldType };
+      }
+
       foreach (var x in
         type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly).
         Where(p => p.CanRead && isbrowsable(p) && p.GetIndexParameters().Length == 0).
@@ -1340,7 +1347,15 @@ namespace Apex
       if (p is string) return string.Format("\"{0}\"", unescape((string)p));
       if (p is Exception) return string.Format("{{{0}}}", unescape(((Exception)p).Message));
       if (p is System.Collections.IList) return rt != null ? string.Format("Count = {0}", evals(((System.Collections.IList)p).Count, null)) : string.Empty;
-      if (t.IsGenericType /*|| Archive.IsRtType(t)*/) return string.Format("{{{0}}}", TypeHelper.shortname(t));
+      if (t.IsGenericType /*|| Archive.IsRtType(t)*/)
+      {
+        if (rt is Tuple<Type, string> xx) //xxx
+        {
+          var ff = xx.Item1.GetFields(); var tp = p;
+          return '(' + string.Join(", ", ff.Select(f => evals(f.GetValue(tp), null))) + ')';
+        }
+        return string.Format("{{{0}}}", TypeHelper.shortname(t));
+      }
       var xt = rt as Type; if (xt != null && xt.IsInterface) return TypeHelper.fullname(xt);
       var tc = Type.GetTypeCode(t);
       switch (tc)
@@ -1451,13 +1466,17 @@ namespace Apex
         }
         return xname(type);
       }
-      var mi = p as MethodInfo; if (mi != null) return string.Format("{0} {1}.{2}{3}({4})", shortname(mi.ReturnType), shortname(mi.DeclaringType), mi.Name, mi.IsGenericMethod ? "<>" : null, shortname(mi.GetParameters()));
-      var fi = p as FieldInfo; if (fi != null) return string.Format("{0} {1}.{2}", shortname(fi.FieldType), shortname(fi.DeclaringType), fi.Name);//XType.FieldName(fi));
-      var pi = p as PropertyInfo; if (pi != null) return string.Format("{0} {1}.{2}", shortname(pi.PropertyType), shortname(pi.DeclaringType), pi.Name);
-      var ei = p as EventInfo; if (ei != null) return string.Format("{0} {1}.{2}", shortname(ei.EventHandlerType), shortname(ei.DeclaringType), ei.Name);
-      var pp = p as ParameterInfo[]; if (pp != null) return string.Join(", ", pp.Select(t => shortname(t)));
-      var ci = p as ConstructorInfo;
-      if (ci != null) return string.Format("{0} {1}({2})", shortname(ci.DeclaringType), ci.Name, shortname(ci.GetParameters()));
+      if (p is MethodInfo mi) return string.Format("{0} {1}.{2}{3}({4})", shortname(mi.ReturnType), shortname(mi.DeclaringType), mi.Name, mi.IsGenericMethod ? "<>" : null, shortname(mi.GetParameters()));
+      if (p is FieldInfo fi) return string.Format("{0} {1}.{2}", shortname(fi.FieldType), shortname(fi.DeclaringType), fi.Name);//XType.FieldName(fi));
+      if (p is PropertyInfo pi) return string.Format("{0} {1}.{2}", shortname(pi.PropertyType), shortname(pi.DeclaringType), pi.Name);
+      if (p is EventInfo ei) return string.Format("{0} {1}.{2}", shortname(ei.EventHandlerType), shortname(ei.DeclaringType), ei.Name);
+      if (p is ParameterInfo[] pp) return string.Join(", ", pp.Select(t => shortname(t)));
+      if (p is ConstructorInfo ci) return string.Format("{0} {1}({2})", shortname(ci.DeclaringType), ci.Name, shortname(ci.GetParameters()));
+      if (p is Tuple<Type, string> xx)
+      {
+        var ff = xx.Item1.GetFields(); var ss = xx.Item2.Split(',');
+        return "(" + string.Join(", ", ff.Zip(ss.Skip(1), (a, b) => shortname(a.FieldType) + " " + b)) + ")";
+      }
       return p.ToString();
     }
     static string shortname(ParameterInfo t)
@@ -1672,10 +1691,10 @@ namespace Apex
             return string.Format("{0} {1}({2})", shortname(mi.ReturnType), name, shortname(mi.GetParameters().Skip(1).ToArray()));
           }
           return tpos.n == 0 ? null : tooltip(tpos.p);
-        case 0x02: return string.Format("({0}) {1} {2}", "const", shortname(tpos.p as Type), text.Substring(tpos.i, tpos.n));
-        case 0x04: return string.Format("({0}) {1} {2}", "local variable", shortname(tpos.p as Type), text.Substring(tpos.i, tpos.n));
-        case 0x05: return string.Format("({0}) {1} {2}", "parameter", shortname(tpos.p as Type), text.Substring(tpos.i, tpos.n));
-        case 0x06: return string.Format("({0}) {1} {2}", "variable", shortname((Type)tpos.p), text.Substring(tpos.i, tpos.n));
+        case 0x02: return string.Format("({0}) {1} {2}", "const", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
+        case 0x04: return string.Format("({0}) {1} {2}", "local variable", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
+        case 0x05: return string.Format("({0}) {1} {2}", "parameter", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
+        case 0x06: return string.Format("({0}) {1} {2}", "variable", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
         case 0x07: return string.Format("({0}) {1} {2}", "property", shortname(((Type)tpos.p).GetGenericArguments()[0]), text.Substring(tpos.i, tpos.n));
         case 0x08: return string.Format("{0} {1}", "namespace", tpos.p);
         case 0x01: return "(dynamic expression)\nThis operation will be resolved at runtime.";
