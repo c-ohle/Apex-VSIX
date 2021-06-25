@@ -144,26 +144,32 @@ namespace Apex
         var @public = false; if (n.equals("public")) { a = t; @public = true; }
         n = a; t = n.gettype(); if (t.n == 0) { if ((flags & 0x08) != 0) continue; __map(a); list.Add(a.Parse(null)); continue; }
         a = n; n = a.next();
-        var type = !t.equals("var") ? GetType(t) : null;
+        var type = !t.equals("var") ? GetType(t) : null; var rettupl = tuplnames;
         if (a.n != 0 && a.s[0] == '(')
         {
-          int i = 0; if ((flags & 0x01) != 0) for (i = 1; !n.equals(stack[i].Name); i++) ;
+          int i = 0; if ((flags & 0x01) != 0) for (i = 1; !n.stackequals(stack[i].Name); i++) ;
           var s = n.ToString(); var istack = i; if (i == 0) { istack = @public ? stack.npub++ : stack.Count; stack.Insert(istack, null); }
           t = a.next(); t.trim(1, 1); a.trim(1, 1); var ab = stack.Count;
-          for (; t.n != 0;) { n = t.next(','); var v = n.gettype(); n.check(ab); stack.Add(Expression.Parameter(GetType(v), n.ToString())); if (map != null && (flags & 0x08) == 0) __map(n, stack[stack.Count - 1]); }
+          for (; t.n != 0;) { n = t.next(','); var v = n.gettype(); n.check(ab); stack.Add(Expression.Parameter(GetType(v), n.ToString() + tuplnames)); if (map != null && (flags & 0x08) == 0) __map(n, stack[stack.Count - 1]); }
           var t0 = i != 0 ? stack[istack].Type : type != typeof(void) ? Expression.GetFuncType(stack.Skip(ab).Select(p => p.Type).Concat(Enumerable.Repeat(type, 1)).ToArray()) : Expression.GetActionType(stack.Skip(ab).Select(p => p.Type).ToArray());
-          var t1 = i != 0 ? stack[istack] : Expression.Variable(t0, s); stack[istack] = t1;
+          var t1 = i != 0 ? stack[istack] : Expression.Variable(t0, s + rettupl); stack[istack] = t1;
           if ((flags & 0x08) != 0) { stack.RemoveRange(ab, stack.Count - ab); continue; }
-          var t2 = Expression.Lambda(t0, a.Parse(Expression.Label(type, "return"), null, null, 0x02), s, stack.Skip(ab));
+          var t2 = Expression.Lambda(t0, a.Parse(Expression.Label(type, "return"), null, null, 0x02), s + rettupl, stack.Skip(ab));
           stack.RemoveRange(ab, stack.Count - ab); list.Insert(++ifunc, Expression.Assign(t1, t2)); continue;
         }
         for (; n.n != 0; n = a.next())
         {
           var v = a.next(','); var b = v.next('='); if (!((flags & 0x01) != 0 && type != null)) n.check(stackab);
-          if ((flags & 0x08) != 0) { if (type != null) { stack.Add(Expression.Parameter(type, n.ToString())); if (map != null) __map(n, stack[stack.Count - 1]); } continue; }
+          if ((flags & 0x08) != 0) { if (type != null) { stack.Add(Expression.Parameter(type, n.ToString() + tuplnames)); if (map != null) __map(n, stack[stack.Count - 1]); } continue; }
           var r = type == null || v.n != 0 ? v.Parse(type) : null;
-          int i = 0; if ((flags & 0x01) != 0 && type != null) for (i = 1; !n.equals(stack[i].Name); i++) ;
-          var e = i != 0 ? stack[i] : Expression.Parameter(type ?? r.Type, n.ToString()); //if (map != null) __map(n, 0x04, e.Type);
+          int i = 0; if ((flags & 0x01) != 0 && type != null) for (i = 1; !n.stackequals(stack[i].Name); i++) ; var tupls = default(string);
+          if (i == 0 && type == null) //xxx var 
+          {
+            var t1 = r; if (r is InvocationExpression u) t1 = u.Expression;
+            if(t1 is ParameterExpression t2) { var x = t2.Name.IndexOf(','); if (x != -1) tupls = t2.Name.Substring(x); }
+            //else { }
+          }
+          var e = i != 0 ? stack[i] : Expression.Parameter(type ?? r.Type, n.ToString() + tupls); //if (map != null) __map(n, 0x04, e.Type);
           if (r != null)
           {
             if (map != null) { var u = n; u.n = (int)(v.s - n.s) + v.n; __map(u); }
@@ -184,6 +190,7 @@ namespace Apex
     }
     Expression Parse(Type wt)
     {
+      //(int x, int y) point; point = (1, 2); var e = point.x;
       if (n == 0) error("syntax");
       Script a = this, b = a, c, d; int op = 0, i1 = 0, i2 = 0;
       for (c = a; c.n != 0; i2++)
@@ -252,8 +259,7 @@ namespace Apex
           //{
           //  var t = Expression.Variable(eb.Type, string.Empty); stack.Add(t); eb = Expression.Assign(t, eb);
           //}
-          if ((pp[1].Attributes & ParameterAttributes.In) != 0) { }
-
+          //if ((pp[1].Attributes & ParameterAttributes.In) != 0) { }
           ea = Convert(ea, pp[0].ParameterType);
           eb = Convert(eb, pp[1].ParameterType);
         }
@@ -327,7 +333,29 @@ namespace Apex
       Expression left = null; Type type = null; bool checkthis = false, priv = false;
       if (a.s[0] == '(')
       {
-        a.trim(1, 1); if (b.n != 0 && b.s[0] != '.' && b.s[0] != '[') { var t = b.Parse(wt = GetType(a)); return t.Type != wt ? Expression.Convert(t, wt) : t; }
+        a.trim(1, 1);
+        if (b.n != 0 && b.s[0] != '.' && b.s[0] != '[') { var t = b.Parse(wt = GetType(a)); return t.Type != wt ? Expression.Convert(t, wt) : t; }
+        if (b.n == 0) //xxx
+        {
+          var l = 0; for (var u = a; u.n != 0; u.next(','), l++) ;
+          if (l > 1 && l <= 8)
+          {
+            var u = a; ConstructorInfo ci = null; ParameterInfo[] pi = null;//var tt = getvtup(l); 
+            if (wt != null)
+            {
+              var cc = wt.GetConstructors();
+              for (int i = 0; i < cc.Length; i++) { var up = cc[i].GetParameters(); if (up.Length == l) { ci = cc[i]; pi = up; break; } }
+            }
+            var ee = new Expression[l];
+            for (int i = 0; i < l; i++) { var v = u.next(','); ee[i] = v.Parse(pi != null ? pi[i].ParameterType : null); }
+            if (ci == null)
+            {
+              var tt = new Type[l]; for (int i = 0; i < l; i++) tt[i] = ee[i].Type;
+              ci = getvtup(l).MakeGenericType(tt).GetConstructors()[0];
+            }
+            left = Expression.New(ci, ee); goto eval;
+          }
+        }
         left = a.Parse(wt); goto eval;
       }
       if (char.IsNumber(a.s[0]) || a.s[0] == '.')
@@ -377,7 +405,7 @@ namespace Apex
           else
           {
             a = b.next(); if (a.n == 0 || a.s[0] != '{') a.error("syntax");
-            for (a.trim(1, 1); a.n != 0;) stack.list.Add(Convert(a.next(',').Parse(null), t));
+            for (a.trim(1, 1); a.n != 0;) stack.list.Add(Convert(a.next(',').Parse(t), t));
             left = Expression.NewArrayInit(t, stack.list.Skip(ab));
           }
         }
@@ -409,7 +437,7 @@ namespace Apex
         }
         stack.list.RemoveRange(ab, stack.list.Count - ab); goto eval;
       }
-      for (int i = stack.Count - 1; i >= 0; i--) if (a.equals(stack[i].Name)) { left = stack[i]; if (map != null) __map(a, stack[i]); goto eval; }
+      for (int i = stack.Count - 1; i >= 0; i--) if (a.stackequals(stack[i].Name)) { left = stack[i]; if (map != null) __map(a, stack[i]); goto eval; }
       var sa = a.ToString();
       for (int i = stack.nstats; --i >= 0;)
       {
@@ -467,15 +495,15 @@ namespace Apex
           if (type == typeof(Debug) && !Debugger.IsAttached && (me.GetCustomAttribute(typeof(ConditionalAttribute)) as ConditionalAttribute)?.ConditionString == "DEBUG") left = Expression.Empty();
           continue;
         }
+
         var x = t1.GetMember(s, MemberTypes.Property | MemberTypes.Field, bf);
         if (x.Length != 0) { left = Expression.MakeMemberAccess(left, x[0]); if (map != null) __map(a, 0x03, x[0]); continue; }
         if ((bf & BindingFlags.Static) != 0) { type = t1.GetNestedType(s, bf); if (type != null) goto eval; }
-        // //extension props ?
-        // GetExtensions();
-        // var ex = extensions.SelectMany(p => p.GetMember(s, BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Static)).OfType<MethodInfo>().
-        //   FirstOrDefault(p => { var pp = p.GetParameters(); return pp.Length == 1 && pp[0].ParameterType == t1; });
-        // if (ex != null) { left = Expression.Call(ex, left); if (map != null) __map(a, 0, ex); break; }
-        // //
+        if (left is ParameterExpression pe) //xxx 
+        {
+          var ss = pe.Name.Split(','); var i = Array.IndexOf(ss, s, 1);
+          if (i >= 1) { var f = t1.GetFields()[i - 1]; left = Expression.Field(left, f); if (map != null) __map(a, 0x03, f); continue; }
+        }
         left = null; break;
       }
       if (left == null || checkthis) a.error();
@@ -506,8 +534,26 @@ namespace Apex
       }
       return match;
     }
+    static string tuplnames;
     static Type GetType(Script a, bool ex = true)
     {
+      tuplnames = null;
+      if (a.s[0] == '(') //xxx (ushort[] ii, int ni)
+      {
+        var u = a; u.trim(1, 1); int c = 0; for (var v = u; v.n != 0; v.next(','), c++) ;
+        if (c > 1 && c <= 8)
+        {
+          var tt = new Type[c]; //var ss = default(string[]);// new string[c];
+          for (c = 0; c < tt.Length; c++)
+          {
+            var t1 = tuplnames;
+            var v = u.next(','); var w = v.gettype(); tt[c] = GetType(w.n != 0 ? w : v, ex);
+            tuplnames = t1;
+            if (w.n != 0) { if (tuplnames == null) for (int j = 0; j < c; j++) tuplnames += ','; tuplnames += ','; tuplnames += v.ToString(); } //v:name
+          }
+          return getvtup(tt.Length).MakeGenericType(tt);
+        }
+      }
       if (map != null)
       {
         var t1 = map; map = null; Type t2 = null; try { t2 = GetType(a, ex); }
@@ -517,7 +563,11 @@ namespace Apex
           var ns = default(string);
           for (var e = a; e.n != 0;)
           {
-            var c = e.next('.'); if (e.n == 0 && t2 != null) { c = c.next(); __map(c, 0, t2); break; }
+            var c = e.next('.'); if (e.n == 0 && t2 != null)
+            {
+              if (c.s[0] != '(') //xxx
+                c = c.next(); __map(c, 0, t2); break;
+            }
             for (var t3 = t2; t3 != null && t3.IsNested;) { t3 = t3.DeclaringType; if (c.equals(t3.Name)) { __map(c, 0, t3); break; } }
             if (ns != null) ns += '.'; ns += c.ToString(); __map(c, 0x08, ns);
           }
@@ -676,6 +726,20 @@ namespace Apex
       }
       return me;
     }
+    static Type getvtup(int n) //xxx
+    {
+      switch (n)
+      {
+        case 2: return typeof(ValueTuple<,>);
+        case 3: return typeof(ValueTuple<,,>);
+        case 4: return typeof(ValueTuple<,,,>);
+        case 5: return typeof(ValueTuple<,,,,>);
+        case 6: return typeof(ValueTuple<,,,,,>);
+        case 7: return typeof(ValueTuple<,,,,,,>);
+        case 8: return typeof(ValueTuple<,,,,,,,>);
+      }
+      return null;
+    }
     internal static Type[] GetExtensions()
     {
       if (extensions == null)
@@ -745,7 +809,7 @@ namespace Apex
     void check(int stackab)
     {
       if (!isname()) error();
-      for (int i = stackab; i < stack.Count; i++) if (equals(stack[i].Name)) error("duplicate name");
+      for (int i = stackab; i < stack.Count; i++) if (stackequals(stack[i].Name)) error("duplicate name");
     }
     class Exception : System.Exception { public Exception(string s) : base(s) { } }
     void error(string s = null) { if (n <= 0) n = 1; *(Script*)ptr = this; throw new Exception(s ?? "syntax"); }
@@ -775,12 +839,19 @@ namespace Apex
           while (n != 0 && (s[0] == '[')) { var i = next(); i.trim(1, 1); if (i.n != 0) goto r; }
           t.n = (int)(s - t.s); t.trim(); return t;
         }
+        if (a.s[0] == '(') { var b = a; b.trim(1, 1); b.next(','); if (b.n != 0) return a; } //xxx (int a, int b)
       r: this = t; t.n = 0; return t;
       }
     }
     bool equals(string name)
     {
       var l = name.Length; if (l != n) return false;
+      for (int i = 0; i < l; i++) if (s[i] != name[i]) return false; return true;
+    }
+    bool stackequals(string name) //xxx
+    {
+      var l = name.IndexOf(','); if (l == -1) l = name.Length; else { }
+      if (l != n) return false;
       for (int i = 0; i < l; i++) if (s[i] != name[i]) return false; return true;
     }
     int token()
