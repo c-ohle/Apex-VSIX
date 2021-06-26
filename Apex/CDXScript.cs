@@ -147,26 +147,28 @@ namespace Apex
         var type = !t.equals("var") ? GetType(t) : null; var rettupl = stack.tuplnames;
         if (a.n != 0 && a.s[0] == '(')
         {
+          if ((flags & 0x08) != 0) n.check(0);
           int i = 0; if ((flags & 0x01) != 0) for (i = 1; !n.stackequals(stack[i].Name); i++) ;
           var s = n.ToString(); var istack = i; if (i == 0) { istack = @public ? stack.npub++ : stack.Count; stack.Insert(istack, null); }
           t = a.next(); t.trim(1, 1); a.trim(1, 1); var ab = stack.Count;
-          for (; t.n != 0;) { n = t.next(','); var v = n.gettype(); n.check(ab); stack.Add(Expression.Parameter(GetType(v), n.ToString() + stack.tuplnames)); if (map != null && (flags & 0x08) == 0) __map(n, stack[stack.Count - 1]); }
+          for (; t.n != 0;) { var u = t.next(','); var v = u.gettype(); u.check(ab); stack.Add(Expression.Parameter(GetType(v), u.ToString() + stack.tuplnames)); if (map != null && (flags & 0x08) == 0) __map(u, stack[stack.Count - 1], 0x05); }
           var t0 = i != 0 ? stack[istack].Type : type != typeof(void) ? Expression.GetFuncType(stack.Skip(ab).Select(p => p.Type).Concat(Enumerable.Repeat(type, 1)).ToArray()) : Expression.GetActionType(stack.Skip(ab).Select(p => p.Type).ToArray());
           var t1 = i != 0 ? stack[istack] : Expression.Variable(t0, s + rettupl); stack[istack] = t1;
-          if ((flags & 0x08) != 0) { stack.RemoveRange(ab, stack.Count - ab); continue; }
+          if ((flags & 0x08) != 0) { stack.RemoveRange(ab, stack.Count - ab); if (map != null) __map(n, t1, 0x03); continue; }
           var t2 = Expression.Lambda(t0, a.Parse(Expression.Label(type, "return"), null, null, 0x02), s + rettupl, stack.Skip(ab));
           stack.RemoveRange(ab, stack.Count - ab); list.Insert(++ifunc, Expression.Assign(t1, t2)); continue;
         }
         for (; n.n != 0; n = a.next())
         {
           var v = a.next(','); var b = v.next('='); if (!((flags & 0x01) != 0 && type != null)) n.check(stackab);
-          if ((flags & 0x08) != 0) { if (type != null) { stack.Add(Expression.Parameter(type, n.ToString() + stack.tuplnames)); if (map != null) __map(n, stack[stack.Count - 1]); } continue; }
-          var r = type == null || v.n != 0 ? v.Parse(type) : null;
+          if ((flags & 0x08) != 0) { if (type != null) { stack.Add(Expression.Parameter(type, n.ToString() + stack.tuplnames)); if (map != null) __map(n, stack[stack.Count - 1], 0x06); } continue; }
+          stack.tuplnames = null; var r = type == null || v.n != 0 ? v.Parse(type) : null;
           int i = 0; if ((flags & 0x01) != 0 && type != null) for (i = 1; !n.stackequals(stack[i].Name); i++) ; var tupls = default(string);
           if (i == 0 && type == null) //xxx var 
           {
             var t1 = r; if (r is InvocationExpression u) t1 = u.Expression;
-            if (t1 is ParameterExpression t2) { var x = t2.Name.IndexOf(','); if (x != -1) tupls = t2.Name.Substring(x); }
+            if (t1 is ParameterExpression t2) { if (stack.tuplnames != null) tupls = stack.tuplnames; else { var x = t2.Name.IndexOf(','); if (x != -1) tupls = t2.Name.Substring(x); } }
+            if (t1 is NewExpression) tupls = stack.tuplnames;
             //else { }
           }
           var e = i != 0 ? stack[i] : Expression.Parameter(type ?? r.Type, n.ToString() + tupls); //if (map != null) __map(n, 0x04, e.Type);
@@ -175,7 +177,7 @@ namespace Apex
             if (map != null) { var u = n; u.n = (int)(v.s - n.s) + v.n; __map(u); }
             list.Add(Expression.Assign(e, Convert(r, e.Type)));
           }
-          if (i == 0) { if (dbg != null && (flags & 0x01) != 0) stack.Insert(stack.xpos++, e); else stack.Add(e); if (map != null) __map(n, e); }
+          if (i == 0) { if (dbg != null && (flags & 0x01) != 0) stack.Insert(stack.xpos++, e); else stack.Add(e); if (map != null) __map(n, e, (flags & 0x01) == 0 ? 0x04 : 0x06); }
         }
       }
       *(Script*)ptr = ep;
@@ -340,14 +342,19 @@ namespace Apex
           var l = 0; for (var u = a; u.n != 0; u.next(','), l++) ;
           if (l > 1 && l <= 8)
           {
-            var u = a; ConstructorInfo ci = null; ParameterInfo[] pi = null;//var tt = getvtup(l); 
+            var u = a; ConstructorInfo ci = null; ParameterInfo[] pi = null; stack.tuplnames = null;
             if (wt != null)
             {
               var cc = wt.GetConstructors();
               for (int i = 0; i < cc.Length; i++) { var up = cc[i].GetParameters(); if (up.Length == l) { ci = cc[i]; pi = up; break; } }
             }
             var ee = new Expression[l];
-            for (int i = 0; i < l; i++) { var v = u.next(','); ee[i] = v.Parse(pi != null ? pi[i].ParameterType : null); }
+            for (int i = 0; i < l; i++)
+            {
+              var v = u.next(','); var h = v.next(':'); if (v.n == 0) { var t = v; v = h; h = t; }
+              if (h.n != 0 || stack.tuplnames != null) addtup(i, h); var t1 = stack.tuplnames;
+              ee[i] = v.Parse(pi != null ? pi[i].ParameterType : null); stack.tuplnames = t1;
+            }
             if (ci == null)
             {
               var tt = new Type[l]; for (int i = 0; i < l; i++) tt[i] = ee[i].Type;
@@ -383,7 +390,7 @@ namespace Apex
             if (v > tc) tc = v;
             else if (tc < TypeCode.Single && v > TypeCode.Char && v < TypeCode.Single) tc = v;
         }
-       left = Expression.Constant(System.Convert.ChangeType(a.ToString(), tc, CultureInfo.InvariantCulture));
+        left = Expression.Constant(System.Convert.ChangeType(a.ToString(), tc, CultureInfo.InvariantCulture));
         if (wt != null && wt.IsEnum) if (0.Equals(((ConstantExpression)left).Value)) left = Expression.Convert(left, wt);
         goto eval;
       }
@@ -437,7 +444,7 @@ namespace Apex
         }
         stack.list.RemoveRange(ab, stack.list.Count - ab); goto eval;
       }
-      for (int i = stack.Count - 1; i >= 0; i--) if (a.stackequals(stack[i].Name)) { left = stack[i]; if (map != null) __map(a, stack[i]); goto eval; }
+      for (int i = stack.Count - 1; i >= 0; i--) if (a.stackequals(stack[i].Name)) { left = stack[i]; if (map != null) __map(a, stack[i], 0); goto eval; }
       var sa = a.ToString();
       for (int i = stack.nstats; --i >= 0;)
       {
@@ -497,12 +504,12 @@ namespace Apex
         }
 
         var x = t1.GetMember(s, MemberTypes.Property | MemberTypes.Field, bf);
-        if (x.Length != 0) { left = Expression.MakeMemberAccess(left, x[0]); if (map != null) __map(a, 0x03, x[0]); continue; }
+        if (x.Length != 0) { left = Expression.MakeMemberAccess(left, x[0]); if (map != null) __map(a, 0, x[0]); continue; }
         if ((bf & BindingFlags.Static) != 0) { type = t1.GetNestedType(s, bf); if (type != null) goto eval; }
         if (left is ParameterExpression pe) //xxx 
         {
           var ss = pe.Name.Split(','); var i = Array.IndexOf(ss, s, 1);
-          if (i >= 1) { var f = t1.GetFields()[i - 1]; left = Expression.Field(left, f); if (map != null) __map(a, 0x03, f); continue; }
+          if (i >= 1) { var f = t1.GetFields()[i - 1]; left = Expression.Field(left, f); if (map != null) __map(a, 0, f); continue; }
         }
         left = null; break;
       }
@@ -547,8 +554,7 @@ namespace Apex
           {
             var t1 = stack.tuplnames;
             var v = u.next(','); var w = v.gettype(); tt[c] = GetType(w.n != 0 ? w : v, ex);
-            stack.tuplnames = t1;
-            if (w.n != 0) { if (stack.tuplnames == null) for (int j = 0; j < c; j++) stack.tuplnames += ','; stack.tuplnames += ','; stack.tuplnames += v.ToString(); } //v:name
+            stack.tuplnames = t1; if (w.n != 0 || stack.tuplnames != null) addtup(c, v); //v:name
           }
           return getvtup(tt.Length).MakeGenericType(tt);
         }
@@ -739,6 +745,7 @@ namespace Apex
       }
       return null;
     }
+    static void addtup(int c, Script v) { if (stack.tuplnames == null) for (int i = 0; i < c; i++) stack.tuplnames += ','; stack.tuplnames += ','; stack.tuplnames += v.ToString(); }
     internal static Type[] GetExtensions()
     {
       if (extensions == null)
@@ -937,13 +944,14 @@ namespace Apex
     static void __map(Script s, int v, object p)
     {
       var i = s.index; for (int t = 0; t < map.Count; t++) if (map[t].i == i && map[t].v == v) return;
-      //var t = ((int)(s.s - (char*)(ptr + 32)), s.n, v, p); if (map.Contains(t)) { }
       map.Add((i, s.n, v, p));
     }
-    static void __map(Script s, ParameterExpression p)
+    static void __map(Script s, ParameterExpression p, int id)
     {
       if (!stack.dict.TryGetValue(p, out var i)) stack.dict[p] = i = stack.dict.Count + 1;
-      __map(s, 0x04 | (i << 8), p.Name.Contains(',') ? (object)new Tuple<Type, string>(p.Type, p.Name) : p.Type); //xxx
+      if (id == 0) for (int t = 0; t < map.Count; t++) if (map[t].v >> 8 == i) { id = map[t].v; break; }
+      if (id == 0) id = 0x06; //this
+      __map(s, id | (i << 8), p.Name.Contains(',') ? (object)new Tuple<Type, string>(p.Type, p.Name) : p.Type); //xxx
     }
     static void __map(Script p)
     {
@@ -1014,7 +1022,11 @@ namespace Apex
 
         for (; i < l; i++) if (error == null || charcolor[i] != 6) charcolor[i] = color; i--;
       }
-      for (int i = 0; i < map.Count; i++) { ref var m = ref pmap[i]; if (m.v == 0 && m.p is Type && charcolor[m.i] != 3) color(m.i, m.n, 6); }
+      for (int i = 0; i < map.Count; i++)
+      {
+        ref var m = ref pmap[i]; if (m.v == 0 && m.p is Type && charcolor[m.i] != 3) color(m.i, m.n, 6);
+        if (overid != 0 && (overid & 0x0f) < 8 && overid == (m.v & ~0xf0)) color2(m.i, m.n, 0x80);
+      }
       for (int i = 0; i < map.Count; i++) { ref var m = ref pmap[i]; if ((m.v & 0xf) == 0x0A && (m.v & 0x30) != 0) color(m.i, m.n, (byte)((m.v & 0x20) != 0 ? 5 : 4)); }
       //if (error != null) for (int i = 0; i < epos.n; i++) { charcolor[epos.i + i] |= 0x70; }
     }
@@ -1159,6 +1171,7 @@ namespace Apex
           return 1;
         case 5020: return breakpoint(test);
         case 5021: return clearbreakpoints(test);
+        case 5022: return ongotodef(test);
           //case 65301: //can close
           //  if (state != 7) return 0;
           //  if (test != null) return 1;
@@ -1195,12 +1208,12 @@ namespace Apex
       try { var e = Script.Compile(node.GetType(), EditText); }
       catch (Exception e) { epos = Script.LastError; error = e.Message; }
       pmap = ((int i, int n, int v, object p)[])map.GetType().GetField("_items", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(map);
-      UpdateSyntaxColors(); Invalidate();
+      checkover(); UpdateSyntaxColors(); Invalidate();
       if (error != null) for (int i = 0; i < epos.n && epos.i + i < charcolor.Length; i++) charcolor[epos.i + i] |= 0x70;
     }
     internal int getlineflags() { int f = 0; for (int i = 0; i < lineflags.Length; i++) f |= lineflags[i]; return f; }
     List<(int i, int n, int v, object p)> map = new List<(int i, int n, int v, object p)>(); (int i, int n, int v, object p)[] pmap;
-    int state; int* sp; (int id, object p)[] stack; Action ontimer; int lastpos = -1;
+    int state; int* sp; (int id, object p)[] stack; Action ontimer; int lastpos = -1, overid;
     bool DebugStep(int i, (int id, object p)[] stack)
     {
       if (!visible) return false;// i >= map.Count) return false;
@@ -1235,6 +1248,7 @@ namespace Apex
     }
     bool visible; internal void show(bool on) { visible = on; if (!visible) state = 0; }
     void color(int i, int n, byte c) { for (int t = 0; t < n; t++) { charcolor[i + t] = c; } }
+    void color2(int i, int n, int c) { for (int b = i + n; i < b; i++) charcolor[i] |= (byte)c; }
     protected override void OnMouseMove(MouseEventArgs e)
     {
       base.OnMouseMove(e); //if (flyer != null) return;
@@ -1343,7 +1357,7 @@ namespace Apex
           EditFlyer(i1, i2, ii.OrderBy(p => p.text).ToArray());
           return;
         }
-        var type = tp.p as Type ?? (tp.p is PropertyInfo pi ? pi.PropertyType : tp.p is FieldInfo fi ? fi.FieldType :  tp.p is Tuple<Type,string> xx ? xx.Item1 : null );
+        var type = tp.p as Type ?? (tp.p is PropertyInfo pi ? pi.PropertyType : tp.p is FieldInfo fi ? fi.FieldType : tp.p is Tuple<Type, string> xx ? xx.Item1 : null);
         if (type == null) return;
         var items = type.GetMembers((tp.v != 0 ? BindingFlags.Instance : BindingFlags.Static | BindingFlags.FlattenHierarchy) |
           (type == node.GetType() ? BindingFlags.Public | BindingFlags.NonPublic : BindingFlags.Public)).
@@ -1351,11 +1365,8 @@ namespace Apex
           Select(p => new TypeExplorer.Item { icon = TypeHelper.image(p[0]), text = p[0].Name, info = p });
         if (tp.v != 0) items = items.Concat(Extensions(type).GroupBy(p => p.Name).Select(p => p.ToArray()).
           Select(p => new TypeExplorer.Item { icon = 24, text = p[0].IsGenericMethod ? p[0].Name + "<>" : p[0].Name, info = p }));
-        if(tp.p is Tuple<Type, string> ts)//xxx
-        {
-          var ff = ts.Item1.GetFields();
-          items = items.Concat(ts.Item2.Split(',').Skip(1).Select((p,x) => new TypeExplorer.Item { icon = 8, text = p, info = ff[x] } ));
-        }
+        if (tp.p is Tuple<Type, string> ts)//xxx
+          items = items.Concat(ts.Item2.Split(',').Skip(1).Zip(ts.Item1.GetFields(), (n, f) => new TypeExplorer.Item { icon = 8, text = n, info = f }).Where(p => p.text.Length != 0));
         EditFlyer(i1, i2, items.OrderBy(p => p.text).ToArray()); return;
       }
     }
@@ -1376,7 +1387,28 @@ namespace Apex
     }
     TypeExplorer flyer;
     internal ScriptToolWindowPane pane;
-
+    protected internal override void OnSelChanged()
+    {
+      base.OnSelChanged(); if (rebuild == 0 && checkover()) { UpdateSyntaxColors(); Invalidate(); }
+    }
+    bool checkover()
+    {
+      int i1 = SelectionStart, i2 = i1 + SelectionLength;
+      var t = map.Count; while (--t >= 0) { ref var p = ref pmap[t]; var f = p.v & 0x0f; if (f != 1 && f != 0xa && i1 >= p.i && i2 <= p.i + p.n) break; }
+      int id = t >= 0 ? pmap[t].v : 0; id = id & ~0xf0;
+      if (overid != id) { overid = id; return true; }
+      return false;
+    }
+    int ongotodef(object test)
+    {
+      if (overid == 0 || (overid & 0xf) == 8) return 0;
+      if ((overid & 0x80000000) != 0) return 0;
+      if (test != null) return 1;
+      var t = map.FirstOrDefault(p => (p.v & ~0xf0) == overid && (p.v & 0x80) != 0);
+      if (t.n == 0) t = map.FirstOrDefault(p => (p.v & ~0xf0) == overid);
+      Select(t.i, t.i + t.n); ScrollVisible();
+      return 1;
+    }
     void EditFlyer(int i1, int i2, TypeExplorer.Item[] items)
     {
       if (items.Length == 0) return; var t2 = i2; ontimer = null;

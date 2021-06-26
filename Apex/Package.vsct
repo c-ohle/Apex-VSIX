@@ -102,10 +102,10 @@
       <Group guid="g2" id="_1000020" priority="9">
         <Parent guid="g2" id="_0x2101" />
       </Group>
-      <Group guid="g2" id="_1000021" priority="13">
+      <Group guid="g2" id="_1000021" priority="14">
         <Parent guid="g2" id="_0x2101" />
       </Group>
-      <Group guid="g2" id="_1000022" priority="17">
+      <Group guid="g2" id="_1000022" priority="18">
         <Parent guid="g2" id="_0x2101" />
       </Group>
       <Group guid="g2" id="_1000023" priority="1">
@@ -539,16 +539,19 @@
     <CommandPlacement guid="guidVSStd97" id="cmdidFindPrev" priority="12">
       <Parent guid="g2" id="_1000020" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="14">
+    <CommandPlacement guid="guidVSStd97" id="cmdidGotoDefn" priority="13">
+      <Parent guid="g2" id="_1000020" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="15">
       <Parent guid="g2" id="_1000021" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="15">
+    <CommandPlacement guid="guidVSStd97" id="cmdidCopy" priority="16">
       <Parent guid="g2" id="_1000021" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="16">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPaste" priority="17">
       <Parent guid="g2" id="_1000021" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="18">
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropertiesWindow" priority="19">
       <Parent guid="g2" id="_1000022" />
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidCut" priority="15">

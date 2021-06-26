@@ -157,6 +157,7 @@
     <MenuItem id="cmdidFindSelectedNext" />
     <MenuItem id="cmdidFindNext" />
     <MenuItem id="cmdidFindPrev" />
+    <MenuItem id="cmdidGotoDefn" />
     <Seperator/>
     <!--<MenuItem id="cmdidExpand" />
     <MenuItem id="cmdidCollapse" />

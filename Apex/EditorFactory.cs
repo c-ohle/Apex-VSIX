@@ -97,6 +97,7 @@ namespace Apex
           case (int)VSConstants.VSStd97CmdID.SendToBack: return 5103;
           //case (int)VSConstants.VSStd97CmdID.InsertObject: return 5104;
           case (int)VSConstants.VSStd97CmdID.F1Help: return 2000;
+          case (int)VSConstants.VSStd97CmdID.GotoDefn: return 5022;
         }
         return 0;
       }
@@ -330,7 +331,11 @@ namespace Apex
     }
     int IVsDocOutlineProvider.GetOutline(out IntPtr phwnd, out IOleCommandTarget ppCmdTarget)
     {
-      treeview = new CDXView.TreeView { view = view, BorderStyle = BorderStyle.None, Font = System.Drawing.SystemFonts.SmallCaptionFont, 
+      treeview = new CDXView.TreeView
+      {
+        view = view,
+        BorderStyle = BorderStyle.None,
+        Font = System.Drawing.SystemFonts.SmallCaptionFont,
         //LabelEdit = true 
       };
       treeview.CreateControl(); phwnd = treeview.Handle; ppCmdTarget = this;

@@ -779,10 +779,10 @@ namespace Apex
         if (ni.Points != null)
         {
           int nni = ni.Indices.Length; var ii = ni.Indices;
-          var nnp = ni.Points.Length; var pp = getbuffer<float3>(nnp);
+          var nnp = ni.Points.Length; var pp = GetBuffer<float3>(nnp, false);
           for (int t = 0; t < nnp; t++) { var v = ni.Points[t]; pp[t] = new float3((float)v.x, (float)v.y, (float)v.z); }
-          float2[] tt = null; if (ni.Texcoords != null) { tt = getbuffer<float2>(nni); for (int t = 0; t < nni; t++) { var v = ni.Texcoords[t]; tt[t] = new float2(v.x, v.y); } }
-          int nnr = 0; Range[] rr = null; if (ni.Ranges != null) { rr = getbuffer<Range>(nnr = ni.Ranges.Length); for (int t = 0; t < nnr; t++) { var v = ni.Ranges[t]; rr[t] = new Range { Start = v.i, Count = v.n, Color = v.c }; } }
+          float2[] tt = null; if (ni.Texcoords != null) { tt = GetBuffer<float2>(nni,false); for (int t = 0; t < nni; t++) { var v = ni.Texcoords[t]; tt[t] = new float2(v.x, v.y); } }
+          int nnr = 0; Range[] rr = null; if (ni.Ranges != null) { rr = GetBuffer<Range>(nnr = ni.Ranges.Length,false); for (int t = 0; t < nnr; t++) { var v = ni.Ranges[t]; rr[t] = new Range { Start = v.i, Count = v.n, Color = v.c }; } }
           MeshRound(pp, ref nnp, ii, ref nni, tt, rr, ref nnr);
           //for (int t = 0; t < nni; t += 3) { var _ = ii[t]; ii[t] = ii[t + 1]; ii[t + 1] = _; }
           no.Color = ni.Textures != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color;

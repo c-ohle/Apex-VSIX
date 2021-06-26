@@ -1421,11 +1421,8 @@ namespace Apex
       }
       if (type.IsGenericType)
       {
-        //if (!type.IsPublic && type.IsNested && type.ReflectedType == typeof(Dynamic)) { }
-        var t1 = type.GetGenericArguments();//var t2 = type.GetGenericTypeDefinition();
-        var t2 = string.Format("{0}<{1}>", type.Name.Split('`')[0], string.Join(", ", t1.Select(t => shortname(t))));
-        //type.IsGenericType ? "<" + string.Join(", ", type.GetGenericArguments().Select((hp, hi) => "T" + hi)) + ">"
-        return t2;
+        var t1 = type.GetGenericArguments(); var t2 = type.Name.Split('`')[0]; var t3 = string.Join(", ", t1.Select(t => shortname(t)));
+        return t2 == "ValueTuple" ? $"({t3})" : $"{t2}<{t3}>";
       }
       return type.Name;
     }
@@ -1472,10 +1469,10 @@ namespace Apex
       if (p is EventInfo ei) return string.Format("{0} {1}.{2}", shortname(ei.EventHandlerType), shortname(ei.DeclaringType), ei.Name);
       if (p is ParameterInfo[] pp) return string.Join(", ", pp.Select(t => shortname(t)));
       if (p is ConstructorInfo ci) return string.Format("{0} {1}({2})", shortname(ci.DeclaringType), ci.Name, shortname(ci.GetParameters()));
-      if (p is Tuple<Type, string> xx)
+      if (p is Tuple<Type, string> xx) //xxx
       {
-        var ff = xx.Item1.GetFields(); var ss = xx.Item2.Split(',');
-        return "(" + string.Join(", ", ff.Zip(ss.Skip(1), (a, b) => shortname(a.FieldType) + " " + b)) + ")";
+        var ff = xx.Item1.GetFields(); var ss = xx.Item2.Split(',').Skip(1);//.Concat(Enumerable.Repeat("", ff.Length));
+        return "(" + string.Join(", ", ff.Zip(ss, (a, b) => shortname(a.FieldType) + (b.Length != 0 ? " " + b : null))) + ")";
       }
       return p.ToString();
     }
@@ -1637,7 +1634,6 @@ namespace Apex
     {
       var infos = p as MemberInfo[];
       if (infos != null) p = infos.Length > 1 && infos[0] is MethodInfo ? infos.OrderByDescending(x => ((MethodInfo)x).GetParameters().Length).Last() : infos[0];// infos[infos.Length - 1];
-
       var type = p as Type;
       if (type != null)
       {
@@ -1670,34 +1666,21 @@ namespace Apex
     }
     internal static string tooltip((int i, int n, int v, object p) tpos, string text, bool skipdef = true)
     {
+      if (tpos.v == 0) return tpos.n == 0 ? null : tooltip(tpos.p);
+      var name = text.Substring(tpos.i, tpos.n);
       switch (tpos.v & 0x0f)
       {
-        case 0x00:
         case 0x03:
-          if (tpos.p is string) return null; //inline xml
-          var name = text.Substring(tpos.i, tpos.n);
-          if (tpos.p is DynamicMethod[])
-          {
-            if (skipdef && (tpos.v & 0x80) != 0) return null;
-            var acc = (DynamicMethod[])tpos.p;
-            if (acc[0] != null) return string.Format("{0} {1}", shortname(acc[0].ReturnType), name);
-            if (acc[1] != null) return string.Format("{0} {1}", shortname(acc[1].GetParameters()[1].ParameterType), name);
-            return null;
-          }
-          if (tpos.p is DynamicMethod)
-          {
-            if (skipdef && (tpos.v & 0x80) != 0) return null;
-            var mi = (DynamicMethod)tpos.p;
-            return string.Format("{0} {1}({2})", shortname(mi.ReturnType), name, shortname(mi.GetParameters().Skip(1).ToArray()));
-          }
-          return tpos.n == 0 ? null : tooltip(tpos.p);
-        case 0x02: return string.Format("({0}) {1} {2}", "const", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
-        case 0x04: return string.Format("({0}) {1} {2}", "local variable", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
-        case 0x05: return string.Format("({0}) {1} {2}", "parameter", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
-        case 0x06: return string.Format("({0}) {1} {2}", "variable", shortname(tpos.p), text.Substring(tpos.i, tpos.n));
-        case 0x07: return string.Format("({0}) {1} {2}", "property", shortname(((Type)tpos.p).GetGenericArguments()[0]), text.Substring(tpos.i, tpos.n));
+          if (!(tpos.p is Type t)) t = (tpos.p as Tuple<Type, string>).Item1;
+          var mi = t.GetMethod("Invoke");
+          return $"{shortname(mi.ReturnType)} {name}({shortname(mi.GetParameters().ToArray())})";
+        //case 0x02: return string.Format("({0}) {1} {2}", "const", shortname(tpos.p), name);
+        case 0x04: return string.Format("({0}) {1} {2}", "local variable", shortname(tpos.p), name);
+        case 0x05: return string.Format("({0}) {1} {2}", "parameter", shortname(tpos.p), name);
+        case 0x06: return string.Format("({0}) {1} {2}", "variable", shortname(tpos.p), name);
+        //case 0x07: return string.Format("({0}) {1} {2}", "property", shortname(((Type)tpos.p).GetGenericArguments()[0]), name);
         case 0x08: return string.Format("{0} {1}", "namespace", tpos.p);
-        case 0x01: return "(dynamic expression)\nThis operation will be resolved at runtime.";
+          //case 0x01: return "(dynamic expression)\nThis operation will be resolved at runtime.";
       }
       return null;
     }
@@ -1734,6 +1717,7 @@ namespace Apex
     {
       if (priv || pi == null) return pi;
       var mi = pi.CanRead ? pi.GetGetMethod(true) : pi.GetSetMethod(true);
+      if (mi.GetParameters().Length != 0) return null; //Item[]
       var at = mi.Attributes; //if((at & MethodAttributes.SpecialName) != 0) return null;
       var ma = at & MethodAttributes.MemberAccessMask;
       switch (ma)

@@ -325,7 +325,6 @@ namespace cde
           }
       }
       for (int i = 0; i < root.Count; i++) { root[i].Tag = null; if (root[i].Name == "$$$DUMMY") root.RemoveAt(i--); }
-      //root.MeshCompact();
       return root;
     }
 

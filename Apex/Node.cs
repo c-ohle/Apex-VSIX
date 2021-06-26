@@ -213,7 +213,7 @@ namespace Apex
         var str = (p: a, i: 0); writeobj(ref str, o);
         fixed (void* aa = str.p) fixed (char* ss = name)
           node.SetProp(ss, aa, str.i, (int)Type.GetTypeCode(t));
-        str.p.Release();
+        WeakSingleton<byte[]>.p.Value = str.p;//.Release();
       }
       static void writeobj(ref (byte[] a, int i) str, object o)
       {
@@ -291,7 +291,7 @@ namespace Apex
       Marshal.Release(node.ptr); p.Tag = node; return node;
     }
     IntPtr ptr;
-    internal INode node => (INode)Marshal.GetObjectForIUnknown(ptr);
+    internal protected INode node => (INode)Marshal.GetObjectForIUnknown(ptr);
     internal object[] funcs;
     internal ScriptEditor editor;
 
@@ -316,7 +316,7 @@ namespace Apex
     }
     object[] getfuncs()
     {
-      if (funcs != null) return funcs;
+      if (funcs != null) return funcs; 
       var node = this.node;
       var bs = node.GetBuffer(BUFFER.SCRIPT);
       if (bs != null)
@@ -351,7 +351,6 @@ namespace Apex
     {
       GetMethod<Action<IExchange>>()?.Invoke(e);
       var node = this.node;
-      //if(e.Modified) { var t = node.GetBuffer(BUFFER.SCRIPTDATA);  }
       if (e.Category("General"))
       {
         var s = node.Name; e.DisplayName("Name"); if (e.Exchange(".n", ref s)) { node.Name = s != string.Empty ? s : null; Invalidate(Inval.Tree); }

@@ -159,11 +159,9 @@ HRESULT CView::Thumbnail(UINT dx, UINT dy, UINT samples, UINT bkcolor, IStream* 
   context->ClearDepthStencilView(dsv.p, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 
   auto t1 = flags; flags = (CDX_RENDER)(flags & CDX_RENDER_SHADOWS);
-  auto t2 = camera.p; //auto t3 = znear; auto t4 = zfar; auto t5 = minwz; 
-  //auto pb = camera.p->getbuffer(CDX_BUFFER_CAMERA); 
-  auto t6 = this->viewport; auto t7 = rcclient;
+  auto t2 = camera.p; auto t6 = this->viewport; auto t7 = rcclient;
   CComClass<CNode> tmpcam; 
-  tmpcam.setmatrix(camera.p->getmatrix()); //tmpcam.setbuffer(CDX_BUFFER_CAMERA, pb); auto t3 = pb->data.p; 
+  tmpcam.setmatrix(camera.p->getmatrix()); camera.p = &tmpcam;
   XMFLOAT4 data(0, 1, 1, 0);
   if (bkcolor == 0x00fffffe)
   {
@@ -184,8 +182,7 @@ HRESULT CView::Thumbnail(UINT dx, UINT dy, UINT samples, UINT bkcolor, IStream* 
   }
   auto t8 = sink.p; sink.p = 0;
   setproject(); RenderScene();
-  flags = t1; camera.p = t2; //pb->data.p = t3; //znear = t3; zfar = t4; minwz = t5; 
-  this->viewport = t6; rcclient = t7; sink.p = t8;
+  flags = t1; camera.p = t2; this->viewport = t6; rcclient = t7; sink.p = t8;
 
   dsv.Release(); ds.Release(); rtv.Release();
   context->OMSetRenderTargets(1, &rtv.p, dsv.p);
