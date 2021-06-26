@@ -449,7 +449,7 @@ namespace Apex
       for (int i = stack.nstats; --i >= 0;)
       {
         var fi = ((Type)stack.usings[i]).GetMember(sa, MemberTypes.Property | MemberTypes.Field, BindingFlags.Static | BindingFlags.Public);
-        if (fi.Length != 0) { left = Expression.MakeMemberAccess(left, fi[0]); if (map != null) __map(a, 0x03, fi[0]); goto eval; }
+        if (fi.Length != 0) { left = Expression.MakeMemberAccess(left, fi[0]); if (map != null) __map(a, 0x01, fi[0]); goto eval; }
       }
       for (d = a, c = b; c.n != 0 && (c.s[0] == '.' || c.s[0] == '·');)
       {
@@ -504,12 +504,12 @@ namespace Apex
         }
 
         var x = t1.GetMember(s, MemberTypes.Property | MemberTypes.Field, bf);
-        if (x.Length != 0) { left = Expression.MakeMemberAccess(left, x[0]); if (map != null) __map(a, 0, x[0]); continue; }
+        if (x.Length != 0) { left = Expression.MakeMemberAccess(left, x[0]); if (map != null) __map(a, 0x01, x[0]); continue; }
         if ((bf & BindingFlags.Static) != 0) { type = t1.GetNestedType(s, bf); if (type != null) goto eval; }
         if (left is ParameterExpression pe) //xxx 
         {
           var ss = pe.Name.Split(','); var i = Array.IndexOf(ss, s, 1);
-          if (i >= 1) { var f = t1.GetFields()[i - 1]; left = Expression.Field(left, f); if (map != null) __map(a, 0, f); continue; }
+          if (i >= 1) { var f = t1.GetFields()[i - 1]; left = Expression.Field(left, f); if (map != null) __map(a, 0x01, f); continue; }
         }
         left = null; break;
       }
@@ -574,7 +574,7 @@ namespace Apex
                 c = c.next(); __map(c, 0, t2); break;
             }
             for (var t3 = t2; t3 != null && t3.IsNested;) { t3 = t3.DeclaringType; if (c.equals(t3.Name)) { __map(c, 0, t3); break; } }
-            if (ns != null) ns += '.'; ns += c.ToString(); __map(c, 0x08, ns);
+            if (ns != null) ns += '.'; ns += c.ToString(); __map(c, 0x08, ns); //ns
           }
         }
         return t2;
@@ -943,7 +943,11 @@ namespace Apex
     internal static Func<int, (int id, object p)[], bool> dbg;
     static void __map(Script s, int v, object p)
     {
-      var i = s.index; for (int t = 0; t < map.Count; t++) if (map[t].i == i && map[t].v == v) return;
+      var i = s.index; for (int t = 0; t < map.Count; t++)
+      {
+        var m = map[t]; if (m.i != i) continue; if (m.v == v) return;
+        if (m.v == 0x08) { map.RemoveAt(t); break; } //!ns
+      }
       map.Add((i, s.n, v, p));
     }
     static void __map(Script s, ParameterExpression p, int id)

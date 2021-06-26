@@ -1666,7 +1666,7 @@ namespace Apex
     }
     internal static string tooltip((int i, int n, int v, object p) tpos, string text, bool skipdef = true)
     {
-      if (tpos.v == 0) return tpos.n == 0 ? null : tooltip(tpos.p);
+      if (tpos.v <= 1) return tpos.n == 0 ? null : tooltip(tpos.p);
       var name = text.Substring(tpos.i, tpos.n);
       switch (tpos.v & 0x0f)
       {
