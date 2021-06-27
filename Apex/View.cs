@@ -34,7 +34,7 @@ namespace Apex
     internal CDXWindowPane pane;
     IScene scene; IView view; static long drvsettings = 0x400000000;
     static int sflags = 2; //1:Init 2:ToolsAssist 
-    int flags = 1; //1:Checkboard 2:Collisions
+    int flags = 1; //1:Checkboard 2:Collisions 4:Buffers 0x40000000:Tip
 
     void initview()
     {

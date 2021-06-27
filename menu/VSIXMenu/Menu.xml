@@ -85,7 +85,7 @@
     </SubMenu>-->
     <!-- <KeyBinding guid="g2" id="_2221" editor="g2" key1="VK_RETURN" /> -->
     <MenuItem text="Tool Assistent" id="2221" keys="VK_RETURN"/>
-    <MenuItem text="Collisions" id="2330"/>
+    <MenuItem text="Collisions" id="2321"/>
     <Seperator/>
     <MenuItem text="Group" id="2035" keys="Control|W|G" fl="DefaultInvisible|DynamicVisibility"/>
     <MenuItem text="Ungroup" id="2036" keys="Control|W|U" fl="DefaultInvisible|DynamicVisibility"/>
@@ -116,6 +116,8 @@
     <SubMenu text="Display">
       <MenuItem text="Shadows" id="2220" />
       <MenuItem text="Checkboard" id="2320" />
+      <MenuItem text="Fps" id="2223" />
+      <MenuItem text="Buffers" id="2322" />
       <Seperator/>
       <Combo text="Graphics" idlist="2755" id="2756" width="150" type="IndexCombo"/>
       <Combo text="MultiSamples" idlist="2757" id="2758" width="30" type="DynamicCombo" />
@@ -161,7 +163,6 @@
     <Seperator/>
     <MenuItem  text="Toggle" id="2062" keys="Control|M|M" />
     <MenuItem  text="Toggle all" id="2063" keys="Control|M|L" />
-    <!--<MenuItem  text="Toggle off" id="2064" keys="Control|M|U" />-->
     <Seperator/>
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />

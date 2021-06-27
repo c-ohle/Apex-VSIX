@@ -31,6 +31,7 @@ typedef enum CDX_RENDER
   CDX_RENDER_SHADOWS = 0x0400,
   CDX_RENDER_ZPLANESHADOWS = 0x0800,
   CDX_RENDER_SELONLY = 0x1000,
+  CDX_RENDER_FPS = 0x2000,
 } CDX_RENDER;
 
 typedef enum CDX_CMD
@@ -90,6 +91,7 @@ interface ICDXView : IUnknown
   [propget] HRESULT OverId([out, retval] UINT* p);
   [propget] HRESULT OverPoint([out, retval] XMFLOAT3* p);
   [propget] HRESULT Dpi([out, retval] UINT* p);
+  [propget] HRESULT Fps([out, retval] UINT* p);
   HRESULT Draw([in] CDX_DRAW idc, [in] UINT* data);
   HRESULT Command([in] CDX_CMD cmd, [in] UINT* data);
   HRESULT Thumbnail([in] UINT dx, [in] UINT dy, [in] UINT samples, [in] UINT bkcolor, [in] IStream* str);

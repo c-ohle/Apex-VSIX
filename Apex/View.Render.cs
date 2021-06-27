@@ -63,77 +63,33 @@ namespace Apex
       }
       if (fl == 1)
       {
-        if (true)
+        var rf = view.Render;
+        if ((rf & RenderFlags.Fps) != 0 || (flags & 4) != 0 || debuginfo != null)
         {
           dc.SetOrtographic();
-
-          //dc.Color = 0x80ffffff; dc.FillRect(8, 8, Width - 16, 24);
-          //dc.Color = 0x80000000; dc.DrawText(16, 24, "File"); dc.DrawText(100, 24, "Edit");
-
-          dc.Color = 0xff000000;
+          dc.Color = 0xff000000; string s;
           float y = 10 + font.Ascent, dy = font.Height, x = ClientSize.Width - 10f;
           if (debuginfo != null) for (int i = 0; i < debuginfo.Count; i++) dc.DrawText(10, y + i * dy, debuginfo[i]);
-          var s = (Factory.Version & 0x100) != 0 ? "Debug" : "Release"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          s = $"Dpi: {view.Dpi}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          s = $"Buffer {Factory.GetInfo(2)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          s = $"Vertexbuffer {Factory.GetInfo(0)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          s = $"Indexbuffer {Factory.GetInfo(1)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          s = $"Textures {Factory.GetInfo(3)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          s = $"Fonts {Factory.GetInfo(4)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          s = $"Views {Factory.GetInfo(5)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          //s = $"Over {view.MouseOverNode?.Name} id 0x{view.MouseOverId:x4} {view.MouseOverPoint}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-          //s = $"Capture {Capture}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-        }
-        //animate();
-      }
-#if (false)
-      var dc = new DC(view);
-      var scene = view.Scene;
-
-      if (true)
-      {
-        for (int a = -1, b; (b = scene.Select(a, 1)) != -1; a = b)
-        {
-          var p = scene[b]; if (!(p.Tag is XNode xp)) continue;
-          var draw = xp.GetMethod<Action<DC>>(); if (draw == null) continue;
-          dc.Transform = p.GetTransform(null);
-          try { DC.icatch = b + 1; draw(dc); } catch (Exception e) { Debug.WriteLine(e.Message); }
+          if ((rf & RenderFlags.Fps) != 0)
+          {
+            s = $"{view.Fps} fps"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            y += dy * 0.5f;
+          }
+          if ((flags & 4) != 0)
+          {
+            //s = (Factory.Version & 0x100) != 0 ? "Debug" : "Release"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            s = $"Dpi: {view.Dpi}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            s = $"Buffer {Factory.GetInfo(2)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            s = $"Vertexbuffer {Factory.GetInfo(0)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            s = $"Indexbuffer {Factory.GetInfo(1)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            s = $"Textures {Factory.GetInfo(3)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            s = $"Fonts {Factory.GetInfo(4)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            s = $"Views {Factory.GetInfo(5)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            //s = $"Over {view.MouseOverNode?.Name} id 0x{view.MouseOverId:x4} {view.MouseOverPoint}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+            //s = $"Capture {Capture}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
+          }
         }
       }
-
-      if (true)
-      {
-        if (checkboard == null) checkboard = GetTexture(256, 256, 1, gr =>
-        {
-          gr.FillRectangle(Brushes.White, 0, 0, 256, 1);
-          gr.FillRectangle(Brushes.White, 0, 0, 1, 256);
-        });
-        dc.Transform = 1;
-        dc.Color = 0xfe000000;
-        var t1 = dc.Texture; dc.Texture = checkboard;
-        dc.Mapping = 1; dc.FillRect(-100, -100, 200, 200); dc.Texture = t1;
-      }
-
-      var infos = XScene.From(scene).Infos;
-      if (infos.Count != 0)
-      {
-        dc.SetOrtographic(); dc.Font = font; dc.Color = 0xff000000;
-        float y = 10 + font.Ascent, dy = font.Height;
-        for (int i = 0; i < infos.Count; i++, y += dy) dc.DrawText(10, y, infos[i]);
-      }
-      if (true)
-      {
-        dc.SetOrtographic();
-        dc.Font = font; dc.Color = 0xff000000;
-        float y = 10 + font.Ascent, dy = font.Height, x = ClientSize.Width - 10f;
-        var s = $"Vertexbuffer {Factory.GetInfo(0)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-        s = $"Indexbuffer {Factory.GetInfo(1)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-        s = $"Mappings {Factory.GetInfo(2)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-        s = $"Textures {Factory.GetInfo(3)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-        s = $"Fonts {Factory.GetInfo(4)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-        s = $"Views {Factory.GetInfo(5)}"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;
-      }
-#endif
     }
 
     void ISink.Animate(INode p, uint t)

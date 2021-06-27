@@ -159,7 +159,8 @@ enum CDX_RENDER
         CDX_RENDER_OUTLINES	= 0x10,
         CDX_RENDER_SHADOWS	= 0x400,
         CDX_RENDER_ZPLANESHADOWS	= 0x800,
-        CDX_RENDER_SELONLY	= 0x1000
+        CDX_RENDER_SELONLY	= 0x1000,
+        CDX_RENDER_FPS	= 0x2000
     } 	CDX_RENDER;
 
 typedef 
@@ -266,6 +267,9 @@ EXTERN_C const IID IID_ICDXView;
         virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Dpi( 
             /* [retval][out] */ UINT *p) = 0;
         
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Fps( 
+            /* [retval][out] */ UINT *p) = 0;
+        
         virtual HRESULT STDMETHODCALLTYPE Draw( 
             /* [in] */ CDX_DRAW idc,
             /* [in] */ UINT *data) = 0;
@@ -358,6 +362,10 @@ EXTERN_C const IID IID_ICDXView;
             ICDXView * This,
             /* [retval][out] */ UINT *p);
         
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Fps )( 
+            ICDXView * This,
+            /* [retval][out] */ UINT *p);
+        
         HRESULT ( STDMETHODCALLTYPE *Draw )( 
             ICDXView * This,
             /* [in] */ CDX_DRAW idc,
@@ -440,6 +448,9 @@ EXTERN_C const IID IID_ICDXView;
 
 #define ICDXView_get_Dpi(This,p)	\
     ( (This)->lpVtbl -> get_Dpi(This,p) ) 
+
+#define ICDXView_get_Fps(This,p)	\
+    ( (This)->lpVtbl -> get_Fps(This,p) ) 
 
 #define ICDXView_Draw(This,idc,data)	\
     ( (This)->lpVtbl -> Draw(This,idc,data) ) 

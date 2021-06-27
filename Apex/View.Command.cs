@@ -51,6 +51,7 @@ namespace Apex
         case 2213: //Select Wireframe
         case 2214: //Select Outline
         case 2220: //Shadows
+        case 2223: //Fps
           if (test != null) return (view.Render & (CDX.RenderFlags)(1 << (id - 2210))) != 0 ? 3 : 1;
           view.Render ^= (CDX.RenderFlags)(1 << (id - 2210)); Application.UserAppDataRegistry.SetValue("fl", (int)view.Render);
           Invalidate(); return 1;
@@ -59,11 +60,11 @@ namespace Apex
         case 2303: return OnJoin(test, id);//Difference
         case 2304: return OnPlaneCut(test);//PlaneCut
         case 2320://Grid
-          if (test != null) return (flags & 1) != 0 ? 3 : 1;
-          flags ^= 1; return 1;
-        case 2330://Collision
-          if (test != null) return (flags & 2) != 0 ? 3 : 1;
-          flags ^= 2; return 1;
+          if (test != null) return (flags & 1) != 0 ? 3 : 1; flags ^= 1; return 1;
+        case 2321: //Collision
+          if (test != null) return (flags & 2) != 0 ? 3 : 1; flags ^= 2; return 1;
+        case 2322://Buffers
+          if (test != null) return (flags & 4) != 0 ? 3 : 1; flags ^= 4; Invalidate(Inval.Render); return 1;
         case 2221: //ToolAssist
           if (test != null) return (sflags & 2) != 0 ? 3 : 1;
           sflags ^= 2; Application.UserAppDataRegistry.SetValue("sfl", sflags); return 1;

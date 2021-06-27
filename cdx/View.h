@@ -18,12 +18,13 @@ struct CView : ICDXView
   CComPtr<ICDXSink>                 sink;
   CComPtr<CScene>                   scene;
   CComPtr<CNode>                    camera; CNode* mainlight = 0;
-  CComPtr<CNode>                    overnode; 
+  CComPtr<CNode>                    overnode;
   UINT                              iover = 0, pickprim = 0, anitime = 0;
   CDX_RENDER                        flags = (CDX_RENDER)0;
   cameradata                        camdat = { 0 };
   float                             dpiscale = 0;
-  
+  UINT                              fps = 0;
+
   struct MBOX { CNode* p; XMFLOAT4X3 m; XMFLOAT3 b[2]; };
   sarray<MBOX> boxes;
 
@@ -92,7 +93,7 @@ struct CView : ICDXView
   HRESULT __stdcall put_Samples(BSTR p)
   {
     UINT c = _wtoi(p); if (c == 0) return E_INVALIDARG;
-    sampels = c; relres(); initres();return 0;
+    sampels = c; relres(); initres(); return 0;
   }
   HRESULT __stdcall get_BkColor(UINT* p);
   HRESULT __stdcall put_BkColor(UINT p);
@@ -117,9 +118,13 @@ struct CView : ICDXView
   {
     XMStoreFloat3(p, vv[VV_OVERPOS]); return 0;
   }
-  HRESULT __stdcall get_Dpi(UINT* p) 
-  { 
+  HRESULT __stdcall get_Dpi(UINT* p)
+  {
     *p = (UINT)(120 / dpiscale); return 0;
+  }
+  HRESULT __stdcall get_Fps(UINT* p)
+  {
+    *p = flags & CDX_RENDER_FPS ? fps : 0; return 0;
   }
   HRESULT __stdcall Draw(CDX_DRAW id, UINT* data);
   HRESULT __stdcall Command(CDX_CMD  cmd, UINT* data);

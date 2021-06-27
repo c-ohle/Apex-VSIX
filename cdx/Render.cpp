@@ -316,6 +316,7 @@ void CView::RenderScene()
 
 void CView::Render()
 {
+  __int64 t1; if (flags & CDX_RENDER_FPS) QueryPerformanceCounter((LARGE_INTEGER*)&t1);
   context.p->RSSetViewports(1, &viewport);
   context.p->OMSetRenderTargets(1, &rtv.p, dsv.p);
   context.p->ClearDepthStencilView(dsv.p, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
@@ -323,6 +324,12 @@ void CView::Render()
   if (scene.p && camera.p) { setproject(); RenderScene(); }
   if (sink.p) sink.p->Render(1);
   auto hr = swapchain.p->Present(0, 0);
+  if (flags & CDX_RENDER_FPS)
+  {
+    __int64 t2; QueryPerformanceCounter((LARGE_INTEGER*)&t2);
+    __int64 fr; QueryPerformanceFrequency((LARGE_INTEGER*)&fr);
+    fps = t2 != t1 ? (UINT)(fr / (t2 - t1)) : 0;
+  }
   XMASSERT(stackptr == baseptr);
 }
 

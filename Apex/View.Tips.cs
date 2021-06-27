@@ -123,7 +123,7 @@ namespace Apex
           tip.hide(); tip.overid = overid; tip.on = true; tip.point.X = -(tip.point.X + 1);
         }
       }
-      if ((flags & 4) != 0 && !tip.on) tip.ticks = Environment.TickCount;
+      if ((flags & 0x40000000) != 0 && !tip.on) tip.ticks = Environment.TickCount;
     }
     bool tipkey(KeyEventArgs e)
     {
@@ -131,7 +131,7 @@ namespace Apex
       switch (e.KeyCode)
       {
         case Keys.Enter:
-          if (!vis) { tipshow(); flags |= 4; } else { tip.hide(); flags &= ~4; }
+          if (!vis) { tipshow(); flags |= 0x40000000; } else { tip.hide(); flags &= ~0x40000000; }
           return true;
         case Keys.Left:
         case Keys.Up:

@@ -82,6 +82,7 @@ namespace Apex
       Shadows = 0x0400,
       ZPlaneShadows = 0x0800,
       SelOnly = 0x1000,
+      Fps = 0x2000,
     }
 
     public enum Cmd
@@ -130,6 +131,7 @@ namespace Apex
       int MouseOverId { get; }
       float3 MouseOverPoint { get; }
       int Dpi { get; }
+      int Fps { get; }
       void Draw(Draw draw, void* data);
       void Command(Cmd cmd, void* data);
       void Thumbnail(int dx, int dy, int samples, uint bkcolor, COM.IStream str);

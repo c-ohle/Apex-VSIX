@@ -72,7 +72,7 @@
       <Group guid="g2" id="_1000010" priority="1">
         <Parent guid="g2" id="_1000009" />
       </Group>
-      <Group guid="g2" id="_1000011" priority="4">
+      <Group guid="g2" id="_1000011" priority="6">
         <Parent guid="g2" id="_1000009" />
       </Group>
       <Group guid="g2" id="_1000012" priority="26">
@@ -141,7 +141,7 @@
           <ButtonText>Tool Assistent</ButtonText>
         </Strings>
       </Button>
-      <Button guid="g2" id="_2330" type="Button" priority="3">
+      <Button guid="g2" id="_2321" type="Button" priority="3">
         <Parent guid="g2" id="_1000000" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -282,6 +282,20 @@
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Checkboard</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2223" type="Button" priority="4">
+        <Parent guid="g2" id="_1000010" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Fps</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="g2" id="_2322" type="Button" priority="5">
+        <Parent guid="g2" id="_1000010" />
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Buffers</ButtonText>
         </Strings>
       </Button>
       <Button guid="g2" id="_2037" type="Button" priority="27">
@@ -459,14 +473,14 @@
       </Button>
     </Buttons>
     <Combos>
-      <Combo guid="g2" priority="5" defaultWidth="150" id="_2756" idCommandList="_2755" type="IndexCombo">
+      <Combo guid="g2" priority="7" defaultWidth="150" id="_2756" idCommandList="_2755" type="IndexCombo">
         <Parent guid="g2" id="_1000011" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Graphics</ButtonText>
         </Strings>
       </Combo>
-      <Combo guid="g2" priority="6" defaultWidth="30" id="_2758" idCommandList="_2757" type="DynamicCombo">
+      <Combo guid="g2" priority="8" defaultWidth="30" id="_2758" idCommandList="_2757" type="DynamicCombo">
         <Parent guid="g2" id="_1000011" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -605,7 +619,7 @@
       <IDSymbol name="_0x2100" value="0x2100" />
       <IDSymbol name="_1000000" value="1000000" />
       <IDSymbol name="_2221" value="2221" />
-      <IDSymbol name="_2330" value="2330" />
+      <IDSymbol name="_2321" value="2321" />
       <IDSymbol name="_1000001" value="1000001" />
       <IDSymbol name="_2035" value="2035" />
       <IDSymbol name="_2036" value="2036" />
@@ -634,6 +648,8 @@
       <IDSymbol name="_1000010" value="1000010" />
       <IDSymbol name="_2220" value="2220" />
       <IDSymbol name="_2320" value="2320" />
+      <IDSymbol name="_2223" value="2223" />
+      <IDSymbol name="_2322" value="2322" />
       <IDSymbol name="_1000011" value="1000011" />
       <IDSymbol name="_2756" value="2756" />
       <IDSymbol name="_2755" value="2755" />
@@ -672,6 +688,7 @@
       <IDSymbol name="_1000027" value="1000027" />
       <IDSymbol name="_1000028" value="1000028" />
       <IDSymbol name="_1000029" value="1000029" />
+      <IDSymbol name="_2330" value="2330" />
       <IDSymbol name="_1000030" value="1000030" />
       <IDSymbol name="_1000031" value="1000031" />
       <IDSymbol name="_1000032" value="1000032" />
