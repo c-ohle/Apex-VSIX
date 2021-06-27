@@ -440,7 +440,7 @@ namespace Apex
       else if (clear) Array.Clear(v, 0, minsize);
       return v;
     }
-    
+
     public readonly struct DC
     {
       readonly IView p;
@@ -886,6 +886,14 @@ namespace Apex
       public static explicit operator float4(string s)
       {
         float4 p; scan(s, (float*)&p, 4); return p;
+      }
+      public static explicit operator int(float4 p)
+      {
+        return (int)(p.x * 0xff) | ((int)(p.y * 0xff) << 8) | ((int)(p.z * 0xff) << 16) | ((int)(p.w * 0xff) << 24);
+      }
+      public static explicit operator float4(int c)
+      { 
+        return new float4((c & 0xff) * (1f / 0xff), ((c >> 8) & 0xff) * (1f / 0xff), ((c >> 16) & 0xff) * (1f / 0xff), ((c >> 24) & 0xff) * (1f / 0xff)); 
       }
       public static bool operator ==(in float4 a, in float4 b)
       {

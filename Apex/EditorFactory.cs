@@ -67,38 +67,41 @@ namespace Apex
       if (guid == Guids.CmdSet) return id;
       if (guid == VSConstants.GUID_VSStandardCommandSet97)
       {
-        switch (id)
+        switch ((VSConstants.VSStd97CmdID)id)
         {
-          case (int)VSConstants.VSStd97CmdID.MultiLevelUndo:
-          case (int)VSConstants.VSStd97CmdID.Undo: return 2010;
-          case (int)VSConstants.VSStd97CmdID.MultiLevelRedo:
-          case (int)VSConstants.VSStd97CmdID.Redo: return 2011;
-          case (int)VSConstants.VSStd97CmdID.Group: return 2035;
-          case (int)VSConstants.VSStd97CmdID.Ungroup: return 2036;
-          case (int)VSConstants.VSStd97CmdID.Cut: return 2020;
-          case (int)VSConstants.VSStd97CmdID.Copy: return 2030;
-          case (int)VSConstants.VSStd97CmdID.Paste: return 2040;
-          case (int)VSConstants.VSStd97CmdID.Delete: return 2015;
-          case (int)VSConstants.VSStd97CmdID.SelectAll: return 2060;
-          case (int)VSConstants.VSStd97CmdID.FindSelectedNext: return 2066;
-          case (int)VSConstants.VSStd97CmdID.FindNext: return 2067;
-          case (int)VSConstants.VSStd97CmdID.FindPrev: return 2068;
-          case (int)VSConstants.VSStd97CmdID.StartNoDebug: return 5011;
-          case (int)VSConstants.VSStd97CmdID.Stop: return 5013;
-          case (int)VSConstants.VSStd97CmdID.ToggleBreakpoint: return 5020;
-          case (int)VSConstants.VSStd97CmdID.ClearBreakpoints: return 5021;
-          case (int)VSConstants.VSStd97CmdID.Start: return 5010;
-          case (int)VSConstants.VSStd97CmdID.StepInto: return 5015;
-          case (int)VSConstants.VSStd97CmdID.StepOver: return 5016;
-          case (int)VSConstants.VSStd97CmdID.StepOut: return 5017;
-          //case (int)VSConstants.VSStd97CmdID.BringForward: return 5100; //not in vs
-          //case (int)VSConstants.VSStd97CmdID.SendBackward: return 5101; //not in vs
-          case (int)VSConstants.VSStd97CmdID.BringToFront: return 5102;
-          case (int)VSConstants.VSStd97CmdID.SendToBack: return 5103;
+          case VSConstants.VSStd97CmdID.MultiLevelUndo:
+          case VSConstants.VSStd97CmdID.Undo: return 2010;
+          case VSConstants.VSStd97CmdID.MultiLevelRedo:
+          case VSConstants.VSStd97CmdID.Redo: return 2011;
+          case VSConstants.VSStd97CmdID.Group: return 2035;
+          case VSConstants.VSStd97CmdID.Ungroup: return 2036;
+          case VSConstants.VSStd97CmdID.Cut: return 2020;
+          case VSConstants.VSStd97CmdID.Copy: return 2030;
+          case VSConstants.VSStd97CmdID.Paste: return 2040;
+          case VSConstants.VSStd97CmdID.Delete: return 2015;
+          case VSConstants.VSStd97CmdID.SelectAll: return 2060;
+          case VSConstants.VSStd97CmdID.FindSelectedNext: return 2066;
+          case VSConstants.VSStd97CmdID.FindNext: return 2067;
+          case VSConstants.VSStd97CmdID.FindPrev: return 2068;
+          case VSConstants.VSStd97CmdID.StartNoDebug: return 5011;
+          case VSConstants.VSStd97CmdID.Stop: return 5013;
+          case VSConstants.VSStd97CmdID.ToggleBreakpoint: return 5020;
+          case VSConstants.VSStd97CmdID.ClearBreakpoints: return 5021;
+          case VSConstants.VSStd97CmdID.Start: return 5010;
+          case VSConstants.VSStd97CmdID.StepInto: return 5015;
+          case VSConstants.VSStd97CmdID.StepOver: return 5016;
+          case VSConstants.VSStd97CmdID.StepOut: return 5017;
+          //case VSConstants.VSStd97CmdID.BringForward: return 5100; //not in vs
+          //case VSConstants.VSStd97CmdID.SendBackward: return 5101; //not in vs
+          case VSConstants.VSStd97CmdID.BringToFront: return 5102;
+          case VSConstants.VSStd97CmdID.SendToBack: return 5103;
           //case (int)VSConstants.VSStd97CmdID.InsertObject: return 5104;
-          case (int)VSConstants.VSStd97CmdID.F1Help: return 2000;
-          case (int)VSConstants.VSStd97CmdID.GotoDefn: return 5022;
+          case VSConstants.VSStd97CmdID.F1Help: return 2000;
+          case VSConstants.VSStd97CmdID.GotoDefn: return 5022;
+          //case (int)VSConstants.VSStd97CmdID.Rename: return 5023;
+          case VSConstants.VSStd97CmdID.Find: return 2065;// 5024;
         }
+        //System.Diagnostics.Debug.WriteLine((VSConstants.VSStd97CmdID)id);
         return 0;
       }
       //if (guid == typeof(VSConstants.VSStd2010CmdID).GUID)
@@ -115,14 +118,16 @@ namespace Apex
       {
         //case 2062: return OnToggle(test);
         //case 2063: return OnToggleAll(test);
-        switch (id)
+        switch ((VSConstants.VSStd2KCmdID)id)
         {
-          case (int)VSConstants.VSStd2KCmdID.OUTLN_TOGGLE_CURRENT: return 2062;
-          case (int)VSConstants.VSStd2KCmdID.OUTLN_TOGGLE_ALL: return 2063;
-          case (int)VSConstants.VSStd2KCmdID.OUTLN_COLLAPSE_TO_DEF: return 2064;
+          case VSConstants.VSStd2KCmdID.OUTLN_TOGGLE_CURRENT: return 2062;
+          case VSConstants.VSStd2KCmdID.OUTLN_TOGGLE_ALL: return 2063;
+          case VSConstants.VSStd2KCmdID.OUTLN_COLLAPSE_TO_DEF: return 2064;
+          case VSConstants.VSStd2KCmdID.RENAME: return 5023;
             //case (int)VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL: id = 7; break;
             //case (int)VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_CURRENT: id = 7; break;
         }
+        //System.Diagnostics.Debug.WriteLine((VSConstants.VSStd2KCmdID)id);
       }
 #if(DEBUG)
       if (guid == typeof(VSConstants.VSStd11CmdID).GUID)

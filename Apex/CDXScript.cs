@@ -479,11 +479,11 @@ namespace Apex
         var bf = (type != null ? BindingFlags.Static : BindingFlags.Instance) | BindingFlags.Public;
         var t1 = type ?? left.Type; if (priv || t1 == stack.@this.Type) bf |= BindingFlags.NonPublic | BindingFlags.FlattenHierarchy; // BindingFlags.NonPublic;
         var s = a.ToString();
-        if (b.n > 1 && (b.s[0] == '(' || b.s[0] == '<'))
+        if (b.n != 0 && (b.s[0] == '(' || b.s[0] == '<'))
         {
           var ng = stack.usings.Count;
           if (b.s[0] == '<') { c = b.next(); c.trim(1, 1); for (; c.n != 0;) stack.usings.Add(GetType(c.next(','))); }
-          c = b.next(); c.trim(1, 1); var ab = stack.list.Count;
+          c = b.next(); if (c.n > 1 && c.s[c.n - 1] == ')') c.trim(1, 1); else c.n = 0; var ab = stack.list.Count;
           for (; c.n != 0;) { var t = c.next(','); if (t.take("ref") || t.take("out")) { } stack.list.Add(t.Parse(null)); }
           var me = GetMember(t1, s, bf, ab, ng);
           if (me == null && checkthis)
@@ -496,8 +496,8 @@ namespace Apex
             stack.list.Insert(ab, left); left = null; GetExtensions();
             for (int i = 0; i < extensions.Length; i++) if ((me = GetMember(extensions[i], s, BindingFlags.Static | BindingFlags.Public, ab, ng)) != null) break; ;
           }
+          if (map != null) { var xm = me; if (xm == null) xm = GetMember(t1, s, bf, ab, -1); if (xm != null) __map(a, 0, xm); }
           if (me == null) { a.n = (int)(b.s - a.s); a.trim(); a.error("unknown method" + " " + a.ToString()); }
-          if (map != null) __map(a, 0, me);
           left = Expression.Call(left, (MethodInfo)me, stack.list.Skip(ab)); stack.list.RemoveRange(ab, stack.list.Count - ab); stack.usings.RemoveRange(ng, stack.usings.Count - ng);
           if (type == typeof(Debug) && !Debugger.IsAttached && (me.GetCustomAttribute(typeof(ConditionalAttribute)) as ConditionalAttribute)?.ConditionString == "DEBUG") left = Expression.Empty();
           continue;
@@ -632,7 +632,7 @@ namespace Apex
     }
     static MethodBase GetMember(Type type, string name, BindingFlags bf, int xt, int xg)
     {
-      var mm = type.GetMember(name ?? ".ctor", name != null ? MemberTypes.Method : MemberTypes.Constructor, bf); if (mm.Length == 0) return null;
+      var mm = type.GetMember(name ?? ".ctor", name != null ? MemberTypes.Method : MemberTypes.Constructor, bf); if (mm.Length == 0) return null; if (xg == -1) return mm[0] as MethodBase;
       var me = (MethodBase)null; var pp = (ParameterInfo[])null; var vt = (Type)null; var tt = stack.list; int nt = tt.Count - xt, best = int.MaxValue;
       for (int i = 0; i < mm.Length; i++)
       {
@@ -1032,7 +1032,7 @@ namespace Apex
         if (overid != 0 && (overid & 0x0f) < 8 && overid == (m.v & ~0xf0)) color2(m.i, m.n, 0x80);
       }
       for (int i = 0; i < map.Count; i++) { ref var m = ref pmap[i]; if ((m.v & 0xf) == 0x0A && (m.v & 0x30) != 0) color(m.i, m.n, (byte)((m.v & 0x20) != 0 ? 5 : 4)); }
-      //if (error != null) for (int i = 0; i < epos.n; i++) { charcolor[epos.i + i] |= 0x70; }
+      if (error != null) color2(epos.i, epos.n, 0x70);// for (int i = 0; i < epos.n && epos.i + i < charcolor.Length; i++) charcolor[epos.i + i] |= 0x70;
     }
     protected override int GetRange(int x)
     {
@@ -1176,6 +1176,7 @@ namespace Apex
         case 5020: return breakpoint(test);
         case 5021: return clearbreakpoints(test);
         case 5022: return ongotodef(test);
+        case 5023: return onrename(test);
           //case 65301: //can close
           //  if (state != 7) return 0;
           //  if (test != null) return 1;
@@ -1213,11 +1214,10 @@ namespace Apex
       catch (Exception e) { epos = Script.LastError; error = e.Message; }
       pmap = ((int i, int n, int v, object p)[])map.GetType().GetField("_items", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(map);
       checkover(); UpdateSyntaxColors(); Invalidate();
-      if (error != null) for (int i = 0; i < epos.n && epos.i + i < charcolor.Length; i++) charcolor[epos.i + i] |= 0x70;
     }
     internal int getlineflags() { int f = 0; for (int i = 0; i < lineflags.Length; i++) f |= lineflags[i]; return f; }
     List<(int i, int n, int v, object p)> map = new List<(int i, int n, int v, object p)>(); (int i, int n, int v, object p)[] pmap;
-    int state; int* sp; (int id, object p)[] stack; Action ontimer; int lastpos = -1, overid;
+    int state; int* sp; (int id, object p)[] stack; Action ontimer; int lastpos = -1, overid;[ThreadStatic] static readonly bool MainThread = true;
     bool DebugStep(int i, (int id, object p)[] stack)
     {
       if (!visible) return false;// i >= map.Count) return false;
@@ -1230,7 +1230,8 @@ namespace Apex
           if (state == 1 && sp > &i) return false; // + 1
           if (state == 3 && sp >= &i) return false;
         }
-        if (state == 7) return false;
+        if (state == 7 ) return false;
+        if(!MainThread) return false;
         return true;
       }
       ReadOnly = true; //var t1 = node.funcs; node.funcs = Array.Empty<object>();
@@ -1252,7 +1253,7 @@ namespace Apex
     }
     bool visible; internal void show(bool on) { visible = on; if (!visible) state = 0; }
     void color(int i, int n, byte c) { for (int t = 0; t < n; t++) { charcolor[i + t] = c; } }
-    void color2(int i, int n, int c) { for (int b = i + n; i < b; i++) charcolor[i] |= (byte)c; }
+    void color2(int i, int n, int c) { for (int b = Math.Min(i + n, charcolor.Length); i < b; i++) charcolor[i] |= (byte)c; }
     protected override void OnMouseMove(MouseEventArgs e)
     {
       base.OnMouseMove(e); //if (flyer != null) return;
@@ -1413,6 +1414,15 @@ namespace Apex
       Select(t.i, t.i + t.n); ScrollVisible();
       return 1;
     }
+    int onrename(object test)
+    {
+      if (ReadOnly || error != null || overid == 0 || (overid & 0xf) == 8) return 0;
+      if (test != null) return 1;
+      var a = map.Where(p => (p.v & ~0xf0) == overid);
+      var f = a.FirstOrDefault(); if (f.n == 0) return 1;
+      var s = text.Substring(f.i, f.n); var b = a.Select(t => new Point(t.i, t.n));
+      TextEnter("Rename", s, v => Replace(b, v)); return 1;
+    }
     void EditFlyer(int i1, int i2, TypeExplorer.Item[] items)
     {
       if (items.Length == 0) return; var t2 = i2; ontimer = null;
@@ -1519,5 +1529,4 @@ namespace Apex
       if (flyer != null && flyer.onpostkeypress != null) flyer.onpostkeypress(e);
     }
   }
-
 }

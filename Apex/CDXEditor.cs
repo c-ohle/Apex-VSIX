@@ -401,9 +401,22 @@ namespace Apex
     int OnFind(object test)
     {
       if (test != null) return 1;
-      Native.FindReplace.Dialog(this, search, (s, f) =>
-      { search = s; if ((f & 0x0001) != 0) OnFindNext(null); else OnFindPrev(null); });
+      TextEnter("Find", search, s => { search = s; if (s.Length != 0) OnFindNext(null); });
       return 1;
+      //if (test != null) return 1;
+      //Native.FindReplace.Dialog(this, search, (s, f) =>
+      //{ search = s; if ((f & 0x0001) != 0) OnFindNext(null); else OnFindPrev(null); });
+      //return 1;
+    }
+    protected void TextEnter(string títle, string text, Action<string> enter)
+    {
+      var edit = new TextBox { Text = text, Width = 300 }; Controls.Add(edit); edit.Focus();
+      edit.LostFocus += (p, e) => Controls.Remove(edit);
+      edit.KeyPress += (p, e) =>
+      {
+        if (e.KeyChar != '\r') return;
+        e.Handled = true; Controls.Remove(edit); var s = edit.Text; if (s != text) enter(s);
+      };
     }
     int OnToggleAll(object test, int fl)
     {
@@ -1812,31 +1825,31 @@ namespace Apex
     internal static extern IntPtr memcpy(void* d, void* s, void* n);
     //[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     //internal static extern IntPtr memset(void* d, int c, int n);
-    [DllImport("comdlg32.dll"), SuppressUnmanagedCodeSecurity]
-    static extern IntPtr FindTextW(FindReplace* p);
-    [DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
-    static extern int SetForegroundWindow(IntPtr hWnd);
-    internal unsafe struct FindReplace
-    {
-      int size; IntPtr owner, inst; int flags; char* find, replace; short nfind, nreplace; IntPtr cust, hook, temp;
-      delegate void* Hook(void* h, int m, void* w, void* l);
-      static EventHandler dlg;
-      public static void Dialog(Control owner, string find, Action<string, int> act)
-      {
-        if (dlg != null) { dlg(act, null); return; }
-        var ft = (FindReplace*)Marshal.AllocCoTaskMem(4096).ToPointer(); Hook hook;
-        ft->size = sizeof(FindReplace); ft->inst = ft->cust = ft->temp = IntPtr.Zero; ft->replace = null; *(&ft->nreplace) = 0;
-        ft->owner = owner.Handle; ft->flags = 0x105; //FR_DOWN | FR_MATCHCASE | FR_ENABLEHOOK
-        ft->hook = Marshal.GetFunctionPointerForDelegate(hook = (a, b, c, d) => b == 0x0110 ? (void*)1 : null);
-        ft->nfind = 1024; var ns = (find ?? (find = String.Empty)).Length;
-        fixed (char* ps = find) Native.memcpy(ft->find = (char*)(ft + 1), ps, (void*)(Math.Min(ns + 1, ft->nfind) << 1));
-        var hr = FindTextW(ft); Application.Idle += dlg = (p, e) =>
-        {
-          if (e == null) { act = (Action<string, int>)p; SetForegroundWindow(hr); return; }
-          if ((ft->flags & 0x08) != 0) { ft->flags ^= 0x08; act(new string(ft->find), ft->flags); }//FR_FINDNEXT
-          if ((ft->flags & 0x40) != 0) { Application.Idle -= dlg; Marshal.FreeCoTaskMem((IntPtr)ft); hook = null; dlg = null; } //FR_DIALOGTERM
-        };
-      }
-    }
+    //[DllImport("comdlg32.dll"), SuppressUnmanagedCodeSecurity]
+    //static extern IntPtr FindTextW(FindReplace* p);
+    //[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
+    //static extern int SetForegroundWindow(IntPtr hWnd);
+    //internal unsafe struct FindReplace
+    //{
+    //  int size; IntPtr owner, inst; int flags; char* find, replace; short nfind, nreplace; IntPtr cust, hook, temp;
+    //  delegate void* Hook(void* h, int m, void* w, void* l);
+    //  static EventHandler dlg;
+    //  public static void Dialog(Control owner, string find, Action<string, int> act)
+    //  {
+    //    if (dlg != null) { dlg(act, null); return; }
+    //    var ft = (FindReplace*)Marshal.AllocCoTaskMem(4096).ToPointer(); Hook hook;
+    //    ft->size = sizeof(FindReplace); ft->inst = ft->cust = ft->temp = IntPtr.Zero; ft->replace = null; *(&ft->nreplace) = 0;
+    //    ft->owner = owner.Handle; ft->flags = 0x105; //FR_DOWN | FR_MATCHCASE | FR_ENABLEHOOK
+    //    ft->hook = Marshal.GetFunctionPointerForDelegate(hook = (a, b, c, d) => b == 0x0110 ? (void*)1 : null);
+    //    ft->nfind = 1024; var ns = (find ?? (find = String.Empty)).Length;
+    //    fixed (char* ps = find) Native.memcpy(ft->find = (char*)(ft + 1), ps, (void*)(Math.Min(ns + 1, ft->nfind) << 1));
+    //    var hr = FindTextW(ft); Application.Idle += dlg = (p, e) =>
+    //    {
+    //      if (e == null) { act = (Action<string, int>)p; SetForegroundWindow(hr); return; }
+    //      if ((ft->flags & 0x08) != 0) { ft->flags ^= 0x08; act(new string(ft->find), ft->flags); }//FR_FINDNEXT
+    //      if ((ft->flags & 0x40) != 0) { Application.Idle -= dlg; Marshal.FreeCoTaskMem((IntPtr)ft); hook = null; dlg = null; } //FR_DIALOGTERM
+    //    };
+    //  }
+    //}
   }
 }

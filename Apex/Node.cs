@@ -395,7 +395,6 @@ namespace Apex
           }
         }
       }
-      //if (node.HasProp("@cfov") && e.Category("Camera")) excam(e, node); 
       if (e.Category("Transform"))
       {
         var m = node.GetTypeTransform(1);
