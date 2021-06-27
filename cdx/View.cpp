@@ -14,8 +14,12 @@ static void wheelpick(CView* view, LPARAM lParam)
 
 UINT CView::getanitime()
 {
-  auto t = GetTickCount();
-  return t ? t : 1;
+  __int64 t, f;  
+  QueryPerformanceCounter((LARGE_INTEGER*)&t);
+  QueryPerformanceFrequency((LARGE_INTEGER*)&f);
+  return (UINT)(t * 1000 / f);
+  //auto t = GetTickCount();
+  //return t ? t : 1;
 }
 void CView::ontimer()
 {

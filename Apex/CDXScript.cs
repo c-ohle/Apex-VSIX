@@ -1177,10 +1177,7 @@ namespace Apex
         case 5021: return clearbreakpoints(test);
         case 5022: return ongotodef(test);
         case 5023: return onrename(test);
-          //case 65301: //can close
-          //  if (state != 7) return 0;
-          //  if (test != null) return 1;
-          //  MessageBox.Show("no!"); return 1;
+        case 2000: return onhelp(test);
           //case 5025: return onshowil(test);
       }
       return base.OnCommand(id, test);
@@ -1230,8 +1227,8 @@ namespace Apex
           if (state == 1 && sp > &i) return false; // + 1
           if (state == 3 && sp >= &i) return false;
         }
-        if (state == 7 ) return false;
-        if(!MainThread) return false;
+        if (state == 7) return false;
+        if (!MainThread) return false;
         return true;
       }
       ReadOnly = true; //var t1 = node.funcs; node.funcs = Array.Empty<object>();
@@ -1347,7 +1344,7 @@ namespace Apex
         if (tp.p is string ns)
         {
           var usings = map.Where(p => p.v == 0x88).Select(p => (string)p.p);
-          var aa = new Assembly[] { typeof(CDX).Assembly, typeof(int).Assembly, typeof(Control).Assembly, typeof(Point).Assembly };
+          var aa = new Assembly[] { typeof(CDX).Assembly, typeof(int).Assembly, typeof(Control).Assembly, typeof(Point).Assembly, typeof(Trace).Assembly };
           var tt = aa.SelectMany(a => a.GetTypes()).Where(t => t.IsPublic && !t.IsNested && t.Namespace != null);
           var ii = tt.Select(p => p.Namespace).
             Where(p => p.Length > ns.Length && p[ns.Length] == '.' && p.StartsWith(ns)).
@@ -1422,6 +1419,24 @@ namespace Apex
       var f = a.FirstOrDefault(); if (f.n == 0) return 1;
       var s = text.Substring(f.i, f.n); var b = a.Select(t => new Point(t.i, t.n));
       TextEnter("Rename", s, v => Replace(b, v)); return 1;
+    }
+    int onhelp(object test)
+    {
+      if (error != null) return 0;
+      //var ep = errors.FirstOrDefault(p => SelMin >= p.i && SelMax <= p.i + p.n);
+      //if ((ep.v >> 8) != 0) { if (test != null) return 1; TypeHelper.msdn("CS" + (ep.v >> 8).ToString("0000")); return 1; }
+      var tpos = map.FirstOrDefault(p => p.p != null && SelMin >= p.i && SelMax <= p.i + p.n);
+      var m = tpos.p as MemberInfo;
+      if (m == null)
+      {
+        var ps = WordFromPoint(SelMin); if (ps.X == ps.Y || SelMax > ps.Y) return 0;
+        var ss = text.Substring(ps.X, ps.Y - ps.X); if (!Script.keywords.Contains(ss)) return 0;
+        if (test != null) return 1; TypeHelper.msdn(ss + "_CSHARPKEYWORD"); return 1;
+      }
+      var t = m as Type ?? m.DeclaringType; if (t == null) return 1; //dm
+      //if (t.DeclaringType == typeof(Compiler)) { if (test == null) TypeHelper.msdn(t.Name + "_CSHARPKEYWORD"); return 1; }
+      if (!t.Assembly.GlobalAssemblyCache) return 0; //todo: navigate to own documentation
+      if (test != null) return 1; TypeHelper.msdn(string.Format(m != t ? "{0}.{1}.{2}" : "{0}.{1}", t.Namespace, t.Name, m.Name)); return 1;
     }
     void EditFlyer(int i1, int i2, TypeExplorer.Item[] items)
     {

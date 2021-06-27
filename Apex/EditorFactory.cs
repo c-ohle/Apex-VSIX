@@ -65,7 +65,7 @@ namespace Apex
     internal static int transcmd(in Guid guid, int id)
     {
       if (guid == Guids.CmdSet) return id;
-      if (guid == VSConstants.GUID_VSStandardCommandSet97)
+      if (guid == typeof(VSConstants.VSStd97CmdID).GUID)
       {
         switch ((VSConstants.VSStd97CmdID)id)
         {
@@ -104,20 +104,8 @@ namespace Apex
         //System.Diagnostics.Debug.WriteLine((VSConstants.VSStd97CmdID)id);
         return 0;
       }
-      //if (guid == typeof(VSConstants.VSStd2010CmdID).GUID)
-      //{
-      //  switch (id)
-      //  {
-      //    case (int)VSConstants.VSStd2010CmdID.OUTLN_EXPAND_CURRENT:
-      //    case (int)VSConstants.VSStd2010CmdID.OUTLN_COLLAPSE_CURRENT:
-      //    case (int)VSConstants.VSStd2010CmdID.OUTLN_EXPAND_ALL:
-      //    case (int)VSConstants.VSStd2010CmdID.OUTLN_COLLAPSE_ALL: return 2064;
-      //  }
-      //}
       if (guid == typeof(VSConstants.VSStd2KCmdID).GUID)
       {
-        //case 2062: return OnToggle(test);
-        //case 2063: return OnToggleAll(test);
         switch ((VSConstants.VSStd2KCmdID)id)
         {
           case VSConstants.VSStd2KCmdID.OUTLN_TOGGLE_CURRENT: return 2062;
@@ -132,7 +120,19 @@ namespace Apex
 #if(DEBUG)
       if (guid == typeof(VSConstants.VSStd11CmdID).GUID)
       {
+        //System.Diagnostics.Debug.WriteLine((VSConstants.VSStd11CmdID)id);
         return 0;
+      }
+      if (guid == typeof(VSConstants.VSStd2010CmdID).GUID)
+      {
+        //switch ((VSConstants.VSStd2010CmdID)id)
+        //{
+        //  case VSConstants.VSStd2010CmdID.OUTLN_EXPAND_CURRENT:
+        //  case VSConstants.VSStd2010CmdID.OUTLN_COLLAPSE_CURRENT:
+        //  case VSConstants.VSStd2010CmdID.OUTLN_EXPAND_ALL:
+        //  case VSConstants.VSStd2010CmdID.OUTLN_COLLAPSE_ALL: return 2064;
+        //}
+        //System.Diagnostics.Debug.WriteLine((VSConstants.VSStd2010CmdID)id);
       }
 #endif
       return 0;

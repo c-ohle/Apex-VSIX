@@ -159,10 +159,10 @@
     <MenuItem id="cmdidFindPrev" />
     <MenuItem id="cmdidGotoDefn" />
     <Seperator/>
-    <!--<MenuItem id="cmdidExpand" />
-    <MenuItem id="cmdidCollapse" />
-    <MenuItem id="cmdidExpandAll" />
-    <Seperator/>--> 
+    <MenuItem  text="Toggle" id="2062" keys="Control|M|M" />
+    <MenuItem  text="Toggle all" id="2063" keys="Control|M|L" />
+    <!--<MenuItem  text="Toggle off" id="2064" keys="Control|M|U" />-->
+    <Seperator/>
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />
     <MenuItem id="cmdidPaste" />

@@ -1779,6 +1779,11 @@ namespace Apex
       }
       return false;
     }
+    internal static void msdn(string s)
+    {
+      s = string.Format("http://msdn.microsoft.com/query/dev10.query?appId=Dev10IDEF1&k=k({0})", s);
+      Microsoft.VisualStudio.Shell.VsShellUtilities.OpenSystemBrowser(s);
+    }
   }
 
   static unsafe class Native

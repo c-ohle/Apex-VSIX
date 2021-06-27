@@ -4,10 +4,15 @@ using System;
 using System.Runtime.InteropServices;
 #pragma warning disable VSTHRD010
 
-
 //https://3mf.io/specification/
 //file:///C:/Users/cohle/Downloads/3MF_Core_Specification_v1_2_3.pdf
 
+//fps
+//bool ops mit ranges
+//help page
+//obj tooltips 
+//beschrift search rename
+//texture release ?
 //todo: refresh after load
 //todo: camera dpi
 //todo: F1
