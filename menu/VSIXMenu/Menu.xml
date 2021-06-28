@@ -161,8 +161,8 @@
     <MenuItem id="cmdidFindPrev" />
     <MenuItem id="cmdidGotoDefn" />
     <Seperator/>
-    <MenuItem  text="Toggle" id="2062" keys="Control|M|M" />
-    <MenuItem  text="Toggle all" id="2063" keys="Control|M|L" />
+    <MenuItem  text="Toggle Outlining" id="2062" keys="Control|M|M" />
+    <MenuItem  text="Toggle All Outlining" id="2063" keys="Control|M|L" />
     <Seperator/>
     <MenuItem id="cmdidCut" />
     <MenuItem id="cmdidCopy" />

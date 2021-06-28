@@ -330,14 +330,14 @@
         <Parent guid="g2" id="_1000021" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
-          <ButtonText>Toggle</ButtonText>
+          <ButtonText>Toggle Outlining</ButtonText>
         </Strings>
       </Button>
       <Button guid="g2" id="_2063" type="Button" priority="16">
         <Parent guid="g2" id="_1000021" />
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
-          <ButtonText>Toggle all</ButtonText>
+          <ButtonText>Toggle All Outlining</ButtonText>
         </Strings>
       </Button>
       <Button guid="g2" id="_2401" type="Button" priority="2">

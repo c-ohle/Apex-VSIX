@@ -19,7 +19,10 @@ namespace Apex
       if (view == null) return -1;
       switch (id)
       {
-        case 2000: if (test == null) return 1; return 1; //F1 
+        case 2000: 
+          if (test == null) return 1;
+          VsShellUtilities.OpenSystemBrowser("https://c-ohle.github.io/Apex-VSIX/");
+          return 1; //F1 
         case 2010: //Undo
           if (undos == null || undoi == 0) return 8;
           if (test == null) { undos[undoi - 1](); undoi--; Invalidate(Inval.Properties); }

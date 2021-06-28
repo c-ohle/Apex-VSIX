@@ -187,7 +187,7 @@ void CView::RenderScene()
       {
         auto rr = (const XRANGE*)rec.ranges->data.p;
         auto nr = rec.ranges->data.n / sizeof(XRANGE);
-        for (UINT k = 0, m = min(15, nr); k < m; k++)
+        for (size_t k = 0, m = min(15, nr); k < m; k++)
         {
           auto tex = (CTexture*)node->getbuffer((CDX_BUFFER)((UINT)CDX_BUFFER_TEXTURE + k));
           if (tex && !tex->srv.p)

@@ -823,11 +823,11 @@ HRESULT __stdcall CView::Draw(CDX_DRAW id, UINT* data)
     return 0;
   }
   case CDX_DRAW_GET_TEXTEXTENT:
-    *(XMFLOAT2*)data = d_font.p->getextent(*(LPCWSTR*)(data + 2), *(UINT*)((LPCWSTR*)(data + 2) + 1));
+    *(XMFLOAT2*)data = d_font.p->getextent(*(LPCWSTR*)(data + 3), data[2]);
     return 0;
   case CDX_DRAW_DRAW_TEXT:
     if (pickprim) return 0;
-    d_font.p->draw(this, *(XMFLOAT2*)data, *(LPCWSTR*)(data + 2), *(UINT*)((LPCWSTR*)(data + 2) + 1));
+    d_font.p->draw(this, *(XMFLOAT2*)data, *(LPCWSTR*)(data + 3), data[2]);
     return 0;
   case CDX_DRAW_DRAW_RECT:
   {
@@ -843,7 +843,7 @@ HRESULT __stdcall CView::Draw(CDX_DRAW id, UINT* data)
   case CDX_DRAW_DRAW_POLYLINE:
   {
     if (pickprim) return 0;
-    auto np = *(UINT*)data; auto pp = *(XMFLOAT3**)((UINT*)data + 1);
+    auto np = data[0]; auto pp = *(XMFLOAT3**)(data + 1);
     auto vv = BeginVertices(np);
     for (UINT i = 0; i < np; i++) vv[i].p = pp[i];
     EndVertices(np, MO_TOPO_LINESTRIP | MO_PSSHADER_COLOR | MO_RASTERIZER_NOCULL | d_blend);
@@ -883,18 +883,6 @@ HRESULT __stdcall CView::Draw(CDX_DRAW id, UINT* data)
     pickprim = (p[0]->getscount() << 16) | (0x7fff & *(UINT*)(p + 1));
     return 0;
   }
-  //case CDX_DRAW_PUSH:
-  //{
-  //  auto p = (UINT*)stackptr; if (!data) { p[0] = 0; return 0; }    
-  //  auto v = (UINT*)data; for (UINT i = 0; i < v[0]; p[++p[0]] = v[++i]) ;
-  //  return 0;
-  //}
-  //case CDX_DRAW_POP:
-  //{
-  //  auto p = (UINT*)stackptr; 
-  //  ((void**)data)[0] = p + 1; *(UINT*)&((void**)data)[1] = p[0];
-  //  return 0;
-  //}
   }
   return E_FAIL;
 }

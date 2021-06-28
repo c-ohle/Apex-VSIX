@@ -492,14 +492,14 @@ namespace cde
     static int getspan(int degree, double[] knots, double u)
     {
       int n = knots.Length - degree - 2;
-      if (u > knots[n + 1] - 1e-6f) return n;
-      if (u < knots[degree] + 1e-6f) return degree;
+      if (u >= knots[n + 1] /*- 1e-6f*/) return n;
+      if (u <= knots[degree] /*+ 1e-6f*/) return degree;
       int low = degree;
-      int high = n + 1, mid = (int)Math.Floor((low + high) * 0.5);
-      for (; (u < knots[mid]) || (u >= knots[mid + 1]);)
+      int high = n + 1, mid = (low + high) >> 1;// (int)Math.Floor((low + high) * 0.5);
+      for (; u < knots[mid] || u >= knots[mid + 1];)
       {
         if (u < knots[mid]) high = mid; else low = mid;
-        mid = (int)Math.Floor((low + high) * 0.5);
+        mid = (low + high) >> 1; //(int)Math.Floor((low + high) * 0.5);
       }
       return mid;
     }

@@ -152,9 +152,9 @@ namespace Apex
       }
       float collision(float4x3* m, int i)
       {
-        var info = (i, new IntPtr(m));
-        iview.Command(Cmd.BoxesInd, &info.i);
-        return *(float*)&info.i;
+        float3 c; *(int*)&c.x = i; *(void**)&c.y = m;
+        iview.Command(Cmd.BoxesInd, &c);
+        return c.x;
       }
 
       internal CollCtrl(CDXView view, IScene scene)

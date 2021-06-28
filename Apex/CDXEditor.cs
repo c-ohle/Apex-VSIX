@@ -1414,14 +1414,7 @@ namespace Apex
 
   static class TypeHelper
   {
-    internal static List<WeakReference> cache = new List<WeakReference>(); //dynamics only
-    //internal static bool IsBlittable(Type t)
-    //{
-    //  if (t.IsPrimitive) return true; if (!t.IsValueType) return false;
-    //  var a = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-    //  for (int i = 0; i < a.Length; i++) if (!IsBlittable(a[i].FieldType)) return false;
-    //  return true;
-    //}
+    internal static List<WeakReference> cache = new List<WeakReference>();
     static string xname(Type type)
     {
       if (type.IsByRef) return $"{"ref"} {shortname(type.GetElementType())}";

@@ -116,7 +116,6 @@ namespace Apex
       DrawPolyline = 18,
       DrawEllipse = 19,
       DrawBox = 20,
-      //Push = 21, Pop = 22,
     }
 
     [ComImport, Guid("4C0EC273-CA2F-48F4-B871-E487E2774492"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SuppressUnmanagedCodeSecurity]
@@ -522,15 +521,15 @@ namespace Apex
       }
       public void DrawLine(float2 a, float2 b)
       {
-        var t1 = ((float3)a, (float3)b); var t2 = (2, new IntPtr(&t1.Item1));
-        p.Draw(Draw.DrawPolyline, &t2.Item1);
-        //var c = (2, (float3)a, (float3)b); p.Draw(Draw.DrawPolyline, &c.Item1);
+        float3box t; t.min = a; t.max = b;
+        float3 c; *(int*)&c = 2; *(void**)&c.y = &t;
+        p.Draw(Draw.DrawPolyline, &c);
       }
       public void DrawLine(float3 a, float3 b)
       {
-        var t1 = (a, b); var t2 = (2, new IntPtr(&t1.Item1));
-        p.Draw(Draw.DrawPolyline, &t2.Item1);
-        //var c = (2, a, b); p.Draw(Draw.DrawPolyline, &c.Item1);
+        float3box t; t.min = a; t.max = b;
+        float3 c; *(int*)&c = 2; *(void**)&c.y = &t;
+        p.Draw(Draw.DrawPolyline, &c);
       }
       public void DrawPolyline(float3[] p, int i, int n)
       {
@@ -538,7 +537,8 @@ namespace Apex
       }
       public void DrawPolyline(float3* pp, int np)
       {
-        var t = (np, new IntPtr(pp)); p.Draw(Draw.DrawPolyline, &t.Item1);
+        float3 c; *(int*)&c = np; *(void**)&c.y = pp;
+        p.Draw(Draw.DrawPolyline, &c);
       }
       public void DrawBox(float3box b)
       {
@@ -548,17 +548,21 @@ namespace Apex
       {
         fixed (char* t = s)
         {
-          var c = (0f, 0f, (IntPtr)t, s.Length);
-          p.Draw(Draw.GetTextExtent, &c.Item1);
-          return *(float2*)&c.Item1;
+          float3box c; *(int*)&c.min.z = s.Length; *(void**)&c.max = t;
+          p.Draw(Draw.GetTextExtent, &c.min); return *(float2*)&c.min;
+          //var c = (0f, 0f, (IntPtr)t, s.Length);
+          //p.Draw(Draw.GetTextExtent, &c.Item1);
+          //return *(float2*)&c.Item1;
         }
       }
       public void DrawText(float x, float y, string s)
       {
         fixed (char* t = s)
         {
-          var c = (x, y, (IntPtr)t, s.Length);
-          p.Draw(Draw.DrawText, &c.Item1);
+          float3box c; c.min.x = x; c.min.y = y; *(int*)&c.min.z = s.Length; *(void**)&c.max = t;
+          p.Draw(Draw.DrawText, &c.min);
+          //var c = (x, y, (IntPtr)t, s.Length);
+          //p.Draw(Draw.DrawText, &c.Item1);
         }
       }
       static IBuffer gettex()
@@ -894,8 +898,8 @@ namespace Apex
         return (int)(p.x * 0xff) | ((int)(p.y * 0xff) << 8) | ((int)(p.z * 0xff) << 16) | ((int)(p.w * 0xff) << 24);
       }
       public static explicit operator float4(int c)
-      { 
-        return new float4((c & 0xff) * (1f / 0xff), ((c >> 8) & 0xff) * (1f / 0xff), ((c >> 16) & 0xff) * (1f / 0xff), ((c >> 24) & 0xff) * (1f / 0xff)); 
+      {
+        return new float4((c & 0xff) * (1f / 0xff), ((c >> 8) & 0xff) * (1f / 0xff), ((c >> 16) & 0xff) * (1f / 0xff), ((c >> 24) & 0xff) * (1f / 0xff));
       }
       public static bool operator ==(in float4 a, in float4 b)
       {

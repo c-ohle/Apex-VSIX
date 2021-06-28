@@ -5,6 +5,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,7 +45,7 @@ namespace Apex
     {
       ex.todo = 2; ex.name = name; ex.value = value; Exchange(ex);
       if (ex.todo == 2) return false;
-      if (!(name[0]=='.' || name[0] == '_') && this is Node n)
+      if (!(name[0] == '.' || name[0] == '_') && this is Node n)
       {
         ex.todo = 3; ex.value = n.node; Exchange(ex); //save prop
       }
@@ -142,45 +143,72 @@ namespace Apex
         if (name[0] == '_') return;
         if (this.name != null) { if (name != this.name) return; todo = -1; }
         var node = (INode)this.value; var t = typeof(T);
-        if (blittable(t))
-        {
-          var n = Marshal.SizeOf(t); var r = __makeref(v);
-          fixed (char* ss = name) node.SetProp(ss, *(void**)&r, n, (int)Type.GetTypeCode(t));
-        }
+        var n = blittsize(t); // if((TypeInfo<T>.blittsize != 0) != blittable(t)) { }
+        if (n != 0) fixed (char* ss = name) { var r = __makeref(v); node.SetProp(ss, *(void**)&r, n, (int)Type.GetTypeCode(t)); }
         else writeobj(node, name, v, t);
       }
       void load<T>(string name, ref T v)
       {
         if (name[0] == '_') return;
-        var node = (INode)this.value;
-        void* p; int n, typ; fixed (char* ss = name) n = node.GetProp(ss, &p, out typ);
+        void* p; int n, typ; fixed (char* ss = name) n = ((INode)value).GetProp(ss, &p, out typ);
         if (p == null) return;
-        var t = typeof(T);
-        if (blittable(t))
+        var t = typeof(T); var c = blittsize(t);
+        if (c != 0)
         {
-          if (n == Marshal.SizeOf(t) && typ == (int)Type.GetTypeCode(t))
-          {
-            var h = default(T); var r = __makeref(h);
-            Native.memcpy(*(void**)&r, p, (void*)n); v = h;
-          }
+          
+          if (n != c || typ != (int)Type.GetTypeCode(t)) return;
+          var h = default(T); var r = __makeref(h);
+          Native.memcpy(*(void**)&r, p, (void*)n); v = h;
         }
         else
         {
+          //var xx = blittsize<T>();
+          //if( T ) { }
           var str = (p: (IntPtr)p, i: 0, n: n);
           if (readobj(ref str, t) is T x) v = x;
         }
       }
-      static bool blittable(Type t) => t.IsValueType && t.IsLayoutSequential; //t.IsLayoutSequential || t.IsExplicitLayout
+      //static int blittsize<T>() where T : unmanaged => sizeof(T);
+
+      //static bool blittable(Type t) => t.IsValueType && t.IsLayoutSequential; //t.IsLayoutSequential || t.IsExplicitLayout
+
+      static int blittsize(Type t)
+      {
+        if (!t.IsValueType) return 0; //if (!t.IsLayoutSequential) return 0; //DateTime?
+        if (t.IsPrimitive)
+          switch (Type.GetTypeCode(t))
+          {
+            case TypeCode.Boolean: return 1;
+            case TypeCode.Char: return 2;
+            case TypeCode.SByte: return 1;
+            case TypeCode.Byte: return 1;
+            case TypeCode.Int16: return 2;
+            case TypeCode.UInt16: return 2;
+            case TypeCode.Int32: return 4;
+            case TypeCode.UInt32: return 4;
+            case TypeCode.Int64: return 8;
+            case TypeCode.UInt64: return 8;
+            case TypeCode.Single: return 4;
+            case TypeCode.Double: return 8;
+          }
+        var x = TypeDescriptor.GetAttributes(t)[typeof(BlittSize)];
+        if (x != null) return ((BlittSize)x).size;
+        var a = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        int c = 0; for (int i = 0; i < a.Length; i++) { var n = blittsize(a[i].FieldType); if (n == 0) { c = 0; break; } c += n; }
+        TypeDescriptor.AddAttributes(t, new BlittSize { size = c }); return c;
+      }
+      class BlittSize : Attribute { internal int size; }
+
       static object readobj(ref (IntPtr p, int i, int n) str, Type t)
       {
         if (t.IsArray)
         {
           var c = readcount(ref str); var e = t.GetElementType();
-          var a = Array.CreateInstance(e, c);
-          if (blittable(e))
+          var a = Array.CreateInstance(e, c); var x = blittsize(e);
+          if (x != 0)
           {
-            var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
-            var p = (byte*)h.AddrOfPinnedObject(); read(ref str, p, a.Length * n); h.Free();
+            var h = GCHandle.Alloc(a, GCHandleType.Pinned);
+            var p = (byte*)h.AddrOfPinnedObject(); read(ref str, p, a.Length * x); h.Free();
           }
           else
           {
@@ -220,11 +248,11 @@ namespace Apex
         if (o is Array a)
         {
           writecount(ref str, a.Length);
-          var e = a.GetType().GetElementType();
-          if (blittable(e))
+          var e = a.GetType().GetElementType(); var x = blittsize(e);
+          if (x != 0)
           {
-            var n = Marshal.SizeOf(e); var h = GCHandle.Alloc(a, GCHandleType.Pinned);
-            var p = (byte*)h.AddrOfPinnedObject(); write(ref str, p, a.Length * n); h.Free();
+            var h = GCHandle.Alloc(a, GCHandleType.Pinned);
+            var p = (byte*)h.AddrOfPinnedObject(); write(ref str, p, a.Length * x); h.Free();
           }
           else
           {
@@ -316,7 +344,7 @@ namespace Apex
     }
     object[] getfuncs()
     {
-      if (funcs != null) return funcs; 
+      if (funcs != null) return funcs;
       var node = this.node;
       var bs = node.GetBuffer(BUFFER.SCRIPT);
       if (bs != null)
