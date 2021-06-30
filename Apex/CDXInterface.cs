@@ -600,7 +600,7 @@ namespace Apex
 
   public static unsafe partial class CDX
   {
-    [TypeConverter(typeof(float2.Converter))]
+    [TypeConverter(typeof(float2.Converter)), Blittable(8)]
     public struct float2 : IEquatable<float2>, IFormattable
     {
       public float x, y;
@@ -701,7 +701,7 @@ namespace Apex
       }
     }
 
-    [TypeConverter(typeof(float3.Converter))]
+    [TypeConverter(typeof(float3.Converter)), Blittable(12)]
     public struct float3 : IEquatable<float3>, IFormattable
     {
       public float x, y, z;
@@ -843,7 +843,7 @@ namespace Apex
       }
     }
 
-    [TypeConverter(typeof(float4.Converter))]
+    [TypeConverter(typeof(float4.Converter)), Blittable(16)]
     public struct float4 : IEquatable<float4>, IFormattable
     {
       public float x, y, z, w;
@@ -1044,7 +1044,6 @@ namespace Apex
           Math.Max(Math.Max(a.y, b.y), c.y),
           Math.Max(Math.Max(a.z, b.z), c.z));
       }
-
     }
 
     public struct float4x3
@@ -1251,6 +1250,12 @@ namespace Apex
         for (b = a; b < n && s[b] > ' '; b++) ;
         pp[c] = XmlConvert.ToSingle(s.Substring(a, b - a));
       }
+    }
+
+    public class BlittableAttribute : Attribute
+    {
+      public BlittableAttribute(int size) => Size = size;
+      public readonly int Size;
     }
 
   }

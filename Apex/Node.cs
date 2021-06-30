@@ -138,6 +138,7 @@ namespace Apex
         ((PropertyDescriptorCollection)value).Add(new PD(name, attris.ToArray()) { type = t });
         attris.RemoveAll(p => !(p is CategoryAttribute));
       }
+
       void save<T>(string name, T v)
       {
         if (name[0] == '_') return;
@@ -155,49 +156,17 @@ namespace Apex
         var t = typeof(T); var c = blittsize(t);
         if (c != 0)
         {
-          
+
           if (n != c || typ != (int)Type.GetTypeCode(t)) return;
           var h = default(T); var r = __makeref(h);
           Native.memcpy(*(void**)&r, p, (void*)n); v = h;
         }
         else
         {
-          //var xx = blittsize<T>();
-          //if( T ) { }
           var str = (p: (IntPtr)p, i: 0, n: n);
           if (readobj(ref str, t) is T x) v = x;
         }
       }
-      //static int blittsize<T>() where T : unmanaged => sizeof(T);
-
-      //static bool blittable(Type t) => t.IsValueType && t.IsLayoutSequential; //t.IsLayoutSequential || t.IsExplicitLayout
-
-      static int blittsize(Type t)
-      {
-        if (!t.IsValueType) return 0; //if (!t.IsLayoutSequential) return 0; //DateTime?
-        if (t.IsPrimitive)
-          switch (Type.GetTypeCode(t))
-          {
-            case TypeCode.Boolean: return 1;
-            case TypeCode.Char: return 2;
-            case TypeCode.SByte: return 1;
-            case TypeCode.Byte: return 1;
-            case TypeCode.Int16: return 2;
-            case TypeCode.UInt16: return 2;
-            case TypeCode.Int32: return 4;
-            case TypeCode.UInt32: return 4;
-            case TypeCode.Int64: return 8;
-            case TypeCode.UInt64: return 8;
-            case TypeCode.Single: return 4;
-            case TypeCode.Double: return 8;
-          }
-        var x = TypeDescriptor.GetAttributes(t)[typeof(BlittSize)];
-        if (x != null) return ((BlittSize)x).size;
-        var a = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        int c = 0; for (int i = 0; i < a.Length; i++) { var n = blittsize(a[i].FieldType); if (n == 0) { c = 0; break; } c += n; }
-        TypeDescriptor.AddAttributes(t, new BlittSize { size = c }); return c;
-      }
-      class BlittSize : Attribute { internal int size; }
 
       static object readobj(ref (IntPtr p, int i, int n) str, Type t)
       {
@@ -233,8 +202,6 @@ namespace Apex
         for (int s = 0; ; s += 7) { int b = pp[str.i++]; i |= (b & 0x7F) << s; if ((b & 0x80) == 0) break; }
         return i;
       }
-
-      //static WeakRef<byte[]> wbytes;
       static void writeobj(INode node, string name, object o, Type t)
       {
         var a = GetBuffer<byte>(1024); //var a = wbytes.Value; if (a == null) wbytes.Value = a = new byte[256];
@@ -278,6 +245,17 @@ namespace Apex
       {
         if (str.i + 5 > str.a.Length) Array.Resize(ref str.a, str.a.Length << 1);
         for (; c >= 0x80; str.a[str.i++] = (byte)(c | 0x80), c >>= 7) ; str.a[str.i++] = (byte)c;
+      }
+
+      static int blittsize(Type t)
+      {
+        if (!t.IsValueType) return 0; //if (!t.IsLayoutSequential) return 0; //DateTime?
+        if (t.IsPrimitive) return (int)((0x848844221121 >> (((int)Type.GetTypeCode(t) - 3) << 2)) & 0xf);
+        var x = TypeDescriptor.GetAttributes(t)[typeof(BlittableAttribute)] as BlittableAttribute;
+        if (x != null) return x.Size;
+        var a = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        int c = 0; for (int i = 0; i < a.Length; i++) { var n = blittsize(a[i].FieldType); if (n == 0) { c = 0; break; } c += n; }
+        TypeDescriptor.AddAttributes(t, new BlittableAttribute(c)); return c; //so far Color, DateTime
       }
 
       class PD : PropertyDescriptor
