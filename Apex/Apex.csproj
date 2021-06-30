@@ -94,7 +94,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="app.ico">
+    <Content Include="app.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

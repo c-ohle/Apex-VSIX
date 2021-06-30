@@ -2,11 +2,11 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Apex VSIX")]
+[assembly: AssemblyTitle("Apex-VSIX")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Vyset Ltd.")]
-[assembly: AssemblyProduct("Apex VSIX")]
+[assembly: AssemblyProduct("Apex-VSIX")]
 [assembly: AssemblyCopyright("(c) Vyset Ltd. 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
