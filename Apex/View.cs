@@ -226,16 +226,16 @@ namespace Apex
       if (b.Length == 1) return b[0];
       return () => { for (int i = 0; i < b.Length; i++) b[i](); Array.Reverse(b); };
     }
-    //internal static Action undo(INode n, BUFFER id, IBuffer p) => () =>
-    //{
-    //  var t = n.GetBuffer(id); if (p != null) n.SetBuffer(p); else n.RemoveBuffer(id); p = t;
-    //};
-    //internal static Action undo(INode node, BUFFER id, byte[] b)
-    //{
-    //  return () => { var t = node.GetBytes(id); node.SetBytes(id, b); b = t; };
-    //}
+    internal static Action undo(INode n, BUFFER id, IBuffer p)
+    {
+      if (n.GetBuffer(id) == p) return null;
+      return () => { var t = n.GetBuffer(id); n.SetBuffer(id, p); p = t; };
+    }
     internal static Action undo<T>(INode node, BUFFER id, T[] b) where T : unmanaged
     {
+      void* pd; var nd = node.GetBufferPtr(id, &pd) / sizeof(T);
+      if (nd == (b != null ? b.Length : 0))
+        fixed (void* t = b) if (Native.memcmp(t, pd, (void*)(nd * sizeof(T))) == 0) return null;
       return () => { var t = node.GetArray<T>(id); node.SetArray(id, b); b = t; };
     }
     internal static Action undo(INode node, BUFFER id, void* p, int n)
@@ -245,6 +245,7 @@ namespace Apex
     }
     internal Action undo(params Action[] a)
     {
+      if (Array.IndexOf(a, null) != -1) a = a.OfType<Action>().ToArray();
       if (a.Length == 1) return a[0];
       return () => { for (int i = 0; i < a.Length; i++) a[i](); Array.Reverse(a); };
     }

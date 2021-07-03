@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="Apex.421ffd53-24b5-4f79-ac82-f4debf962f5f" Version="1.0" Language="en-US" Publisher="c.ohle@superkabel.de" />
+        <Identity Id="Apex.421ffd53-24b5-4f79-ac82-f4debf962f5f" Version="1.0" Language="en-US" Publisher="Christian Ohle" />
         <DisplayName>Apex-VSIX</DisplayName>
         <Description xml:space="preserve">Visual Studio Extension for 3MF support and 3D modelling.</Description>
         <Icon>app.png</Icon>

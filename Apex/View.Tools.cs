@@ -127,6 +127,7 @@ namespace Apex
     }
     static int lastwheel, lastzoom;
 
+#if(false)
     class CollCtrl
     {
       CDXView view; IView iview; (int nsel, int count) inf; bool ansch; int cnt;
@@ -263,6 +264,104 @@ namespace Apex
       }
       internal void End() => setbox(false);
     }
+#else
+    class CollCtrl
+    { 
+      IView iview; (int nsel, int count) inf; bool ansch; int cnt;
+      float3 dir, midp, lastok;
+      
+      (int nsel, int count) setbox(bool on)
+      { 
+        (int nsel, int count) info; info.nsel = on ? 1 : 0; info.count = 0;
+        iview.Command(Cmd.BoxesSet, &info.nsel); return info;
+      }
+      float3box getbox(int i)
+      {
+        float3box box; ((int*)&box)[0] = i;
+        iview.Command(Cmd.BoxesGet, &box); return box;
+      }
+      float4x3 gettrans(int i)
+      {
+        float4x3 m; ((int*)&m)[0] = i;
+        iview.Command(Cmd.BoxesTra, &m); return m;
+      }
+      float collision(float4x3* m, int i)
+      {
+        float3 c; *(int*)&c.x = i; *(void**)&c.y = m;
+        iview.Command(Cmd.BoxesInd, &c);
+        return c.x;
+      }
+
+      internal CollCtrl(CDXView view, IScene scene)
+      {
+        iview = view.view;
+        inf = setbox(true);
+      }
+      internal void Move(ref float4x3 m)
+      {
+        if (inf.count == 0) return;
+        var mp = m.mp;
+        var u = ansch ? (dir != default ? dir : (dir = mp - lastok)) : mp - lastok;
+        if (u == default) return; 
+        var shift = 0f; 
+        for (int ia = 0; ia < inf.nsel; ia++)
+        {
+          var selbox = getbox(ia); //var orgselbox = selbox;
+          var xbox = selbox; xbox += mp;//
+          selbox += lastok; selbox.Extend(mp - lastok);
+          for (int ib = inf.nsel; ib < inf.count; ib++)
+          {
+            var unselbox = getbox(ib);
+            if ((xbox & unselbox).IsEmpty) continue;
+            var intbox = selbox & unselbox;
+            intbox = intbox.Inflate(0.1f);
+            var um = LookAtLH(intbox.mid + u, intbox.mid, Math.Abs(u.z) < 0.7f ? new float3(0, 0, 1) : new float3(1, 0, 0));
+            var xb = float3box.Empty; for (int i = 0; i < 8; i++) xb.Add(intbox.Corner(i) * um);
+            xb.min.z -= xb.size.z * 2;// xb.size.z;// orgselbox.size.x;//.Length;// xb.size.z;
+            var xbsize = xb.size; xbsize.z = 1 / xbsize.z;
+            int dx = 256, dy = 256;
+            var xm = new float4x3 { _11 = dx / xbsize.x, _22 = dy / xbsize.y, _33 = xbsize.z, _41 = dx * 0.5f, _42 = dy * 0.5f, _43 = -xb.min.z * xbsize.z };
+            um *= xm;
+
+            var ma = gettrans(ia) * mp * um;
+            var mb = gettrans(ib) * um;
+            collision(null, dx | (dy << 16));
+            collision(&mb, ib);
+            var dz = collision(&ma, ia | (1 << 31));
+            if (dz != 0)
+            {
+              var v = (mp - lastok) - u * (dz / xbsize.z / u.Length);
+              if ((u & v) > 0)// || (u - v).LengthSq < u.LengthSq)//u.LengthSq * 0.5f)
+                shift = Math.Max(shift, dz / xbsize.z);
+            }
+          }
+        }
+        if (u.z < 0)
+        {
+          for (int i = 0; i < inf.nsel; i++)
+          {
+            var box = getbox(i);
+            var z1 = box.min.z; if (z1 < 0) continue;
+            var z2 = z1 + mp.z; if (z2 > 0) continue;
+            shift = Math.Max(shift, -z2 * mp.Length / (z1 - z2));
+          }
+        }
+        if (ansch = shift != 0) { m.mp -= u * (shift / u.Length); }
+        else
+        {
+          if (u.LengthSq > dir.LengthSq)
+          {
+            dir = u;
+            if (cnt == 10) midp = mp;
+            if (cnt++ == 20) { lastok = midp; cnt = 0; dir = mp - lastok; }
+          }
+          else { dir = default; lastok = mp; cnt = 0; }
+        }
+      }
+      internal void Draw() { }
+      internal void End() => setbox(false);
+    }
+#endif
 
     Action<int> tool;
     INode mainselect()
@@ -781,8 +880,8 @@ namespace Apex
           int nni = ni.Indices.Length; var ii = ni.Indices;
           var nnp = ni.Points.Length; var pp = GetBuffer<float3>(nnp, false);
           for (int t = 0; t < nnp; t++) { var v = ni.Points[t]; pp[t] = new float3((float)v.x, (float)v.y, (float)v.z); }
-          float2[] tt = null; if (ni.Texcoords != null) { tt = GetBuffer<float2>(nni,false); for (int t = 0; t < nni; t++) { var v = ni.Texcoords[t]; tt[t] = new float2(v.x, v.y); } }
-          int nnr = 0; Range[] rr = null; if (ni.Ranges != null) { rr = GetBuffer<Range>(nnr = ni.Ranges.Length,false); for (int t = 0; t < nnr; t++) { var v = ni.Ranges[t]; rr[t] = new Range { Start = v.i, Count = v.n, Color = v.c }; } }
+          float2[] tt = null; if (ni.Texcoords != null) { tt = GetBuffer<float2>(nni, false); for (int t = 0; t < nni; t++) { var v = ni.Texcoords[t]; tt[t] = new float2(v.x, v.y); } }
+          int nnr = 0; Range[] rr = null; if (ni.Ranges != null) { rr = GetBuffer<Range>(nnr = ni.Ranges.Length, false); for (int t = 0; t < nnr; t++) { var v = ni.Ranges[t]; rr[t] = new Range { Start = v.i, Count = v.n, Color = v.c }; } }
           MeshRound(pp, ref nnp, ii, ref nni, tt, rr, ref nnr);
           //for (int t = 0; t < nni; t += 3) { var _ = ii[t]; ii[t] = ii[t + 1]; ii[t + 1] = _; }
           no.Color = ni.Textures != null && ni.Color >> 24 == 0xff ? 0xffffffff : ni.Color;

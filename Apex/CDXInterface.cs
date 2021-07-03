@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Globalization;
@@ -43,6 +44,7 @@ namespace Apex
 
     internal struct Range
     {
+      public override string ToString() => $"{Start} - {Start + Count} 0x{Color:x8}";
       internal int Start, Count;
       internal uint Color;
     }

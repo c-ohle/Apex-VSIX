@@ -1821,6 +1821,9 @@ namespace Apex
     internal static extern bool PostMessage(IntPtr hWnd, int m, void* w, void* l);
     [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     internal static extern IntPtr memcpy(void* d, void* s, void* n);
+    [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+    internal static extern int memcmp(void* d, void* s, void* n);
+
     //[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     //internal static extern IntPtr memset(void* d, int c, int n);
     //[DllImport("comdlg32.dll"), SuppressUnmanagedCodeSecurity]
