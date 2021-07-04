@@ -1808,6 +1808,18 @@ EXTERN_C const IID IID_ICDXFactory;
             /* [in] */ XMFLOAT2 *bttp,
             /* [in] */ FLOAT eps) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE RestoreRanges( 
+            /* [in] */ const XMFLOAT3 *pp,
+            /* [in] */ UINT np,
+            /* [in] */ const USHORT *ii,
+            /* [in] */ UINT ni,
+            /* [in] */ ICDXNode *n1,
+            /* [in] */ ICDXNode *n2,
+            /* [in] */ const XMFLOAT4X3 *rm,
+            /* [in] */ UINT fl,
+            /* [in] */ FLOAT eps,
+            /* [retval][out] */ ICDXNode **p) = 0;
+        
     };
     
     
@@ -1887,6 +1899,19 @@ EXTERN_C const IID IID_ICDXFactory;
             /* [in] */ XMFLOAT2 *bttp,
             /* [in] */ FLOAT eps);
         
+        HRESULT ( STDMETHODCALLTYPE *RestoreRanges )( 
+            ICDXFactory * This,
+            /* [in] */ const XMFLOAT3 *pp,
+            /* [in] */ UINT np,
+            /* [in] */ const USHORT *ii,
+            /* [in] */ UINT ni,
+            /* [in] */ ICDXNode *n1,
+            /* [in] */ ICDXNode *n2,
+            /* [in] */ const XMFLOAT4X3 *rm,
+            /* [in] */ UINT fl,
+            /* [in] */ FLOAT eps,
+            /* [retval][out] */ ICDXNode **p);
+        
         END_INTERFACE
     } ICDXFactoryVtbl;
 
@@ -1939,6 +1964,9 @@ EXTERN_C const IID IID_ICDXFactory;
 
 #define ICDXFactory_CopyCoords(This,appp,aiip,aiin,attp,bppp,biip,biin,bttp,eps)	\
     ( (This)->lpVtbl -> CopyCoords(This,appp,aiip,aiin,attp,bppp,biip,biin,bttp,eps) ) 
+
+#define ICDXFactory_RestoreRanges(This,pp,np,ii,ni,n1,n2,rm,fl,eps,p)	\
+    ( (This)->lpVtbl -> RestoreRanges(This,pp,np,ii,ni,n1,n2,rm,fl,eps,p) ) 
 
 #endif /* COBJMACROS */
 

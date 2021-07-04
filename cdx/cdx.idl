@@ -240,8 +240,7 @@ interface ICDXFactory : IUnknown
   HRESULT GetInfo([in] CDX_INFO id, [out, retval] UINT* v);
   HRESULT GetBuffer([in] CDX_BUFFER id, [in] const BYTE* p, [in] UINT n, [out, retval] ICDXBuffer** v);
   HRESULT CopyCoords([in] const XMFLOAT3* appp, [in] const USHORT* aiip, [in] UINT aiin, [in] const XMFLOAT2* attp, [in] const XMFLOAT3* bppp, [in] const USHORT* biip, [in] UINT biin, [in] XMFLOAT2* bttp, [in] FLOAT eps);
-  //HRESULT Push([in] const UINT* p, UINT n);
-  //HRESULT Pop([out] UINT* n, [out, retval] UINT** p);
+  HRESULT RestoreRanges([in] const XMFLOAT3* pp, [in] UINT np, [in] const USHORT* ii, [in] UINT ni, [in] ICDXNode* n1, [in] ICDXNode* n2, [in] const XMFLOAT4X3* rm, [in] UINT fl, [in] FLOAT eps, [out, retval] ICDXNode** p); //fl 1:invn2
 };
 
 [uuid(6d43a611-b5a3-489c-aa3a-dc01bb9225e8), version(1.0)]

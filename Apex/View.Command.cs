@@ -258,131 +258,12 @@ namespace Apex
       fixed (float2* bt = btt ?? (btt = new float2[bii.Length]))
         Factory.CopyCoords(app, aii, ani, att, bp, bi, bii.Length, bt);
     }
-    //static void CopyCoords(INode sour, in float4x3 sm, float3[] bpp, ushort[] bii, ref float2[] btt)
-    //{
-    //  var pp = sour.GetArray<float3>(BUFFER.POINTBUFFER);
-    //  var ii = sour.GetArray<ushort>(BUFFER.INDEXBUFFER);
-    //  var tt = sour.GetArray<float2>(BUFFER.TEXCOORDS);
-    //  for (int t = 0; t < pp.Length; t++) pp[t] *= sm;
-    //  for (int t = 0; t < ii.Length; t += 3)
-    //  {
-    //    var t1 = ii[t]; ii[t] = ii[t + 1]; ii[t + 1] = t1;
-    //    var t2 = tt[t]; tt[t] = tt[t + 1]; tt[t + 1] = t2;
-    //  }
-    //  fixed (float3* ap = pp) fixed (ushort* ai = ii) fixed (float2* at = tt)
-    //  fixed (float3* bp = bpp) fixed (ushort* bi = bii) fixed (float2* bt = btt ?? (btt = new float2[bii.Length]))
-    //    Factory.CopyCoords(ap, ai, ii.Length, at, bp, bi, bii.Length, bt);
-    //}
-
-    static void join(
-      float3[] pp, ushort[] ii, float2[] tt,
-      float3[] pporg, ushort[] iiorg, float2[] ttorg, (Range r, IBuffer t)[] rtorg,
-      ref (Range r, IBuffer t)[] rr, ref int nr)
-    {
-      for (int x = 0, i = 0, nc = nr; ; i = rr[x].r.Start + rr[x].r.Count, x++)
-      {
-        for (int ni = x < nc ? rr[x].r.Start : ii.Length; i < ni; i += 3)
-        {
-          var p1 = pp[ii[i + 0]];
-          var p2 = pp[ii[i + 1]];
-          var p3 = pp[ii[i + 2]];
-          var e = PlaneFromPoints(p1, p2, p3);
-          var w = new float3(Math.Abs(e.x), Math.Abs(e.y), Math.Abs(e.z));
-          var l = w.x > w.y && w.x > w.z ? 0 : w.y > w.z ? 1 : 2;
-          var d = (l == 0 ? -e.x : l == 1 ? +e.y : -e.z) > 0 ? +1f : -1f;
-          var s1 = new float2(l == 0 ? p1.y : p1.x, l == 2 ? p1.y : p1.z);
-          var s2 = new float2(l == 0 ? p2.y : p2.x, l == 2 ? p2.y : p2.z);
-          var s3 = new float2(l == 0 ? p3.y : p3.x, l == 2 ? p3.y : p3.z);
-          var mp = (s1 + s2 + s3) * (1f / 3);
-          for (int k = 0; k < iiorg.Length; k += 3)
-          {
-            var u1 = pporg[iiorg[k + 0]]; if (Math.Abs(DotCoord(e, u1)) > 1e-3f) continue;
-            var u2 = pporg[iiorg[k + 1]]; if (Math.Abs(DotCoord(e, u2)) > 1e-3f) continue;
-            var u3 = pporg[iiorg[k + 2]]; if (Math.Abs(DotCoord(e, u3)) > 1e-3f) continue;
-            var t1 = new float2(l == 0 ? u1.y : u1.x, l == 2 ? u1.y : u1.z);
-            var t2 = new float2(l == 0 ? u2.y : u2.x, l == 2 ? u2.y : u2.z);
-            var t3 = new float2(l == 0 ? u3.y : u3.x, l == 2 ? u3.y : u3.z);
-            var f1 = t2 - t1 ^ mp - t1; if (f1 * d > 1e-6f) continue;
-            var f2 = t3 - t2 ^ mp - t2; if (f2 * d > 1e-6f) continue;
-            var f3 = t1 - t3 ^ mp - t3; if (f3 * d > 1e-6f) continue;
-            /////
-            int t = 0; for (; t < rtorg.Length && !(rtorg[t].r.Start <= k && rtorg[t].r.Start + rtorg[t].r.Count > k); t++) ;
-            ref var r = ref rtorg[t];
-            ref var ra = ref rr[(nr != 0 ? nr : nr = 1) - 1];
-            if (ra.r.Start + ra.r.Count != i || ra.r.Color != r.r.Color || ra.t != r.t)
-            {
-              if (ra.r.Count != 0) if (nr++ == rr.Length) Array.Resize(ref rr, rr.Length << 1);
-              ra = ref rr[nr - 1]; ra.r.Start = i; ra.r.Count = 0; ra.r.Color = r.r.Color; ra.t = r.t;
-            }
-            ra.r.Count += 3;
-            /////
-            if (ttorg == null) break;
-            var va = t2 - t1; var vb = t3 - t1; var de = va ^ vb; if (de == 0) break; de = 1 / de;
-            var ua = s1 - t1; var ub = s2 - t1; var uc = s3 - t1;
-            var c1 = ttorg[k + 0]; var c2 = (ttorg[k + 1] - c1) * de; var c3 = (ttorg[k + 2] - c1) * de;
-            tt[i + 0] = c1 + c2 * (ua ^ vb) + c3 * (va ^ ua);
-            tt[i + 1] = c1 + c2 * (ub ^ vb) + c3 * (va ^ ub);
-            tt[i + 2] = c1 + c2 * (uc ^ vb) + c3 * (va ^ uc); break;
-          }
-        }
-        if (x == nc) break;
-      }
-#if(false)
-      for (int i = 0; i < ii.Length; i += 3)
-      {
-        if ((ffdone[i] & 1) != 0) continue;
-        var p1 = pp[ii[i + 0]];
-        var p2 = pp[ii[i + 1]];
-        var p3 = pp[ii[i + 2]];
-        var e = PlaneFromPoints(p1, p2, p3);
-        var w = new float3(Math.Abs(e.x), Math.Abs(e.y), Math.Abs(e.z));
-        var l = w.x > w.y && w.x > w.z ? 0 : w.y > w.z ? 1 : 2;
-        var d = (l == 0 ? -e.x : l == 1 ? +e.y : -e.z) > 0 ? +1f : -1f;
-        var s1 = new float2(l == 0 ? p1.y : p1.x, l == 2 ? p1.y : p1.z);
-        var s2 = new float2(l == 0 ? p2.y : p2.x, l == 2 ? p2.y : p2.z);
-        var s3 = new float2(l == 0 ? p3.y : p3.x, l == 2 ? p3.y : p3.z);
-        var mp = (s1 + s2 + s3) * (1f / 3);
-        for (int k = 0; k < iiorg.Length; k += 3)
-        {
-          var u1 = pporg[iiorg[k + 0]]; if (Math.Abs(DotCoord(e, u1)) > 1e-3f) continue;
-          var u2 = pporg[iiorg[k + 1]]; if (Math.Abs(DotCoord(e, u2)) > 1e-3f) continue;
-          var u3 = pporg[iiorg[k + 2]]; if (Math.Abs(DotCoord(e, u3)) > 1e-3f) continue;
-          var t1 = new float2(l == 0 ? u1.y : u1.x, l == 2 ? u1.y : u1.z);
-          var t2 = new float2(l == 0 ? u2.y : u2.x, l == 2 ? u2.y : u2.z);
-          var t3 = new float2(l == 0 ? u3.y : u3.x, l == 2 ? u3.y : u3.z);
-          var f1 = t2 - t1 ^ mp - t1; if (f1 * d > 1e-6f) continue;
-          var f2 = t3 - t2 ^ mp - t2; if (f2 * d > 1e-6f) continue;
-          var f3 = t1 - t3 ^ mp - t3; if (f3 * d > 1e-6f) continue;
-          ffdone[i] |= 1;
-          /////
-          int t = 0; for (; t < rtorg.Length && !(rtorg[t].r.Start <= k && rtorg[t].r.Start + rtorg[t].r.Count > k); t++) ;
-          ref var r = ref rtorg[t];
-          ref var ra = ref rr[(nr != 0 ? nr : nr = 1) - 1];
-          if (ra.r.Start + ra.r.Count != i || ra.r.Color != r.r.Color || ra.t != r.t)
-          {
-            if (ra.r.Count != 0) if (nr++ == rr.Length) Array.Resize(ref rr, rr.Length << 1);
-            ra = ref rr[nr - 1]; ra.r.Start = i; ra.r.Count = 0; ra.r.Color = r.r.Color; ra.t = r.t;
-          }
-          ra.r.Count += 3;
-          /////
-          if (ttorg == null) break;
-          var va = t2 - t1; var vb = t3 - t1; var de = va ^ vb; if (de == 0) break; de = 1 / de;
-          var ua = s1 - t1; var ub = s2 - t1; var uc = s3 - t1;
-          var c1 = ttorg[k + 0]; var c2 = (ttorg[k + 1] - c1) * de; var c3 = (ttorg[k + 2] - c1) * de;
-          tt[i + 0] = c1 + c2 * (ua ^ vb) + c3 * (va ^ ua);
-          tt[i + 1] = c1 + c2 * (ub ^ vb) + c3 * (va ^ ub);
-          tt[i + 2] = c1 + c2 * (uc ^ vb) + c3 * (va ^ uc); break;
-        }
-      }
-#endif
-    }
-
+    
     int OnJoin(object test, int id)
     {
       if (scene.SelectionCount != 2) return 0;
       var n1 = scene.GetSelection(0); if (!n1.HasBuffer(BUFFER.POINTBUFFER)) return 0;
       var n2 = scene.GetSelection(1); if (!n2.HasBuffer(BUFFER.POINTBUFFER)) return 0;
-      //if (n1.HasBuffer(BUFFER.RANGES)) return 0;
       if (test != null) return 1;
       Cursor = Cursors.WaitCursor;
       var op = id == 2301 ? CSG.JoinOp.Union : id == 2302 ? CSG.JoinOp.Intersection : CSG.JoinOp.Difference;
@@ -397,74 +278,31 @@ namespace Apex
       Marshal.ReleaseComObject(r1);
       Marshal.ReleaseComObject(r2);
 
-      ////////
-      var ppa = n1.GetArray<float3>(BUFFER.POINTBUFFER);
-      var iia = n1.GetArray<ushort>(BUFFER.INDEXBUFFER);
-      var tta = n1.GetArray<float2>(BUFFER.TEXCOORDS);
-      var rra = n1.GetArray<Range>(BUFFER.RANGES);
-      if (rra == null) rra = new[] { new Range { Start = 0, Count = iia.Length, Color = n1.Color } };
-      var rta = rra.Select((r, i) => (r, i < 16 ? n1.GetBuffer(BUFFER.TEXTURE + i) : null)).ToArray();
-
-      var ppb = n2.GetArray<float3>(BUFFER.POINTBUFFER);
-      var iib = n2.GetArray<ushort>(BUFFER.INDEXBUFFER);
-      var ttb = n2.GetArray<float2>(BUFFER.TEXCOORDS);
-      var rrb = n2.GetArray<Range>(BUFFER.RANGES);
-      if (rrb == null) rrb = new[] { new Range { Start = 0, Count = iib.Length, Color = n2.Color } };
-      var rtb = rrb.Select((r, i) => (r, i < 16 ? n2.GetBuffer(BUFFER.TEXTURE + i) : null)).ToArray();
-
-      for (int i = 0; i < ppb.Length; i++) ppb[i] *= rm;
-      if (op == CSG.JoinOp.Difference)
-        for (int i = 0; i < iib.Length; i += 3)
-        {
-          var t1 = iib[i]; iib[i] = iib[i + 1]; iib[i + 1] = t1; if (ttb == null) continue;
-          var t2 = ttb[i]; ttb[i] = ttb[i + 1]; ttb[i + 1] = t2;
-        }
-
-      var tt = tta != null || ttb != null ? new float2[ii.Length] : null;
-      var nu = 0; var uu = new (Range r, IBuffer t)[16];
-      join(vv, ii, tt, ppa, iia, tta, rta, ref uu, ref nu);
-      join(vv, ii, tt, ppb, iib, ttb, rtb, ref uu, ref nu);
-      ///
-      var rr = default(Range[]);
-      int c = 1; for (; c < nu && uu[c - 1].r.Color == uu[c].r.Color && uu[c - 1].t == uu[c].t; c++) ;
-      if (c == nu) { }
-      if (c != nu)
-      {
-        int nuu = 0, nii = 0;
-        var iii = new ushort[ii.Length];
-        var ttt = tt != null ? new float2[tt.Length] : null;
-        for (int i = 0, iab; i < nu; i++)
-        {
-          if (uu[i].r.Count == -1) continue; iab = nii;
-          for (int k = i; k < nu; k++)
-          {
-            if (uu[i].r.Color != uu[k].r.Color || uu[i].t != uu[k].t) continue;
-            for (int j = 0, sj = uu[k].r.Start, nj = uu[k].r.Count; j < nj; j++, nii++)
-            {
-              iii[nii] = ii[sj + j]; if (tt == null) continue;
-              ttt[nii] = tt[sj + j];
-            }
-            uu[k].r.Count = -1;
-          }
-          uu[nuu] = uu[i]; uu[nuu].r.Start = iab; uu[nuu++].r.Count = nii - iab;
-        }
-        if (nii != ii.Length) { }
-        ii = iii; tt = ttt;
-        rr = uu.Select(p => p.r).Take(nu = nuu).ToArray();
-      }
-      var te = undo(uu.Select(p => p.t).Take(nu).Concat(Enumerable.Repeat(default(IBuffer), 15 - nu)).Select((p, i) => undo(n1, BUFFER.TEXTURE + i, p)));
-      ///
+      //var no = RestoreRanges(vv, ii, n1, n2, rm, op == CSG.JoinOp.Difference); 
+      INode no;
+      fixed (float3* pvv = vv) fixed (ushort* pii = ii) 
+        no = Factory.RestoreRanges(pvv, vv.Length, pii, ii.Length, n1, n2, &rm, op == CSG.JoinOp.Difference ? 1 : 0);
+      
+      var pv = no.GetBuffer(BUFFER.POINTBUFFER);
+      var pi = no.GetBuffer(BUFFER.INDEXBUFFER);
+      var tt = no.GetBuffer(BUFFER.TEXCOORDS);
+      var rr = no.GetBuffer(BUFFER.RANGES);
+      var te = undo(
+        Enumerable.Range(0, 16).
+        Select(i => no.GetBuffer(BUFFER.TEXTURE + i)).
+        Select((p, i) => undo(n1, BUFFER.TEXTURE + i, p)));
       Execute(undo(
         undosel(false, n1, n2),
-        undo(n1, BUFFER.POINTBUFFER, vv),
-        undo(n1, BUFFER.INDEXBUFFER, ii),
+        undo(n1, BUFFER.POINTBUFFER, pv),
+        undo(n1, BUFFER.INDEXBUFFER, pi),
         undo(n1, BUFFER.TEXCOORDS, tt),
-        undo(n1, BUFFER.RANGES, rr), te,
+        undo(n1, BUFFER.RANGES, rr),
+        te,
         undodel(n2), undosel(true, n1)));
       return 1;
     }
 
-#if(false)
+#if (false)
     int OnJoin(object test, int id)
     {
       if (scene.SelectionCount != 2) return 0;

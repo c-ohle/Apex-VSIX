@@ -38,8 +38,7 @@ namespace Apex
       int GetInfo(int id);
       IBuffer GetBuffer(BUFFER id, void* p, int n);
       void CopyCoords(float3* app, ushort* aii, int ani, float2* att, float3* bpp, ushort* bii, int bni, float2* btt, float eps = 0);
-      //void Push(void* p, int n);
-      //void* Pop(out int n);
+      INode RestoreRanges(float3* pp, int np, ushort* ii, int ni, INode n1, INode n2, float4x3* pmn2, int fl, float eps = 0); //fl 1:invn2
     }
 
     internal struct Range

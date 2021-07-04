@@ -887,15 +887,3 @@ HRESULT __stdcall CView::Draw(CDX_DRAW id, UINT* data)
   return E_FAIL;
 }
 
-HRESULT CFactory::Push(const UINT* pp, UINT np)
-{
-  auto p = (UINT*)stackptr; if (!pp) { p[0] = 0; return 0; }
-  for (UINT i = 0; i < np; p[++p[0]] = pp[i++]);
-  return 0;
-}
-HRESULT CFactory::Pop(UINT* np, UINT** pp)
-{
-  auto p = (UINT*)stackptr;
-  *pp = p + 1; *np = p[0];
-  return 0;
-}

@@ -10,8 +10,7 @@ namespace Apex
   {
     //IFont font = GetFont(new System.Drawing.Font("Tahoma", 13));
     IFont font = GetFont(System.Drawing.SystemFonts.MenuFont);
-    IBuffer checkboard;
-    List<string> debuginfo;
+    IBuffer checkboard; //List<string> debuginfo;
 
     void ISink.Render(int fl)
     {
@@ -64,12 +63,12 @@ namespace Apex
       if (fl == 1)
       {
         var rf = view.Render;
-        if ((rf & RenderFlags.Fps) != 0 || (flags & 4) != 0 || debuginfo != null)
+        if ((rf & RenderFlags.Fps) != 0 || (flags & 4) != 0)// || debuginfo != null)
         {
           dc.SetOrtographic();
           dc.Color = 0xff000000; string s;
           float y = 10 + font.Ascent, dy = font.Height, x = ClientSize.Width - 10f;
-          if (debuginfo != null) for (int i = 0; i < debuginfo.Count; i++) dc.DrawText(10, y + i * dy, debuginfo[i]);
+          //if (debuginfo != null) for (int i = 0; i < debuginfo.Count; i++) dc.DrawText(10, y + i * dy, debuginfo[i]);
           if ((rf & RenderFlags.Fps) != 0)
           {
             s = $"{view.Fps} fps"; dc.DrawText(x - dc.GetTextExtent(s).x, y, s); y += dy;

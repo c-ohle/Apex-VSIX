@@ -21,6 +21,132 @@ namespace Apex
 {
 
 #if (false)
+    internal struct RT
+    {
+      internal Range r; internal IBuffer t;
+    }
+
+    static void join(
+      float3[] pp, ushort[] ii, float2[] tt,
+      float3[] pporg, ushort[] iiorg, float2[] ttorg, RT[] rtorg,
+      ref RT[] rr, ref int nr)
+    {
+      for (int x = 0, i = 0, nc = nr; ; i = rr[x].r.Start + rr[x].r.Count, x++)
+      {
+        for (int ni = x < nc ? rr[x].r.Start : ii.Length; i < ni; i += 3)
+        {
+          var p1 = pp[ii[i + 0]];
+          var p2 = pp[ii[i + 1]];
+          var p3 = pp[ii[i + 2]];
+          var e = PlaneFromPoints(p1, p2, p3);
+          var w = new float3(Math.Abs(e.x), Math.Abs(e.y), Math.Abs(e.z));
+          var l = w.x > w.y && w.x > w.z ? 0 : w.y > w.z ? 1 : 2;
+          var d = (l == 0 ? -e.x : l == 1 ? +e.y : -e.z) > 0 ? +1f : -1f;
+          var s1 = new float2(l == 0 ? p1.y : p1.x, l == 2 ? p1.y : p1.z);
+          var s2 = new float2(l == 0 ? p2.y : p2.x, l == 2 ? p2.y : p2.z);
+          var s3 = new float2(l == 0 ? p3.y : p3.x, l == 2 ? p3.y : p3.z);
+          var mp = (s1 + s2 + s3) * (1f / 3);
+          for (int k = 0; k < iiorg.Length; k += 3)
+          {
+            var u1 = pporg[iiorg[k + 0]]; if (Math.Abs(DotCoord(e, u1)) > 1e-3f) continue;
+            var u2 = pporg[iiorg[k + 1]]; if (Math.Abs(DotCoord(e, u2)) > 1e-3f) continue;
+            var u3 = pporg[iiorg[k + 2]]; if (Math.Abs(DotCoord(e, u3)) > 1e-3f) continue;
+            var t1 = new float2(l == 0 ? u1.y : u1.x, l == 2 ? u1.y : u1.z);
+            var t2 = new float2(l == 0 ? u2.y : u2.x, l == 2 ? u2.y : u2.z);
+            var t3 = new float2(l == 0 ? u3.y : u3.x, l == 2 ? u3.y : u3.z);
+            var f1 = t2 - t1 ^ mp - t1; if (f1 * d > 1e-6f) continue;
+            var f2 = t3 - t2 ^ mp - t2; if (f2 * d > 1e-6f) continue;
+            var f3 = t1 - t3 ^ mp - t3; if (f3 * d > 1e-6f) continue;
+            /////
+            int t = 0; for (; t < rtorg.Length && !(rtorg[t].r.Start <= k && rtorg[t].r.Start + rtorg[t].r.Count > k); t++) ;
+            ref var r = ref rtorg[t];
+            ref var ra = ref rr[(nr != 0 ? nr : nr = 1) - 1];
+            if (ra.r.Start + ra.r.Count != i || ra.r.Color != r.r.Color || ra.t != r.t)
+            {
+              if (ra.r.Count != 0) if (nr++ == rr.Length) Array.Resize(ref rr, rr.Length << 1);
+              ra = ref rr[nr - 1]; ra.r.Start = i; ra.r.Count = 0; ra.r.Color = r.r.Color; ra.t = r.t;
+            }
+            ra.r.Count += 3;
+            /////
+            if (ttorg == null) break;
+            var va = t2 - t1; var vb = t3 - t1; var de = va ^ vb; if (de == 0) break; de = 1 / de;
+            var ua = s1 - t1; var ub = s2 - t1; var uc = s3 - t1;
+            var c1 = ttorg[k + 0]; var c2 = (ttorg[k + 1] - c1) * de; var c3 = (ttorg[k + 2] - c1) * de;
+            tt[i + 0] = c1 + c2 * (ua ^ vb) + c3 * (va ^ ua);
+            tt[i + 1] = c1 + c2 * (ub ^ vb) + c3 * (va ^ ub);
+            tt[i + 2] = c1 + c2 * (uc ^ vb) + c3 * (va ^ uc); break;
+          }
+        }
+        if (x == nc) break;
+      }
+    }
+    static INode RestoreRanges(float3[] vv, ushort[] ii, INode n1, INode n2, in float4x3 rm, bool inv)
+    {
+      var ppa = n1.GetArray<float3>(BUFFER.POINTBUFFER);
+      var iia = n1.GetArray<ushort>(BUFFER.INDEXBUFFER);
+      var tta = n1.GetArray<float2>(BUFFER.TEXCOORDS);
+      var rra = n1.GetArray<Range>(BUFFER.RANGES);
+      var rta = new RT[rra != null ? rra.Length : 1];
+      if (rra != null) for (int i = 0; i < rra.Length; i++) { rta[i].r = rra[i]; rta[i].t = i < 16 ? n1.GetBuffer(BUFFER.TEXTURE + i) : null; }
+      else rta[0] = new RT { r = new Range { Start = 0, Count = iia.Length, Color = n1.Color }, t = n1.GetBuffer(BUFFER.TEXTURE) };
+
+      var ppb = n2.GetArray<float3>(BUFFER.POINTBUFFER);
+      var iib = n2.GetArray<ushort>(BUFFER.INDEXBUFFER);
+      var ttb = n2.GetArray<float2>(BUFFER.TEXCOORDS);
+      var rrb = n2.GetArray<Range>(BUFFER.RANGES);
+      var rtb = new RT[rrb != null ? rrb.Length : 1];
+      if (rrb != null) for (int i = 0; i < rrb.Length; i++) { rtb[i].r = rrb[i]; rtb[i].t = i < 16 ? n2.GetBuffer(BUFFER.TEXTURE + i) : null; }
+      else rtb[0] = new RT { r = new Range { Start = 0, Count = iib.Length, Color = n2.Color }, t = n2.GetBuffer(BUFFER.TEXTURE) };
+
+      for (int i = 0; i < ppb.Length; i++) ppb[i] *= rm;
+      if (inv)
+        for (int i = 0; i < iib.Length; i += 3)
+        {
+          var t1 = iib[i]; iib[i] = iib[i + 1]; iib[i + 1] = t1; if (ttb == null) continue;
+          var t2 = ttb[i]; ttb[i] = ttb[i + 1]; ttb[i + 1] = t2;
+        }
+
+      var tt = tta != null || ttb != null ? new float2[ii.Length] : null;
+      var nu = 0; var uu = new RT[16];
+      join(vv, ii, tt, ppa, iia, tta, rta, ref uu, ref nu);
+      join(vv, ii, tt, ppb, iib, ttb, rtb, ref uu, ref nu);
+
+      var node = Factory.CreateNode();
+      node.SetArray(BUFFER.POINTBUFFER, vv);
+      int c = 1; for (; c < nu && uu[c - 1].r.Color == uu[c].r.Color && uu[c - 1].t == uu[c].t; c++) ;
+      if (c != nu)
+      {
+        int nuu = 0, nii = 0;
+        var iii = new ushort[ii.Length];
+        var ttt = tt != null ? new float2[tt.Length] : null;
+        for (int i = 0, iab; i < nu; i++)
+        {
+          if (uu[i].r.Count == -1) continue; iab = nii;
+          for (int k = i; k < nu; k++)
+          {
+            if (uu[i].r.Color != uu[k].r.Color || uu[i].t != uu[k].t) continue;
+            for (int j = 0, sj = uu[k].r.Start, nj = uu[k].r.Count; j < nj; j++, nii++)
+            {
+              iii[nii] = ii[sj + j]; if (tt == null) continue;
+              ttt[nii] = tt[sj + j];
+            }
+            uu[k].r.Count = -1;
+          }
+          uu[nuu] = uu[i]; uu[nuu].r.Start = iab; uu[nuu++].r.Count = nii - iab;
+        }
+        //if (nii != ii.Length) { }
+        ii = iii; tt = ttt;
+        var rr = new Range[nu = nuu]; for (int i = 0; i < nu; i++) rr[i] = uu[i].r;
+        node.SetArray(BUFFER.RANGES, rr);
+      }
+      node.SetArray(BUFFER.INDEXBUFFER, ii);
+      if (tt != null) node.SetArray(BUFFER.TEXCOORDS, tt);
+      for (int i = 0, n = Math.Min(nu, 15); i < n; i++) if (uu[i].t != null) node.SetBuffer(BUFFER.TEXTURE + i, uu[i].t);
+      return node;
+    }
+#endif
+
+#if (false)
   unsafe class MiniStream
   {
     byte[] pp; int ip, np;
